@@ -31,6 +31,8 @@
 
 #include "ns3/random-variable-stream.h"
 
+#include <iostream>
+
 NS_LOG_COMPONENT_DEFINE("CustomApp");
 
 namespace ns3 {
@@ -73,6 +75,7 @@ CustomApp::SendInterest()
   /////////////////////////////////////
   // Sending one Interest packet out //
   /////////////////////////////////////
+  std::cout << "INS_send" << std::endl ;
 
   // Create and configure ndn::Interest
   auto interest = std::make_shared<ndn::Interest>("/prefix/sub");

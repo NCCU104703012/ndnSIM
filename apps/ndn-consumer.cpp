@@ -37,6 +37,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/ref.hpp>
 
+#include <iostream>
+
 NS_LOG_COMPONENT_DEFINE("ndn.Consumer");
 
 namespace ns3 {
@@ -47,6 +49,7 @@ NS_OBJECT_ENSURE_REGISTERED(Consumer);
 TypeId
 Consumer::GetTypeId(void)
 {
+  //nccu:興趣封包定義
   static TypeId tid =
     TypeId("ns3::ndn::Consumer")
       .SetGroupName("Ndn")
@@ -158,6 +161,8 @@ Consumer::StopApplication() // Called at time specified by Stop
 void
 Consumer::SendPacket()
 {
+  std::cout << "送出興趣封包" << std::endl ;
+
   if (!m_active)
     return;
 
@@ -217,7 +222,9 @@ Consumer::OnData(shared_ptr<const Data> data)
 
   App::OnData(data); // tracing inside
 
-  NS_LOG_FUNCTION(this << data);
+  //nccu:偵錯LOG: 接收到資料封包 印出prefix
+  //NS_LOG_FUNCTION(this << data);
+  NS_LOG_FUNCTION(data->getName());
 
   // NS_LOG_INFO ("Received content object: " << boost::cref(*data));
 

@@ -113,14 +113,18 @@ App::GetId() const
 void
 App::OnInterest(shared_ptr<const Interest> interest)
 {
-  NS_LOG_FUNCTION(this << interest);
+  //nccu:偵錯LOG: 接收興趣封包 印出資訊
+  //NS_LOG_FUNCTION(this << interest);
+  NS_LOG_FUNCTION(interest->getName());
   m_receivedInterests(interest, this, m_face);
 }
 
 void
 App::OnData(shared_ptr<const Data> data)
 {
-  NS_LOG_FUNCTION(this << data);
+  //nccu:偵錯LOG: 接收到資料封包 印出prefix
+  //NS_LOG_FUNCTION(this << data);
+  NS_LOG_FUNCTION(data->getName());
   m_receivedDatas(data, this, m_face);
 }
 

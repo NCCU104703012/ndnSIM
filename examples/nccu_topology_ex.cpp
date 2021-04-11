@@ -80,11 +80,11 @@ main(int argc, char* argv[])
   consumerNodes.Add(Names::Find<Node>("Node0"));
 
   // Install NDN applications
-  std::string prefix = "/prefix";
+  std::string prefix = "/prefix/test";
 
   ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
   consumerHelper.SetPrefix(prefix);
-  consumerHelper.SetAttribute("Frequency", StringValue("100")); // 100 interests a second
+  consumerHelper.SetAttribute("Frequency", StringValue("1")); // 100 interests a second
   consumerHelper.Install(consumerNodes);
 
   ndn::AppHelper producerHelper("ns3::ndn::Producer");
@@ -102,7 +102,9 @@ main(int argc, char* argv[])
 
   Ptr<Node> Fail_node1 = Names::Find<Node>("Node2");
   Ptr<Node> Fail_node2 = Names::Find<Node>("Node9");
+  Ptr<Node> Fail_node3 = Names::Find<Node>("Node8");
   Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::FailLink, Fail_node1, Fail_node2);
+   Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node2, Fail_node3);
 
   Simulator::Stop(Seconds(20.0));
 

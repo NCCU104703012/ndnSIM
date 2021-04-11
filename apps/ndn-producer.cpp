@@ -17,6 +17,8 @@
  * ndnSIM, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include <iostream>
+
 #include "ndn-producer.hpp"
 #include "ns3/log.h"
 #include "ns3/string.h"
@@ -100,6 +102,7 @@ Producer::OnInterest(shared_ptr<const Interest> interest)
   if (!m_active)
     return;
 
+  // nccu:偵錯LOG:負責處理回傳資料
   Name dataName(interest->getName());
   // dataName.append(m_postfix);
   // dataName.appendVersion();
@@ -123,6 +126,8 @@ Producer::OnInterest(shared_ptr<const Interest> interest)
   data->setSignature(signature);
 
   NS_LOG_INFO("node(" << GetNode()->GetId() << ") responding with Data: " << data->getName());
+
+  //std::cout << "data packet name : " << dataName << std::endl ;
 
   // to create real wire encoding
   data->wireEncode();
