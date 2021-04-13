@@ -161,7 +161,7 @@ Consumer::StopApplication() // Called at time specified by Stop
 void
 Consumer::SendPacket()
 {
-  std::cout << "送出興趣封包" << std::endl ;
+  //std::cout << "送出興趣封包" << std::endl ;
 
   if (!m_active)
     return;

@@ -22,11 +22,15 @@
 #include "ns3/assert.h"
 #include "ns3/packet.h"
 
+#include <fstream>
+
 #include "model/ndn-l3-protocol.hpp"
 #include "model/ndn-app-link-service.hpp"
 #include "model/null-transport.hpp"
 
 NS_LOG_COMPONENT_DEFINE("ndn.App");
+
+using namespace std;
 
 namespace ns3 {
 namespace ndn {
@@ -116,6 +120,18 @@ App::OnInterest(shared_ptr<const Interest> interest)
   //nccu:偵錯LOG: 接收興趣封包 印出資訊
   //NS_LOG_FUNCTION(this << interest);
   NS_LOG_FUNCTION(interest->getName());
+
+  fstream file;
+  char str[] = "ON interest/n" ;
+  file.open("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/apps/nccu_output.txt", ios::app);
+  if(!file)     //檢查檔案是否成功開啟，如果!file為真，表示無法開啟檔案
+        {
+                cerr << "Can't open file!\n";
+                exit(1);     //在不正常情形下，中斷程式的執行
+        }
+  file.write(str, 14);
+  file.close();
+
   m_receivedInterests(interest, this, m_face);
 }
 

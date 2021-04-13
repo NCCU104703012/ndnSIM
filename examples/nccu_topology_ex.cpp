@@ -26,6 +26,7 @@
 // for LinkStatusControl::FailLinks and LinkStatusControl::UpLinks
 #include "ns3/ndnSIM/helper/ndn-link-control-helper.hpp"
 
+
 namespace ns3 {
 
 /**
@@ -52,6 +53,27 @@ namespace ns3 {
  *     NS_LOG=ndn.Consumer:ndn.Producer ./waf --run=nccu_topology_ex
  */
 
+void producer_set(std::string node, std::string prefix, std::string payloadsize){
+  Ptr<Node> producer = Names::Find<Node>(node);
+  ndn::AppHelper producerHelper("ns3::ndn::Producer");
+  ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
+  producerHelper.SetPrefix(prefix);
+  producerHelper.SetAttribute("PayloadSize", StringValue(payloadsize));
+  producerHelper.Install(producer);
+  ndnGlobalRoutingHelper.AddOrigins(prefix, producer);
+}
+
+void consumer_set(std::string node, std::string prefix, std::string frequency){
+  Ptr<Node> consumer = Names::Find<Node>(node);
+  ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
+  //ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
+  consumerHelper.SetPrefix(prefix);
+  consumerHelper.SetAttribute("Frequency", StringValue(frequency)); // 100 interests a second
+  consumerHelper.Install(consumer);
+  //ndnGlobalRoutingHelper.AddOrigins(prefix, consumer);
+}
+
+
 int
 main(int argc, char* argv[])
 {
@@ -63,48 +85,43 @@ main(int argc, char* argv[])
   topologyReader.Read();
 
   // Install NDN stack on all nodes
+  // 可以設定cs size,cache policy等
   ndn::StackHelper ndnHelper;
+  ndnHelper.setCsSize(1000);
   ndnHelper.InstallAll();
 
   // Set BestRoute strategy
-  ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/multicast");
+  ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/ncc");
 
   // Installing global routing interface on all nodes
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll();
 
-  // Getting containers for the consumer/producer
-  Ptr<Node> producer = Names::Find<Node>("Node8");
-  Ptr<Node> producer2 = Names::Find<Node>("Node9");
-  NodeContainer consumerNodes;
-  consumerNodes.Add(Names::Find<Node>("Node0"));
+  // // Getting containers for the consumer/producer
+  // // 分為food & clothes兩類
+  std::string prefix_food = "/prefix/food";
+  std::string prefix_clothes = "/prefix/clothes";
 
-  // Install NDN applications
-  std::string prefix = "/prefix/test";
 
-  ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
-  consumerHelper.SetPrefix(prefix);
-  consumerHelper.SetAttribute("Frequency", StringValue("1")); // 100 interests a second
-  consumerHelper.Install(consumerNodes);
+  consumer_set("Node7", prefix_food, "10");
+  consumer_set("Node12", prefix_clothes, "10");
+  consumer_set("Node13", prefix_clothes, "5");
 
-  ndn::AppHelper producerHelper("ns3::ndn::Producer");
-  producerHelper.SetPrefix(prefix);
-  producerHelper.SetAttribute("PayloadSize", StringValue("1024"));
-  producerHelper.Install(producer);
-  producerHelper.Install(producer2);
 
-  // Add /prefix origins to ndn::GlobalRouter
-  ndnGlobalRoutingHelper.AddOrigins(prefix, producer);
-  ndnGlobalRoutingHelper.AddOrigins(prefix, producer2);
+  producer_set("Node10", prefix_food, "1024");
+  producer_set("Node15", prefix_clothes, "1024");
+  producer_set("Node9", prefix_clothes, "1024");
+
+
 
   // Calculate and install FIBs
   ndn::GlobalRoutingHelper::CalculateRoutes();
 
-  Ptr<Node> Fail_node1 = Names::Find<Node>("Node2");
-  Ptr<Node> Fail_node2 = Names::Find<Node>("Node9");
-  Ptr<Node> Fail_node3 = Names::Find<Node>("Node8");
-  Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::FailLink, Fail_node1, Fail_node2);
-   Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node2, Fail_node3);
+  Ptr<Node> Fail_node3 = Names::Find<Node>("Node3");
+  Ptr<Node> Fail_node4 = Names::Find<Node>("Node4");
+  Ptr<Node> Fail_node0 = Names::Find<Node>("Node0");
+   Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::FailLink, Fail_node3, Fail_node4);
+   Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node4, Fail_node0);
 
   Simulator::Stop(Seconds(20.0));
 
