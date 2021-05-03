@@ -26,6 +26,8 @@
 // for LinkStatusControl::FailLinks and LinkStatusControl::UpLinks
 #include "ns3/ndnSIM/helper/ndn-link-control-helper.hpp"
 
+#include "ns3/ndnSIM/apps/nccu_custom-app.hpp"
+
 
 namespace ns3 {
 
@@ -102,13 +104,16 @@ main(int argc, char* argv[])
   std::string prefix_food = "/prefix/food";
   std::string prefix_clothes = "/prefix/clothes";
 
+//  Ptr<Node> Node1 = Names::Find<Node>("Node1");
+//  ndn::AppHelper app1("CustomApp");
+//   app1.Install(Node1);
 
-  consumer_set("Node7", prefix_food, "10");
-  consumer_set("Node12", prefix_clothes, "10");
-  consumer_set("Node13", prefix_clothes, "5");
+  consumer_set("Node7", "/prefix/food/one", "10");
+  consumer_set("Node12", "/prefix/clothes", "10");
+  consumer_set("Node13", "/prefix/clothes", "5");
 
 
-  producer_set("Node10", prefix_food, "1024");
+   producer_set("Node10", "/prefix/food", "1024");
   producer_set("Node15", prefix_clothes, "1024");
   producer_set("Node9", prefix_clothes, "1024");
 
@@ -120,8 +125,10 @@ main(int argc, char* argv[])
   Ptr<Node> Fail_node3 = Names::Find<Node>("Node3");
   Ptr<Node> Fail_node4 = Names::Find<Node>("Node4");
   Ptr<Node> Fail_node0 = Names::Find<Node>("Node0");
+  Ptr<Node> Fail_node2 = Names::Find<Node>("Node2");
    Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::FailLink, Fail_node3, Fail_node4);
    Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node4, Fail_node0);
+   Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
 
   Simulator::Stop(Seconds(20.0));
 
