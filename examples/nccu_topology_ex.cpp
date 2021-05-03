@@ -27,6 +27,7 @@
 #include "ns3/ndnSIM/helper/ndn-link-control-helper.hpp"
 
 #include "ns3/ndnSIM/apps/nccu_custom-app.hpp"
+#include "ns3/ndnSIM/apps/nccu_producer-app.hpp"
 
 
 namespace ns3 {
@@ -104,18 +105,22 @@ main(int argc, char* argv[])
   std::string prefix_food = "/prefix/food";
   std::string prefix_clothes = "/prefix/clothes";
 
-//  Ptr<Node> Node1 = Names::Find<Node>("Node1");
-//  ndn::AppHelper app1("CustomApp");
-//   app1.Install(Node1);
+  Ptr<Node> Node1 = Names::Find<Node>("Node1");
+  ndn::AppHelper app1("CustomApp");
+  app1.Install(Node1);
 
-  consumer_set("Node7", "/prefix/food/one", "10");
-  consumer_set("Node12", "/prefix/clothes", "10");
-  consumer_set("Node13", "/prefix/clothes", "5");
+  Ptr<Node> Node8 = Names::Find<Node>("Node8");
+  ndn::AppHelper app2("ProudcerApp");
+  app2.Install(Node8);
+
+  // consumer_set("Node7", "/prefix/food/one", "10");
+  // consumer_set("Node12", "/prefix/clothes", "10");
+  // consumer_set("Node13", "/prefix/clothes", "5");
 
 
-   producer_set("Node10", "/prefix/food", "1024");
-  producer_set("Node15", prefix_clothes, "1024");
-  producer_set("Node9", prefix_clothes, "1024");
+    producer_set("Node10", "/prefix/food", "1024");
+  // producer_set("Node15", prefix_clothes, "1024");
+  // producer_set("Node9", prefix_clothes, "1024");
 
 
 
