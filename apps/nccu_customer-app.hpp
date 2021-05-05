@@ -17,17 +17,17 @@
  * ndnSIM, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-// custom-app.hpp
+// customer-app.hpp
 
-#ifndef CUSTOM_APP_H_
-#define CUSTOM_APP_H_
+#ifndef CUSTOMER_APP_H_
+#define CUSTOMER_APP_H_
 
 #include "ns3/ndnSIM/apps/ndn-app.hpp"
 
 namespace ns3 {
 
 /**
- * @brief A simple custom application
+ * @brief A simple customer application
  *
  * This applications demonstrates how to send Interests and respond with Datas to incoming interests
  *
@@ -36,9 +36,9 @@ namespace ns3 {
  *
  * When an Interest is received, it is replied with a Data with 1024-byte fake payload
  */
-class CustomApp : public ndn::App {
+class CustomerApp : public ndn::App {
 public:
-  // register NS-3 type "CustomApp"
+  // register NS-3 type "CustomerApp"
   static TypeId
   GetTypeId();
 
@@ -66,4 +66,4 @@ private:
 
 } // namespace ns3
 
-#endif // CUSTOM_APP_H_
+#endif // CUSTOMER_APP_H_

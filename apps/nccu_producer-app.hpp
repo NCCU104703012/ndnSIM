@@ -22,16 +22,21 @@
 #ifndef PERDUCER_H_
 #define PERDUCER_H_
 
+#include "ns3/ndnSIM/model/ndn-common.hpp"
 #include "ns3/ndnSIM/apps/ndn-app.hpp"
 
-namespace ns3 {
+#include "ns3/nstime.h"
+#include "ns3/ptr.h"
 
-class ProudcerApp : public ndn::App {
+namespace ns3 {
+namespace ndn {
+
+class ProducerApp : public ndn::App {
 public:
   static TypeId
   GetTypeId();
 
-  ProudcerApp();
+  ProducerApp();
 
   // Receive all Interests but do nothing in response
   void
@@ -44,8 +49,19 @@ protected:
 
   virtual void
   StopApplication();
+
+private:
+  Name m_prefix;
+  Name m_postfix;
+  uint32_t m_virtualPayloadSize;
+  Time m_freshness;
+
+  uint32_t m_signature;
+  Name m_keyLocator;
+  int check = 0;
 };
 
+} // namespace ndn
 } // namespace ns3
 
 #endif // PERDUCER_H_

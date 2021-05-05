@@ -26,7 +26,7 @@
 // for LinkStatusControl::FailLinks and LinkStatusControl::UpLinks
 #include "ns3/ndnSIM/helper/ndn-link-control-helper.hpp"
 
-#include "ns3/ndnSIM/apps/nccu_custom-app.hpp"
+#include "ns3/ndnSIM/apps/nccu_customer-app.hpp"
 #include "ns3/ndnSIM/apps/nccu_producer-app.hpp"
 
 
@@ -58,7 +58,7 @@ namespace ns3 {
 
 void producer_set(std::string node, std::string prefix, std::string payloadsize){
   Ptr<Node> producer = Names::Find<Node>(node);
-  ndn::AppHelper producerHelper("ns3::ndn::Producer");
+  ndn::AppHelper producerHelper("ns3::ndn::ProducerApp");
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   producerHelper.SetPrefix(prefix);
   producerHelper.SetAttribute("PayloadSize", StringValue(payloadsize));
@@ -90,7 +90,7 @@ main(int argc, char* argv[])
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等
   ndn::StackHelper ndnHelper;
-  ndnHelper.setCsSize(1000);
+  ndnHelper.setCsSize(0);
   ndnHelper.InstallAll();
 
   // Set BestRoute strategy
@@ -106,19 +106,22 @@ main(int argc, char* argv[])
   std::string prefix_clothes = "/prefix/clothes";
 
   Ptr<Node> Node1 = Names::Find<Node>("Node1");
-  ndn::AppHelper app1("CustomApp");
+  ndn::AppHelper app1("CustomerApp");
   app1.Install(Node1);
 
-  Ptr<Node> Node8 = Names::Find<Node>("Node8");
-  ndn::AppHelper app2("ProudcerApp");
-  app2.Install(Node8);
+  // Ptr<Node> Node9 = Names::Find<Node>("Node9");
+  // app1.Install(Node9);
+
+  // Ptr<Node> Node8 = Names::Find<Node>("Node8");
+  // ndn::AppHelper app2("ProudcerApp");
+  // app2.Install(Node8);
 
   // consumer_set("Node7", "/prefix/food/one", "10");
   // consumer_set("Node12", "/prefix/clothes", "10");
   // consumer_set("Node13", "/prefix/clothes", "5");
 
 
-    producer_set("Node10", "/prefix/food", "1024");
+    producer_set("Node1", "/prefix/food", "1024");
   // producer_set("Node15", prefix_clothes, "1024");
   // producer_set("Node9", prefix_clothes, "1024");
 

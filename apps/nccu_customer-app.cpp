@@ -17,9 +17,9 @@
  * ndnSIM, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-// custom-app.cpp
+// customer-app.cpp
 
-#include "nccu_custom-app.hpp"
+#include "nccu_customer-app.hpp"
 
 #include "ns3/ptr.h"
 #include "ns3/log.h"
@@ -34,23 +34,23 @@
 #include <iostream>
 #include <string> 
 
-NS_LOG_COMPONENT_DEFINE("CustomApp");
+NS_LOG_COMPONENT_DEFINE("CustomerApp");
 
 namespace ns3 {
 
-NS_OBJECT_ENSURE_REGISTERED(CustomApp);
+NS_OBJECT_ENSURE_REGISTERED(CustomerApp);
 
 // register NS-3 type
 TypeId
-CustomApp::GetTypeId()
+CustomerApp::GetTypeId()
 {
-  static TypeId tid = TypeId("CustomApp").SetParent<ndn::App>().AddConstructor<CustomApp>();
+  static TypeId tid = TypeId("CustomerApp").SetParent<ndn::App>().AddConstructor<CustomerApp>();
   return tid;
 }
 
 // Processing upon start of the application
 void
-CustomApp::StartApplication()
+CustomerApp::StartApplication()
 {
   // initialize ndn::App
   ndn::App::StartApplication();
@@ -60,23 +60,23 @@ CustomApp::StartApplication()
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
   // Schedule send of first interest
-  Simulator::Schedule(Seconds(1.0), &CustomApp::SendInterest, this);
-  Simulator::Schedule(Seconds(2.0), &CustomApp::SendInterest, this);
-  Simulator::Schedule(Seconds(3.0), &CustomApp::SendInterest, this);
-  Simulator::Schedule(Seconds(4.0), &CustomApp::SendInterest, this);
-  Simulator::Schedule(Seconds(5.0), &CustomApp::SendInterest, this);
+  Simulator::Schedule(Seconds(1.0), &CustomerApp::SendInterest, this);
+  Simulator::Schedule(Seconds(2.0), &CustomerApp::SendInterest, this);
+  Simulator::Schedule(Seconds(3.0), &CustomerApp::SendInterest, this);
+  Simulator::Schedule(Seconds(4.0), &CustomerApp::SendInterest, this);
+  Simulator::Schedule(Seconds(5.0), &CustomerApp::SendInterest, this);
 }
 
 // Processing when application is stopped
 void
-CustomApp::StopApplication()
+CustomerApp::StopApplication()
 {
   // cleanup ndn::App
   ndn::App::StopApplication();
 }
 
 void
-CustomApp::SendInterest()
+CustomerApp::SendInterest()
 {
   /////////////////////////////////////
   // Sending one Interest packet out //
@@ -101,7 +101,7 @@ CustomApp::SendInterest()
 
 // Callback that will be called when Interest arrives
 void
-CustomApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
+CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 {
   ndn::App::OnInterest(interest);
 
@@ -124,7 +124,7 @@ CustomApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
 // Callback that will be called when Data arrives
 void
-CustomApp::OnData(std::shared_ptr<const ndn::Data> data)
+CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 {
   NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
 

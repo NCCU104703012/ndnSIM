@@ -18,54 +18,136 @@
  **/
 
 // hijacker.cpp
+#include <iostream>
+#include <string> 
+#include<unistd.h>
 
 #include "nccu_producer-app.hpp"
 
 #include "ns3/log.h"
+#include "ns3/string.h"
+#include "ns3/uinteger.h"
+#include "ns3/packet.h"
+#include "ns3/simulator.h"
 
+#include "model/ndn-l3-protocol.hpp"
 #include "ns3/ndnSIM/helper/ndn-fib-helper.hpp"
 
-NS_LOG_COMPONENT_DEFINE("ProudcerApp");
+#include <memory>
+
+NS_LOG_COMPONENT_DEFINE("ProducerApp");
 
 namespace ns3 {
+namespace ndn {
 
 // Necessary if you are planning to use ndn::AppHelper
-NS_OBJECT_ENSURE_REGISTERED(ProudcerApp);
+NS_OBJECT_ENSURE_REGISTERED(ProducerApp);
 
 TypeId
-ProudcerApp::GetTypeId()
+ProducerApp::GetTypeId()
 {
-  static TypeId tid = TypeId("ProudcerApp").SetParent<ndn::App>().AddConstructor<ProudcerApp>();
-
+  static TypeId tid = 
+    TypeId("ns3::ndn::ProducerApp")
+      .SetGroupName("Ndn")
+      .SetParent<App>()
+      .AddConstructor<ProducerApp>()
+      .AddAttribute("Prefix", "Prefix, for which producer has the data", StringValue("/"),
+                    MakeNameAccessor(&ProducerApp::m_prefix), MakeNameChecker())
+      .AddAttribute(
+         "Postfix",
+         "Postfix that is added to the output data (e.g., for adding producer-uniqueness)",
+         StringValue("/"), MakeNameAccessor(&ProducerApp::m_postfix), MakeNameChecker())
+      .AddAttribute("PayloadSize", "Virtual payload size for Content packets", UintegerValue(1024),
+                    MakeUintegerAccessor(&ProducerApp::m_virtualPayloadSize),
+                    MakeUintegerChecker<uint32_t>())
+      .AddAttribute("Freshness", "Freshness of data packets, if 0, then unlimited freshness",
+                    TimeValue(Seconds(0)), MakeTimeAccessor(&ProducerApp::m_freshness),
+                    MakeTimeChecker())
+      .AddAttribute(
+         "Signature",
+         "Fake signature, 0 valid signature (default), other values application-specific",
+         UintegerValue(0), MakeUintegerAccessor(&ProducerApp::m_signature),
+         MakeUintegerChecker<uint32_t>())
+      .AddAttribute("KeyLocator",
+                    "Name to be used for key locator.  If root, then key locator is not used",
+                    NameValue(), MakeNameAccessor(&ProducerApp::m_keyLocator), MakeNameChecker());
   return tid;
 }
 
-ProudcerApp::ProudcerApp()
+ProducerApp::ProducerApp()
 {
+  NS_LOG_FUNCTION_NOARGS();
 }
 
 void
-ProudcerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
+ProducerApp::StartApplication()
+{
+  NS_LOG_FUNCTION_NOARGS();
+  App::StartApplication();
+
+  // equivalent to setting interest filter for "/prefix" prefix
+  // ndn::FibHelper::AddRoute(GetNode(), "/prefix/food/1", m_face, 0);
+  FibHelper::AddRoute(GetNode(), m_prefix, m_face, 0);
+}
+
+void
+ProducerApp::StopApplication()
+{
+  NS_LOG_FUNCTION_NOARGS();
+
+  App::StopApplication();
+}
+
+void
+ProducerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 {
   ndn::App::OnInterest(interest); // forward call to perform app-level tracing
   // do nothing else (hijack interest)
 
-  NS_LOG_DEBUG("Do nothing for incoming interest for" << interest->getName());
+  NS_LOG_FUNCTION(this << interest);
+
+  if (!m_active)
+    return;
+
+  // nccu:偵錯LOG:負責處理回傳資料
+  Name dataName(interest->getName());
+  // dataName.append(m_postfix);
+  // dataName.appendVersion();
+
+  auto data = make_shared<Data>();
+  data->setName(dataName);
+  data->setFreshnessPeriod(::ndn::time::milliseconds(m_freshness.GetMilliSeconds()));
+
+  data->setContent(make_shared< ::ndn::Buffer>(m_virtualPayloadSize));
+
+  Signature signature;
+  SignatureInfo signatureInfo(static_cast< ::ndn::tlv::SignatureTypeValue>(255));
+
+  if (m_keyLocator.size() > 0) {
+    signatureInfo.setKeyLocator(m_keyLocator);
+  }
+
+  signature.setInfo(signatureInfo);
+  signature.setValue(::ndn::makeNonNegativeIntegerBlock(::ndn::tlv::SignatureValue, m_signature));
+
+  data->setSignature(signature);
+
+  // 確認回傳封包資訊
+  NS_LOG_INFO("node(" << GetNode()->GetId() << ") responding with Data: " << data->getName() << "回傳資料封包號碼： " << std::to_string(check));
+  check++;
+  
+
+  //std::cout << "data packet name : " << dataName << std::endl ;
+
+  // to create real wire encoding
+  data->wireEncode();
+
+  m_transmittedDatas(data, this, m_face);
+  m_appLink->onReceiveData(*data);
+
 }
 
-void
-ProudcerApp::StartApplication()
-{
-  App::StartApplication();
 
-  // equivalent to setting interest filter for "/prefix" prefix
-  ndn::FibHelper::AddRoute(GetNode(), "/prefix/food/1", m_face, 0);
-}
 
-void
-ProudcerApp::StopApplication()
-{
-  App::StopApplication();
-}
-
+} // namespace ndn
 } // namespace ns3
