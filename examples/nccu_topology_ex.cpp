@@ -105,24 +105,27 @@ main(int argc, char* argv[])
   std::string prefix_food = "/prefix/food";
   std::string prefix_clothes = "/prefix/clothes";
 
-  Ptr<Node> Node1 = Names::Find<Node>("Node1");
+  Ptr<Node> Node12 = Names::Find<Node>("Node12");
   ndn::AppHelper app1("CustomerApp");
-  app1.Install(Node1);
+  app1.SetPrefix(prefix_food);
+  app1.Install(Node12);
 
-  // Ptr<Node> Node9 = Names::Find<Node>("Node9");
-  // app1.Install(Node9);
+  Ptr<Node> Node6 = Names::Find<Node>("Node6");
+  ndn::AppHelper app2("CustomerApp");
+  app2.SetPrefix(prefix_clothes);
+  app2.Install(Node6);
 
   // Ptr<Node> Node8 = Names::Find<Node>("Node8");
   // ndn::AppHelper app2("ProudcerApp");
   // app2.Install(Node8);
 
   // consumer_set("Node7", "/prefix/food/one", "10");
-  // consumer_set("Node12", "/prefix/clothes", "10");
+  // consumer_set("Node12", "/prefix/clothes", "0");
   // consumer_set("Node13", "/prefix/clothes", "5");
 
 
-    producer_set("Node1", "/prefix/food", "1024");
-  // producer_set("Node15", prefix_clothes, "1024");
+  producer_set("Node10", "/prefix/food", "1024");
+  producer_set("Node15", prefix_clothes, "1024");
   // producer_set("Node9", prefix_clothes, "1024");
 
 
@@ -134,9 +137,9 @@ main(int argc, char* argv[])
   Ptr<Node> Fail_node4 = Names::Find<Node>("Node4");
   Ptr<Node> Fail_node0 = Names::Find<Node>("Node0");
   Ptr<Node> Fail_node2 = Names::Find<Node>("Node2");
-   Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::FailLink, Fail_node3, Fail_node4);
-   Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node4, Fail_node0);
-   Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
+   //Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::FailLink, Fail_node3, Fail_node4);
+   //Simulator::Schedule(Seconds(3.0), ndn::LinkControlHelper::FailLink, Fail_node4, Fail_node0);
+   //Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
 
   Simulator::Stop(Seconds(20.0));
 

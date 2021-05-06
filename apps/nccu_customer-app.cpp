@@ -25,6 +25,8 @@
 #include "ns3/log.h"
 #include "ns3/simulator.h"
 #include "ns3/packet.h"
+#include "ns3/string.h"
+#include "ns3/uinteger.h"
 
 #include "ns3/ndnSIM/helper/ndn-stack-helper.hpp"
 #include "ns3/ndnSIM/helper/ndn-fib-helper.hpp"
@@ -33,6 +35,7 @@
 
 #include <iostream>
 #include <string> 
+#include <memory>
 
 NS_LOG_COMPONENT_DEFINE("CustomerApp");
 
@@ -44,7 +47,32 @@ NS_OBJECT_ENSURE_REGISTERED(CustomerApp);
 TypeId
 CustomerApp::GetTypeId()
 {
-  static TypeId tid = TypeId("CustomerApp").SetParent<ndn::App>().AddConstructor<CustomerApp>();
+  static TypeId tid = 
+    TypeId("CustomerApp")
+      .SetGroupName("Ndn")
+      .SetParent<App>()
+      .AddConstructor<CustomerApp>()
+      .AddAttribute("Prefix", "Prefix, for which producer has the data", StringValue("/"),
+                    MakeNameAccessor(&CustomerApp::m_prefix), ndn::MakeNameChecker())
+      .AddAttribute(
+         "Postfix",
+         "Postfix that is added to the output data (e.g., for adding producer-uniqueness)",
+         StringValue("/"), MakeNameAccessor(&CustomerApp::m_postfix), ndn::MakeNameChecker())
+      .AddAttribute("PayloadSize", "Virtual payload size for Content packets", UintegerValue(1024),
+                    MakeUintegerAccessor(&CustomerApp::m_virtualPayloadSize),
+                    MakeUintegerChecker<uint32_t>())
+      .AddAttribute("Freshness", "Freshness of data packets, if 0, then unlimited freshness",
+                    TimeValue(Seconds(0)), MakeTimeAccessor(&CustomerApp::m_freshness),
+                    MakeTimeChecker())
+      .AddAttribute(
+         "Signature",
+         "Fake signature, 0 valid signature (default), other values application-specific",
+         UintegerValue(0), MakeUintegerAccessor(&CustomerApp::m_signature),
+         MakeUintegerChecker<uint32_t>())
+      .AddAttribute("KeyLocator",
+                    "Name to be used for key locator.  If root, then key locator is not used",
+                    ndn::NameValue(), MakeNameAccessor(&CustomerApp::m_keyLocator), ndn::MakeNameChecker());
+
   return tid;
 }
 
@@ -56,7 +84,8 @@ CustomerApp::StartApplication()
   ndn::App::StartApplication();
 
   // Add entry to FIB for `/prefix/sub`
-  ndn::FibHelper::AddRoute(GetNode(), "/prefix/food", m_face, 0);
+  //ndn::FibHelper::AddRoute(GetNode(), prefix, m_face, 0);
+  ndn::FibHelper::AddRoute(GetNode(), m_prefix, m_face, 0);
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
   // Schedule send of first interest
@@ -81,12 +110,13 @@ CustomerApp::SendInterest()
   /////////////////////////////////////
   // Sending one Interest packet out //
   /////////////////////////////////////
-  std::cout << "INS_send" << std::endl ;
+
 
   // Create and configure ndn::Interest
-  auto interest = std::make_shared<ndn::Interest>("/prefix/food/" + std::to_string(packet_count));
+  auto interest = std::make_shared<ndn::Interest>(m_prefix.append(std::to_string(packet_count)));
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+
   interest->setInterestLifetime(ndn::time::seconds(1));
 
   packet_count++;
@@ -130,5 +160,10 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 
   std::cout << "DATA received for name " << data->getName() << std::endl;
 }
+
+// void
+// CustomerApp::SetPrefix(std::string input){
+//   prefix =  input;
+// }
 
 } // namespace ns3

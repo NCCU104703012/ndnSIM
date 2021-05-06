@@ -113,6 +113,7 @@ ProducerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   Name dataName(interest->getName());
   // dataName.append(m_postfix);
   // dataName.appendVersion();
+  //Name dataName("/prefix/food");
 
   auto data = make_shared<Data>();
   data->setName(dataName);

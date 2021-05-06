@@ -58,9 +58,21 @@ public:
   virtual void
   OnData(std::shared_ptr<const ndn::Data> contentObject);
 
+  // void
+  // SetPrefix(std::string prefix);
+
 private:
   void
   SendInterest();
+
+  ndn::Name m_prefix;
+  ndn::Name m_postfix;
+  uint32_t m_virtualPayloadSize;
+  Time m_freshness;
+
+  uint32_t m_signature;
+  ndn::Name m_keyLocator;
+
   int packet_count = 0;
 };
 
