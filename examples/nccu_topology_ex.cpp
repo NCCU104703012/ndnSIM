@@ -26,8 +26,10 @@
 // for LinkStatusControl::FailLinks and LinkStatusControl::UpLinks
 #include "ns3/ndnSIM/helper/ndn-link-control-helper.hpp"
 
+
 #include "ns3/ndnSIM/apps/nccu_customer-app.hpp"
 #include "ns3/ndnSIM/apps/nccu_producer-app.hpp"
+#include "apps/kademlia.hpp"
 
 
 namespace ns3 {
@@ -76,6 +78,18 @@ void consumer_set(std::string node, std::string prefix, std::string frequency){
   //ndnGlobalRoutingHelper.AddOrigins(prefix, consumer);
 }
 
+void Test_Kad(Kademlia *input , std::string data){
+  if ((*input).GetData(data))
+  {
+    cout << "Get data" << data;
+  }
+  else
+  {
+    cout << "Go to " << (*input).GetNext_Node();
+    Test_Kad((*input).GetNext_Node(), data);
+  };
+  
+}
 
 int
 main(int argc, char* argv[])
@@ -140,6 +154,28 @@ main(int argc, char* argv[])
    //Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::FailLink, Fail_node3, Fail_node4);
    //Simulator::Schedule(Seconds(3.0), ndn::LinkControlHelper::FailLink, Fail_node4, Fail_node0);
    //Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
+
+  Kademlia node0("node0", "data0");
+  Kademlia node2("node2", "data2");
+  Kademlia node8("node8", "data8");
+  Kademlia node9("node9", "data9");
+
+  Kademlia *P_9 = &node9;
+  Kademlia *P_0 = &node0;
+  Kademlia *P_8 = &node8;
+  Kademlia *P_2 = &node2;
+
+  node0.SetNext(P_2);
+  node2.SetNext(P_8);
+  node8.SetNext(P_9);
+  node9.SetNext(P_9);
+
+  cout << "***********start test";
+  Test_Kad(P_0, "data9");
+  cout << "***********done test";
+
+
+
 
   Simulator::Stop(Seconds(20.0));
 

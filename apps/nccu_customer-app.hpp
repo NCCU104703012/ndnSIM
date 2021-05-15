@@ -61,6 +61,9 @@ public:
   // void
   // SetPrefix(std::string prefix);
 
+  void
+  SetNode_Pointer(Ptr<Node> input);
+
 private:
   void
   SendInterest();
@@ -74,6 +77,7 @@ private:
   ndn::Name m_keyLocator;
 
   int packet_count = 0;
+  Ptr<Node> parent_node ;
 };
 
 } // namespace ns3

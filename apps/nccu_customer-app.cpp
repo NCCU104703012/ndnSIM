@@ -161,9 +161,10 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
   std::cout << "DATA received for name " << data->getName() << std::endl;
 }
 
-// void
-// CustomerApp::SetPrefix(std::string input){
-//   prefix =  input;
-// }
+void
+CustomerApp::SetNode_Pointer(Ptr<Node> input)
+{
+  parent_node = input;
+}
 
 } // namespace ns3
