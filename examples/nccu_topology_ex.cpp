@@ -79,13 +79,13 @@ void consumer_set(std::string node, std::string prefix, std::string frequency){
 }
 
 void Test_Kad(Kademlia *input , std::string data){
-  if ((*input).GetData(data))
+  if (!(*input).GetData(data))
   {
-    cout << "Get data" << data;
+    cout << "Get data" << data << endl;
   }
   else
   {
-    cout << "Go to " << (*input).GetNext_Node();
+    cout << "Go to " << (*input).GetNext_Node() << endl;
     Test_Kad((*input).GetNext_Node(), data);
   };
   
@@ -155,24 +155,24 @@ main(int argc, char* argv[])
    //Simulator::Schedule(Seconds(3.0), ndn::LinkControlHelper::FailLink, Fail_node4, Fail_node0);
    //Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
 
-  Kademlia node0("node0", "data0");
-  Kademlia node2("node2", "data2");
-  Kademlia node8("node8", "data8");
-  Kademlia node9("node9", "data9");
+  // Kademlia node0("node0", "0");
+  // Kademlia node2("node2", "2");
+  // Kademlia node8("node8", "8");
+  // Kademlia node9("node9", "9");
 
-  Kademlia *P_9 = &node9;
-  Kademlia *P_0 = &node0;
-  Kademlia *P_8 = &node8;
-  Kademlia *P_2 = &node2;
+  // Kademlia *P_9 = &node9;
+  // Kademlia *P_0 = &node0;
+  // Kademlia *P_8 = &node8;
+  // Kademlia *P_2 = &node2;
 
-  node0.SetNext(P_2);
-  node2.SetNext(P_8);
-  node8.SetNext(P_9);
-  node9.SetNext(P_9);
+  // node0.SetNext(P_2);
+  // node2.SetNext(P_8);
+  // node8.SetNext(P_9);
+  // node9.SetNext(P_9);
 
-  cout << "***********start test";
-  Test_Kad(P_0, "data9");
-  cout << "***********done test";
+  // cout << "***********start test" << endl;
+  // Test_Kad(P_0, "9");
+  // cout << "***********done test" << endl;
 
 
 

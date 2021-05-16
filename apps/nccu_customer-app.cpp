@@ -137,6 +137,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
   NS_LOG_DEBUG("Received Interest packet for " << interest->getName());
 
+
   // Note that Interests send out by the app will not be sent back to the app !
 
   auto data = std::make_shared<ndn::Data>(interest->getName());

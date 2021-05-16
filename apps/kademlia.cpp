@@ -23,3 +23,12 @@ void
 Kademlia::SetNext(Kademlia *input){
     next_node = input;
 }
+
+void
+Kademlia::Node_info(){
+    std::cout << "**************" << std::endl;
+    std::cout << "node name = " << node_name << std::endl;
+    std::cout << "data = " << data << std::endl;
+    std::cout << "next node = " << next_node << std::endl;
+    std::cout << "**************" << std::endl;
+}

@@ -20,6 +20,9 @@ public:
     void
     SetNext(Kademlia *input);
 
+    void
+    Node_info();
+
 private:
     std::string node_name;
     Kademlia *next_node;

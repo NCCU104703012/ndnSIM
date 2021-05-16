@@ -34,6 +34,7 @@
 #include "ns3/ndnSIM/helper/ndn-fib-helper.hpp"
 
 #include <memory>
+#include <string>
 
 NS_LOG_COMPONENT_DEFINE("ProducerApp");
 
@@ -114,6 +115,11 @@ ProducerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   // dataName.append(m_postfix);
   // dataName.appendVersion();
   //Name dataName("/prefix/food");
+
+  std::cout << "------dataName test--------" << std::endl;
+  std::string temp = dataName.toUri();
+  std::cout << temp <<std::endl;
+  std::cout << "------dataName test--------" << std::endl;
 
   auto data = make_shared<Data>();
   data->setName(dataName);
