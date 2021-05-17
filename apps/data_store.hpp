@@ -19,10 +19,11 @@
 
 // customer-app.hpp
 
-#ifndef CUSTOMER_APP_H_
-#define CUSTOMER_APP_H_
+#ifndef DataStore_H_
+#define DataStore_H_
 
 #include "ns3/ndnSIM/apps/ndn-app.hpp"
+#include "apps/kademlia.hpp"
 
 namespace ns3 {
 
@@ -36,9 +37,9 @@ namespace ns3 {
  *
  * When an Interest is received, it is replied with a Data with 1024-byte fake payload
  */
-class CustomerApp : public ndn::App {
+class DataStore : public ndn::App {
 public:
-  // register NS-3 type "CustomerApp"
+  // register NS-3 type "DataStore"
   static TypeId
   GetTypeId();
 
@@ -58,13 +59,26 @@ public:
   virtual void
   OnData(std::shared_ptr<const ndn::Data> contentObject);
 
-  //送出一筆交易紀錄
-  void
-  SendRecord();
-  
+  // void
+  // SetPrefix(std::string prefix);
 
   void
   SetNode_Pointer(Ptr<Node> input);
+
+  //將kademlia struct位址從字串轉成指標
+  Kademlia*
+  GetK_ptr()
+  {
+    std::stringstream ss;
+    std::string temp = k_ptr.toUri().substr(1);
+    ss << temp;
+    std::cout << "ss = " << temp << std::endl;
+    long long unsigned int i;
+    ss >> std::hex >> i;
+    std::cout << "i = " << i << std::endl;
+    Kademlia *output = reinterpret_cast<Kademlia *>(i);
+    return output;
+  };
 
 private:
   void
@@ -78,10 +92,13 @@ private:
   uint32_t m_signature;
   ndn::Name m_keyLocator;
 
+  //k_ptr內容為"/0x00000" 不為純位址 要注意
+  ndn::Name k_ptr;
+
   int packet_count = 0;
   Ptr<Node> parent_node ;
 };
 
 } // namespace ns3
 
-#endif // CUSTOMER_APP_H_
+#endif // DataStore_H_

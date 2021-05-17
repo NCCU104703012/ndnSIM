@@ -31,6 +31,10 @@
 #include "ns3/ndnSIM/apps/nccu_producer-app.hpp"
 #include "apps/kademlia.hpp"
 
+#include "ns3/ndnSIM/apps/shop_service.hpp"
+#include "ns3/ndnSIM/apps/data_management.hpp"
+#include "ns3/ndnSIM/apps/data_store.hpp"
+
 
 namespace ns3 {
 
@@ -91,6 +95,22 @@ void Test_Kad(Kademlia *input , std::string data){
   
 }
 
+void set_data_store(std::string nodeName, std::string prefix, Kademlia* k_ptr )
+{
+  ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
+
+  std::ostringstream address;
+  address << k_ptr;
+  std::string location = address.str();
+
+  Ptr<Node> TargetNode = Names::Find<Node>(nodeName);
+  ndn::AppHelper app("DataStore");
+  app.SetPrefix(prefix);
+  app.SetAttribute("Kademlia", StringValue(location));
+  app.Install(TargetNode);
+  ndnGlobalRoutingHelper.AddOrigins(prefix, TargetNode);
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -116,18 +136,23 @@ main(int argc, char* argv[])
 
   // // Getting containers for the consumer/producer
   // // 分為food & clothes兩類
-  std::string prefix_food = "/prefix/food";
-  std::string prefix_clothes = "/prefix/clothes";
+  // std::string prefix_DataStore = "/prefix/data/store";
+  // std::string prefix_clothes = "/prefix/clothes";
+
 
   Ptr<Node> Node12 = Names::Find<Node>("Node12");
   ndn::AppHelper app1("CustomerApp");
-  app1.SetPrefix(prefix_food);
+  app1.SetPrefix("/prefix/data/store/6");
   app1.Install(Node12);
+  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/store/6", Node12);
 
-  Ptr<Node> Node6 = Names::Find<Node>("Node6");
-  ndn::AppHelper app2("CustomerApp");
-  app2.SetPrefix(prefix_clothes);
-  app2.Install(Node6);
+
+  Kademlia node6("node666", "data666");
+  Kademlia *P_6 = &node6;
+  node6.SetNext(P_6);
+  node6.Node_info();
+  set_data_store("Node6", "/prefix/data/store/6", P_6);
+
 
   // Ptr<Node> Node8 = Names::Find<Node>("Node8");
   // ndn::AppHelper app2("ProudcerApp");
@@ -138,8 +163,8 @@ main(int argc, char* argv[])
   // consumer_set("Node13", "/prefix/clothes", "5");
 
 
-  producer_set("Node10", "/prefix/food", "1024");
-  producer_set("Node15", prefix_clothes, "1024");
+  // producer_set("Node10", "/prefix/food", "1024");
+  // producer_set("Node15", prefix_clothes, "1024");
   // producer_set("Node9", prefix_clothes, "1024");
 
 

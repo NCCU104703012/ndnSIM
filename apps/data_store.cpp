@@ -19,7 +19,7 @@
 
 // customer-app.cpp
 
-#include "nccu_customer-app.hpp"
+#include "data_store.hpp"
 
 #include "ns3/ptr.h"
 #include "ns3/log.h"
@@ -37,83 +37,90 @@
 #include <string> 
 #include <memory>
 
-NS_LOG_COMPONENT_DEFINE("CustomerApp");
+NS_LOG_COMPONENT_DEFINE("DataStore");
 
 namespace ns3 {
 
-NS_OBJECT_ENSURE_REGISTERED(CustomerApp);
+NS_OBJECT_ENSURE_REGISTERED(DataStore);
 
 // register NS-3 type
 TypeId
-CustomerApp::GetTypeId()
+DataStore::GetTypeId()
 {
   static TypeId tid = 
-    TypeId("CustomerApp")
+    TypeId("DataStore")
       .SetGroupName("Ndn")
       .SetParent<App>()
-      .AddConstructor<CustomerApp>()
+      .AddConstructor<DataStore>()
       .AddAttribute("Prefix", "Prefix, for which producer has the data", StringValue("/"),
-                    MakeNameAccessor(&CustomerApp::m_prefix), ndn::MakeNameChecker())
+                    MakeNameAccessor(&DataStore::m_prefix), ndn::MakeNameChecker())
       .AddAttribute(
          "Postfix",
          "Postfix that is added to the output data (e.g., for adding producer-uniqueness)",
-         StringValue("/"), MakeNameAccessor(&CustomerApp::m_postfix), ndn::MakeNameChecker())
+         StringValue("/"), MakeNameAccessor(&DataStore::m_postfix), ndn::MakeNameChecker())
       .AddAttribute("PayloadSize", "Virtual payload size for Content packets", UintegerValue(1024),
-                    MakeUintegerAccessor(&CustomerApp::m_virtualPayloadSize),
+                    MakeUintegerAccessor(&DataStore::m_virtualPayloadSize),
                     MakeUintegerChecker<uint32_t>())
       .AddAttribute("Freshness", "Freshness of data packets, if 0, then unlimited freshness",
-                    TimeValue(Seconds(0)), MakeTimeAccessor(&CustomerApp::m_freshness),
+                    TimeValue(Seconds(0)), MakeTimeAccessor(&DataStore::m_freshness),
                     MakeTimeChecker())
       .AddAttribute(
          "Signature",
          "Fake signature, 0 valid signature (default), other values application-specific",
-         UintegerValue(0), MakeUintegerAccessor(&CustomerApp::m_signature),
+         UintegerValue(0), MakeUintegerAccessor(&DataStore::m_signature),
          MakeUintegerChecker<uint32_t>())
       .AddAttribute("KeyLocator",
                     "Name to be used for key locator.  If root, then key locator is not used",
-                    ndn::NameValue(), MakeNameAccessor(&CustomerApp::m_keyLocator), ndn::MakeNameChecker());
+                    ndn::NameValue(), MakeNameAccessor(&DataStore::m_keyLocator), ndn::MakeNameChecker())
+      .AddAttribute(
+        "Kademlia",
+        "Kademlia struct",
+        StringValue(""),
+        MakeNameAccessor(&DataStore::k_ptr),
+        ndn::MakeNameChecker()
+      );
 
   return tid;
 }
 
 // Processing upon start of the application
 void
-CustomerApp::StartApplication()
+DataStore::StartApplication()
 {
   // initialize ndn::App
   ndn::App::StartApplication();
 
   // Add entry to FIB for `/prefix/sub`
-  //ndn::FibHelper::AddRoute(GetNode(), prefix, m_face, 0);
   ndn::FibHelper::AddRoute(GetNode(), m_prefix, m_face, 0);
-  //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
   // Schedule send of first interest
-  Simulator::Schedule(Seconds(1.0), &CustomerApp::SendRecord, this);
-  Simulator::Schedule(Seconds(2.0), &CustomerApp::SendRecord, this);
-  Simulator::Schedule(Seconds(3.0), &CustomerApp::SendRecord, this);
-  Simulator::Schedule(Seconds(4.0), &CustomerApp::SendRecord, this);
-  Simulator::Schedule(Seconds(5.0), &CustomerApp::SendRecord, this);
+
+  //Simulator::Schedule(Seconds(1.0), &DataStore::SendInterest, this);
+  //Simulator::Schedule(Seconds(20.0), &DataStore::SendInterest, this);
+
 }
 
 // Processing when application is stopped
 void
-CustomerApp::StopApplication()
+DataStore::StopApplication()
 {
   // cleanup ndn::App
-  ndn::App::StopApplication();
+  //ndn::App::StopApplication();
 }
 
 void
-CustomerApp::SendInterest()
+DataStore::SendInterest()
 {
   /////////////////////////////////////
   // Sending one Interest packet out //
   /////////////////////////////////////
+  std::string temp = m_prefix.toUri();
+
+  ndn::Name output("/prefix/data/store/6");
 
 
   // Create and configure ndn::Interest
-  auto interest = std::make_shared<ndn::Interest>(m_prefix.append(std::to_string(packet_count)));
+  auto interest = std::make_shared<ndn::Interest>(output.append(std::to_string(packet_count)));
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
@@ -131,31 +138,20 @@ CustomerApp::SendInterest()
 
 // Callback that will be called when Interest arrives
 void
-CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
+DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 {
   ndn::App::OnInterest(interest);
 
-  NS_LOG_DEBUG("Received Interest packet for " << interest->getName());
+  NS_LOG_DEBUG("Received Record for " << interest->getName());
 
+  Kademlia * temp = GetK_ptr();
+  (*temp).Node_info();
 
-  // Note that Interests send out by the app will not be sent back to the app !
-
-  auto data = std::make_shared<ndn::Data>(interest->getName());
-  data->setFreshnessPeriod(ndn::time::milliseconds(1000));
-  data->setContent(std::make_shared< ::ndn::Buffer>(1024));
-  ndn::StackHelper::getKeyChain().sign(*data);
-
-  NS_LOG_DEBUG("Sending Data packet for " << data->getName());
-
-  // Call trace (for logging purposes)
-  m_transmittedDatas(data, this, m_face);
-
-  m_appLink->onReceiveData(*data);
 }
 
 // Callback that will be called when Data arrives
 void
-CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
+DataStore::OnData(std::shared_ptr<const ndn::Data> data)
 {
   NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
 
@@ -163,31 +159,10 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 }
 
 void
-CustomerApp::SetNode_Pointer(Ptr<Node> input)
+DataStore::SetNode_Pointer(Ptr<Node> input)
 {
   parent_node = input;
 }
 
-
-
-//送出一筆交易紀錄
-void
-CustomerApp::SendRecord()
-{
-  ndn::Name temp = m_prefix;
-  temp.append(std::to_string(packet_count));
-  auto interest = std::make_shared<ndn::Interest>(temp);
-  packet_count++;
-  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
-  interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
-  interest->setInterestLifetime(ndn::time::seconds(1));
-  NS_LOG_DEBUG("Sending Record for " << interest->getName());
-
-  // Call trace (for logging purposes)
-  m_transmittedInterests(interest, this, m_face);
-
-  m_appLink->onReceiveInterest(*interest);
-}
-
 } // namespace ns3
+

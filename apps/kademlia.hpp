@@ -21,13 +21,16 @@ public:
     SetNext(Kademlia *input);
 
     void
+    Set_KBucket(std::string input);
+
+    void
     Node_info();
 
 private:
     std::string node_name;
     Kademlia *next_node;
     std::string data;
-
+    std::string k_bucket;
 };
 
 

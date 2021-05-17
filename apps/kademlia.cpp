@@ -7,6 +7,7 @@ Kademlia::Kademlia(std::string node_name_input, std::string data_input)
 {
     node_name = node_name_input;
     data = data_input;
+    
 }
 
 bool
@@ -31,4 +32,10 @@ Kademlia::Node_info(){
     std::cout << "data = " << data << std::endl;
     std::cout << "next node = " << next_node << std::endl;
     std::cout << "**************" << std::endl;
+}
+
+void
+Kademlia::Set_KBucket(std::string input)
+{
+    k_bucket = input;
 }

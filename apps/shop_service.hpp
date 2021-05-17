@@ -19,8 +19,8 @@
 
 // customer-app.hpp
 
-#ifndef CUSTOMER_APP_H_
-#define CUSTOMER_APP_H_
+#ifndef ShopService_H_
+#define ShopService_H_
 
 #include "ns3/ndnSIM/apps/ndn-app.hpp"
 
@@ -36,9 +36,9 @@ namespace ns3 {
  *
  * When an Interest is received, it is replied with a Data with 1024-byte fake payload
  */
-class CustomerApp : public ndn::App {
+class ShopService : public ndn::App {
 public:
-  // register NS-3 type "CustomerApp"
+  // register NS-3 type "ShopService"
   static TypeId
   GetTypeId();
 
@@ -58,10 +58,8 @@ public:
   virtual void
   OnData(std::shared_ptr<const ndn::Data> contentObject);
 
-  //送出一筆交易紀錄
-  void
-  SendRecord();
-  
+  // void
+  // SetPrefix(std::string prefix);
 
   void
   SetNode_Pointer(Ptr<Node> input);
@@ -84,4 +82,4 @@ private:
 
 } // namespace ns3
 
-#endif // CUSTOMER_APP_H_
+#endif // ShopService_H_
