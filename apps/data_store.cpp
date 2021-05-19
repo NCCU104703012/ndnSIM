@@ -199,11 +199,6 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
     m_appLink->onReceiveInterest(*next_interest);
   }
-  
-  //GetK_ptr()->Node_info();
-
-  // Kademlia * temp = GetK_ptr();
-  // (*temp).Node_info();
 
 }
 

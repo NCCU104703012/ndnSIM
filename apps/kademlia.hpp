@@ -47,9 +47,6 @@ public:
         return std::to_string(KId);
     };
 
-    // void
-    // SetNext(Kademlia *input);
-
     void
     Set_KBucket(Kademlia *KNode);
 
@@ -59,7 +56,6 @@ public:
 private:
     std::string node_name;
     int KId;
-    //Kademlia *next_node;
     Data *dataList;
     Kademlia *k_bucket[5] = {NULL, NULL, NULL, NULL, NULL};
     int knum = 0;

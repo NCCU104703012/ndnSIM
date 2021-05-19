@@ -9,9 +9,6 @@ Kademlia::Kademlia(std::string node_name_input, std::string data_input, int kade
     dataList = new Data();
     dataList->Name = data_input;
     KId = kademliaID;
-    // dataList = init;
-    // dataList->head = dataList;
-    // dataList->AddData(data_input);
     
 }
 
@@ -37,10 +34,6 @@ Kademlia::GetNext_Node(std::string TargetNode){
    return output;
 }
 
-// void
-// Kademlia::SetNext(Kademlia *input){
-//     next_node = input;
-// }
 
 void
 Kademlia::Node_info(){
