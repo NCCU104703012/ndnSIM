@@ -82,18 +82,6 @@ void consumer_set(std::string node, std::string prefix, std::string frequency){
   //ndnGlobalRoutingHelper.AddOrigins(prefix, consumer);
 }
 
-void Test_Kad(Kademlia *input , std::string data){
-  if (!(*input).GetData(data))
-  {
-    cout << "Get data" << data << endl;
-  }
-  else
-  {
-    cout << "Go to " << (*input).GetNext_Node() << endl;
-    Test_Kad((*input).GetNext_Node(), data);
-  };
-  
-}
 
 void set_data_store(std::string nodeName, std::string prefix, Kademlia* k_ptr )
 {
@@ -142,16 +130,24 @@ main(int argc, char* argv[])
 
   Ptr<Node> Node12 = Names::Find<Node>("Node12");
   ndn::AppHelper app1("CustomerApp");
-  app1.SetPrefix("/prefix/data/store/6");
+  //app1.SetPrefix("/prefix/data/store/6");
+  app1.SetAttribute("NodeName", StringValue("12"));
   app1.Install(Node12);
-  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/store/6", Node12);
+  //ndnGlobalRoutingHelper.AddOrigins("/prefix/data/store/6", Node12);
+  
+  
 
 
-  Kademlia node6("node666", "data666");
+  Kademlia node6("node6", "data6", 6);
   Kademlia *P_6 = &node6;
-  node6.SetNext(P_6);
-  node6.Node_info();
+  Kademlia node8("node8", "data8", 8);
+  Kademlia *P_8 = &node8;
+
+
+  //node6.Node_info();
   set_data_store("Node6", "/prefix/data/store/6", P_6);
+  P_6->Set_KBucket(P_8);
+  set_data_store("Node8", "/prefix/data/store/8", P_8);
 
 
   // Ptr<Node> Node8 = Names::Find<Node>("Node8");

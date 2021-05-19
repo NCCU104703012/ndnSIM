@@ -61,7 +61,9 @@ public:
   //送出一筆交易紀錄
   void
   SendRecord();
-  
+
+  void
+  SetRecord(std::string input);
 
   void
   SetNode_Pointer(Ptr<Node> input);
@@ -80,6 +82,11 @@ private:
 
   int packet_count = 0;
   Ptr<Node> parent_node ;
+
+  //本身節點的交易紀錄 用來送出給Data store
+  std::string record;
+  //用來製作興趣封包
+  ndn::Name NodeName;
 };
 
 } // namespace ns3

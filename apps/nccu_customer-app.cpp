@@ -71,7 +71,9 @@ CustomerApp::GetTypeId()
          MakeUintegerChecker<uint32_t>())
       .AddAttribute("KeyLocator",
                     "Name to be used for key locator.  If root, then key locator is not used",
-                    ndn::NameValue(), MakeNameAccessor(&CustomerApp::m_keyLocator), ndn::MakeNameChecker());
+                    ndn::NameValue(), MakeNameAccessor(&CustomerApp::m_keyLocator), ndn::MakeNameChecker())
+      .AddAttribute("NodeName", "string name of node", StringValue(""),
+          MakeNameAccessor(&CustomerApp::NodeName), ndn::MakeNameChecker());
 
   return tid;
 }
@@ -89,6 +91,7 @@ CustomerApp::StartApplication()
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
   // Schedule send of first interest
+  SetRecord("initRecord");
   Simulator::Schedule(Seconds(1.0), &CustomerApp::SendRecord, this);
   Simulator::Schedule(Seconds(2.0), &CustomerApp::SendRecord, this);
   Simulator::Schedule(Seconds(3.0), &CustomerApp::SendRecord, this);
@@ -174,8 +177,10 @@ CustomerApp::SetNode_Pointer(Ptr<Node> input)
 void
 CustomerApp::SendRecord()
 {
-  ndn::Name temp = m_prefix;
-  temp.append(std::to_string(packet_count));
+  std::string TargetNode = "9";
+  ndn::Name temp;
+  temp.append("prefix").append("data").append("store").append("6");
+  temp.append(TargetNode).append(record + std::to_string(packet_count));
   auto interest = std::make_shared<ndn::Interest>(temp);
   packet_count++;
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
@@ -188,6 +193,12 @@ CustomerApp::SendRecord()
   m_transmittedInterests(interest, this, m_face);
 
   m_appLink->onReceiveInterest(*interest);
+}
+
+void
+CustomerApp::SetRecord(std::string input)
+{
+  record = input;
 }
 
 } // namespace ns3

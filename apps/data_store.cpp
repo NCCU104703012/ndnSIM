@@ -144,8 +144,66 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
   NS_LOG_DEBUG("Received Record for " << interest->getName());
 
-  Kademlia * temp = GetK_ptr();
-  (*temp).Node_info();
+  std::string inputString = interest->getName().toUri();
+
+    int head = 0, tail;
+    std::string DataName, TargetNode;
+    
+    for (int i = 0; i < 6; i++)
+    {
+      head = inputString.find("/", head);
+      tail = inputString.find("/", head+1);
+      std::string temp = inputString.substr(head+1, tail-head-1);
+
+      //std::cout  << temp << std::endl;
+      head = tail;
+
+      switch (i)
+      {
+      case 4:
+        TargetNode = temp;
+        //NS_LOG_DEBUG("targetnode = " << TargetNode);
+        break;
+      case 5:
+        DataName = temp;
+        //NS_LOG_DEBUG("dataname = " << DataName);
+        break;
+      }
+    }
+
+  if (GetK_ptr() == GetK_ptr()->GetNext_Node(TargetNode))
+  {
+    //NS_LOG_DEBUG("GetK_ptr() == GetK_ptr()->GetNext_Node(TargetNode)");
+
+    GetK_ptr()->SetData(DataName);
+
+    GetK_ptr()->Node_info();
+  }
+  else
+  {
+    ndn::Name next ;
+    std::string nextTarget = GetK_ptr()->GetNext_Node(TargetNode)->GetKId();
+
+    next.append("prefix").append("data").append("store").append(nextTarget).append(TargetNode).append(DataName);
+    auto next_interest = std::make_shared<ndn::Interest>(next);
+    Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+    next_interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+
+    next_interest->setInterestLifetime(ndn::time::seconds(1));
+
+
+    NS_LOG_DEBUG("Sending Interest packet to another node : " << *next_interest);
+
+  
+    m_transmittedInterests(next_interest, this, m_face);
+
+    m_appLink->onReceiveInterest(*next_interest);
+  }
+  
+  //GetK_ptr()->Node_info();
+
+  // Kademlia * temp = GetK_ptr();
+  // (*temp).Node_info();
 
 }
 

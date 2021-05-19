@@ -72,10 +72,10 @@ public:
     std::stringstream ss;
     std::string temp = k_ptr.toUri().substr(1);
     ss << temp;
-    std::cout << "ss = " << temp << std::endl;
+    //std::cout << "ss = " << temp << std::endl;
     long long unsigned int i;
     ss >> std::hex >> i;
-    std::cout << "i = " << i << std::endl;
+    //std::cout << "i = " << i << std::endl;
     Kademlia *output = reinterpret_cast<Kademlia *>(i);
     return output;
   };
