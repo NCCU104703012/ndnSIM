@@ -173,10 +173,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
   if (GetK_ptr() == GetK_ptr()->GetNext_Node(TargetNode))
   {
-    //NS_LOG_DEBUG("GetK_ptr() == GetK_ptr()->GetNext_Node(TargetNode)");
-
     GetK_ptr()->SetData(DataName);
-
     GetK_ptr()->Node_info();
   }
   else
