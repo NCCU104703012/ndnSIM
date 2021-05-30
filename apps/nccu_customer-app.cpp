@@ -148,20 +148,53 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
   NS_LOG_DEBUG("Received Interest packet for " << interest->getName());
 
+   std::string inputString = interest->getName().toUri();
 
-  // Note that Interests send out by the app will not be sent back to the app !
+    int head = 0, tail;
+    std::string DataName, TargetNode, SourceNode, flag;
+    
+    for (int i = 0; i < 6; i++)
+    {
+      head = inputString.find("/", head);
+      tail = inputString.find("/", head+1);
+      std::string temp = inputString.substr(head+1, tail-head-1);
 
-  auto data = std::make_shared<ndn::Data>(interest->getName());
-  data->setFreshnessPeriod(ndn::time::milliseconds(1000));
-  data->setContent(std::make_shared< ::ndn::Buffer>(1024));
-  ndn::StackHelper::getKeyChain().sign(*data);
+      //std::cout  << temp << std::endl;
+      head = tail;
 
-  NS_LOG_DEBUG("Sending Data packet for " << data->getName());
+      switch (i)
+      {
+      case 3:
+        TargetNode = temp;
+        //NS_LOG_DEBUG("targetnode = " << TargetNode);
+        break;
+      case 4:
+        SourceNode = temp;
+        //NS_LOG_DEBUG("sourcenode = " << SourceNode);
+        break;
+      case 5:
+        DataName = temp;
+        //NS_LOG_DEBUG("dataname = " << DataName);
+        break;
+      }
+    }
+
+  ndn::Name InsName;
+  InsName.append("prefix").append("data").append("query").append(SourceNode).append("1").append(TargetNode).append(DataName);
+
+  auto outinterest = std::make_shared<ndn::Interest>(InsName);
+  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+  outinterest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+
+  outinterest->setInterestLifetime(ndn::time::seconds(1));
+
+  NS_LOG_DEBUG("Sending Interest packet for " << *outinterest);
 
   // Call trace (for logging purposes)
-  m_transmittedDatas(data, this, m_face);
+  m_transmittedInterests(outinterest, this, m_face);
 
-  m_appLink->onReceiveData(*data);
+  m_appLink->onReceiveInterest(*outinterest);
+
 }
 
 // Callback that will be called when Data arrives
@@ -212,7 +245,7 @@ CustomerApp::SetRecord(std::string input)
 void
 CustomerApp::SendQuery(){
   ndn::Name temp;
-  temp.append("prefix").append("data").append("query").append(NodeName);
+  temp.append("prefix").append("data").append("query").append(NodeName).append("0");
   temp.append(query[query_count]);
   query_count++;
 

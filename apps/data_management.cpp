@@ -142,9 +142,9 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   std::string inputString = interest->getName().toUri();
 
     int head = 0, tail;
-    std::string DataName, TargetNode, SourceNode;
+    std::string DataName, TargetNode, SourceNode, flag;
     
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 7; i++)
     {
       head = inputString.find("/", head);
       tail = inputString.find("/", head+1);
@@ -155,45 +155,65 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
       switch (i)
       {
-      
       case 3:
         TargetNode = temp;
         //NS_LOG_DEBUG("targetnode = " << TargetNode);
-        break;
       case 4:
+        flag = temp;
+        break;
+      case 5:
         SourceNode = temp;
         //NS_LOG_DEBUG("sourcenode = " << SourceNode);
         break;
-      case 5:
+      case 6:
         DataName = temp;
         //NS_LOG_DEBUG("dataname = " << DataName);
         break;
       }
     }
-
-    //確認是否有此資料 若無則從k桶找尋下一目標
-    
-
-    if (GetK_ptr()->GetData(DataName))
+    //確認flag 若為1則為match到的source節點傳來興趣封包
+    if (flag.compare("1") == 0)
     {
       ndn::Name outData;
-      //outData.append("prefix").append("data").append("query").append(SourceNode).append(TargetNode).append(DataName);
-      outData.append("prefix").append("data").append("query").append("6").append("15").append("data8");
-      auto data = std::make_shared<ndn::Data>(outData);
+      outData.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName);
+
+      auto data = std::make_shared<ndn::Data>(interest->getName());
       data->setFreshnessPeriod(ndn::time::milliseconds(1000));
       data->setContent(std::make_shared< ::ndn::Buffer>(1024));
       ndn::StackHelper::getKeyChain().sign(*data);
 
       NS_LOG_DEBUG("Sending Data packet for " << data->getName());
 
+      // Call trace (for logging purposes)
       m_transmittedDatas(data, this, m_face);
+
       m_appLink->onReceiveData(*data);
+    }
+
+    //確認是否有此資料 若無則從k桶找尋下一目標
+    ndn::Name outInterest;
+
+    if (GetK_ptr()->GetData(DataName))
+    {
+      outInterest.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName);
+
+      // Create and configure ndn::Interest
+      auto interest = std::make_shared<ndn::Interest>(outInterest);
+      Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+      interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+
+      interest->setInterestLifetime(ndn::time::seconds(1));
+
+      NS_LOG_DEBUG("Sending Interest packet for " << *interest);
+
+      // Call trace (for logging purposes)
+      m_transmittedInterests(interest, this, m_face);
+
+      m_appLink->onReceiveInterest(*interest);
     }
     else
     {
       //從K桶找下一目標 目前用預設第一個節點
-      ndn::Name outInterest;
-
       if (GetK_ptr()->QueryKbucket(DataName) == NULL)
       {
         NS_LOG_DEBUG("NO match Data & next Node");
@@ -201,7 +221,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       else
       {
         TargetNode = (GetK_ptr()->QueryKbucket(DataName))->GetKId();
-        outInterest.append("prefix").append("data").append("query").append(TargetNode).append(SourceNode).append(DataName);
+        outInterest.append("prefix").append("data").append("query").append(TargetNode).append("0").append(SourceNode).append(DataName);
 
         // Create and configure ndn::Interest
         auto interest = std::make_shared<ndn::Interest>(outInterest);
@@ -218,6 +238,8 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         m_appLink->onReceiveInterest(*interest);
       }
     }
+
+
     
     
 

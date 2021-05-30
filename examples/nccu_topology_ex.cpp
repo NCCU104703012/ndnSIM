@@ -149,7 +149,7 @@ main(int argc, char* argv[])
   app1.SetPrefix("/prefix/data/download/15");
   app1.SetAttribute("NodeName", StringValue("15"));
   app1.Install(Node15);
-  //ndnGlobalRoutingHelper.AddOrigins("/prefix/data/store/6", Node15);
+  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/15", Node15);
   
   
 
