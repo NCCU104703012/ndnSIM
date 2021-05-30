@@ -124,7 +124,7 @@ DataStore::SendInterest()
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
-  interest->setInterestLifetime(ndn::time::seconds(1));
+  interest->setInterestLifetime(ndn::time::seconds(3));
 
   packet_count++;
 
@@ -186,7 +186,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
     next_interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
-    next_interest->setInterestLifetime(ndn::time::seconds(1));
+    next_interest->setInterestLifetime(ndn::time::seconds(3));
 
 
     NS_LOG_DEBUG("Sending Interest packet to another node : " << *next_interest);

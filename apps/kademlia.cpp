@@ -7,14 +7,24 @@ Kademlia::Kademlia(std::string node_name_input, std::string data_input, int kade
 {
     node_name = node_name_input;
     dataList = new Data();
+    dataList->head = dataList;
     dataList->Name = data_input;
     KId = kademliaID;
     
 }
 
 bool
-Kademlia::GetData(std::string input){
-    //return data.compare(input);
+Kademlia::GetData(std::string DataName){
+    Data *output = NULL;
+    output = dataList->GetData(DataName);
+    if (output == NULL)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }
 
 Kademlia *
@@ -94,4 +104,22 @@ Data::GetTail()
         tempPtr = tempPtr->next;
     }
     return outputPtr;
+}
+
+Data*
+Data::GetData(std::string DataName)
+{
+    Data *tempptr = this;
+    while (tempptr != NULL)
+    {
+        if (DataName.compare(tempptr->Name) == 0)
+        {
+            return tempptr;
+        }
+        else
+        {
+            tempptr = tempptr->next;
+        }
+    }
+    return NULL;
 }

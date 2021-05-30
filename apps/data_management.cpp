@@ -71,7 +71,14 @@ DataManage::GetTypeId()
          MakeUintegerChecker<uint32_t>())
       .AddAttribute("KeyLocator",
                     "Name to be used for key locator.  If root, then key locator is not used",
-                    ndn::NameValue(), MakeNameAccessor(&DataManage::m_keyLocator), ndn::MakeNameChecker());
+                    ndn::NameValue(), MakeNameAccessor(&DataManage::m_keyLocator), ndn::MakeNameChecker())
+      .AddAttribute(
+        "Kademlia",
+        "Kademlia struct",
+        StringValue(""),
+        MakeNameAccessor(&DataManage::k_ptr),
+        ndn::MakeNameChecker())
+      ;
 
   return tid;
 }
@@ -89,11 +96,6 @@ DataManage::StartApplication()
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
   // Schedule send of first interest
-  Simulator::Schedule(Seconds(1.0), &DataManage::SendInterest, this);
-  Simulator::Schedule(Seconds(2.0), &DataManage::SendInterest, this);
-  Simulator::Schedule(Seconds(3.0), &DataManage::SendInterest, this);
-  Simulator::Schedule(Seconds(4.0), &DataManage::SendInterest, this);
-  Simulator::Schedule(Seconds(5.0), &DataManage::SendInterest, this);
 }
 
 // Processing when application is stopped
@@ -117,7 +119,7 @@ DataManage::SendInterest()
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
-  interest->setInterestLifetime(ndn::time::seconds(1));
+  interest->setInterestLifetime(ndn::time::seconds(3));
 
   packet_count++;
 
@@ -137,20 +139,102 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
   NS_LOG_DEBUG("Received Interest packet for " << interest->getName());
 
+  std::string inputString = interest->getName().toUri();
+
+    int head = 0, tail;
+    std::string DataName, TargetNode, SourceNode;
+    
+    for (int i = 0; i < 6; i++)
+    {
+      head = inputString.find("/", head);
+      tail = inputString.find("/", head+1);
+      std::string temp = inputString.substr(head+1, tail-head-1);
+
+      //std::cout  << temp << std::endl;
+      head = tail;
+
+      switch (i)
+      {
+      
+      case 3:
+        TargetNode = temp;
+        //NS_LOG_DEBUG("targetnode = " << TargetNode);
+        break;
+      case 4:
+        SourceNode = temp;
+        //NS_LOG_DEBUG("sourcenode = " << SourceNode);
+        break;
+      case 5:
+        DataName = temp;
+        //NS_LOG_DEBUG("dataname = " << DataName);
+        break;
+      }
+    }
+
+    //確認是否有此資料 若無則從k桶找尋下一目標
+    
+
+    if (GetK_ptr()->GetData(DataName))
+    {
+      ndn::Name outData;
+      //outData.append("prefix").append("data").append("query").append(SourceNode).append(TargetNode).append(DataName);
+      outData.append("prefix").append("data").append("query").append("6").append("15").append("data8");
+      auto data = std::make_shared<ndn::Data>(outData);
+      data->setFreshnessPeriod(ndn::time::milliseconds(1000));
+      data->setContent(std::make_shared< ::ndn::Buffer>(1024));
+      ndn::StackHelper::getKeyChain().sign(*data);
+
+      NS_LOG_DEBUG("Sending Data packet for " << data->getName());
+
+      m_transmittedDatas(data, this, m_face);
+      m_appLink->onReceiveData(*data);
+    }
+    else
+    {
+      //從K桶找下一目標 目前用預設第一個節點
+      ndn::Name outInterest;
+
+      if (GetK_ptr()->QueryKbucket(DataName) == NULL)
+      {
+        NS_LOG_DEBUG("NO match Data & next Node");
+      }
+      else
+      {
+        TargetNode = (GetK_ptr()->QueryKbucket(DataName))->GetKId();
+        outInterest.append("prefix").append("data").append("query").append(TargetNode).append(SourceNode).append(DataName);
+
+        // Create and configure ndn::Interest
+        auto interest = std::make_shared<ndn::Interest>(outInterest);
+        Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+        interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+
+        interest->setInterestLifetime(ndn::time::seconds(1));
+
+        NS_LOG_DEBUG("Sending Interest packet for " << *interest);
+
+        // Call trace (for logging purposes)
+        m_transmittedInterests(interest, this, m_face);
+
+        m_appLink->onReceiveInterest(*interest);
+      }
+    }
+    
+    
+
 
   // Note that Interests send out by the app will not be sent back to the app !
 
-  auto data = std::make_shared<ndn::Data>(interest->getName());
-  data->setFreshnessPeriod(ndn::time::milliseconds(1000));
-  data->setContent(std::make_shared< ::ndn::Buffer>(1024));
-  ndn::StackHelper::getKeyChain().sign(*data);
+  // auto data = std::make_shared<ndn::Data>(interest->getName());
+  // data->setFreshnessPeriod(ndn::time::milliseconds(1000));
+  // data->setContent(std::make_shared< ::ndn::Buffer>(1024));
+  // ndn::StackHelper::getKeyChain().sign(*data);
 
-  NS_LOG_DEBUG("Sending Data packet for " << data->getName());
+  // NS_LOG_DEBUG("Sending Data packet for " << data->getName());
 
-  // Call trace (for logging purposes)
-  m_transmittedDatas(data, this, m_face);
+  // // Call trace (for logging purposes)
+  // m_transmittedDatas(data, this, m_face);
 
-  m_appLink->onReceiveData(*data);
+  // m_appLink->onReceiveData(*data);
 }
 
 // Callback that will be called when Data arrives

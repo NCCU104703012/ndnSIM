@@ -14,6 +14,8 @@ public:
 
     void AddData(std::string inputName);
 
+    Data* GetData(std::string DataName);
+
     void printAllData();
 
     Data* GetTail();
@@ -34,7 +36,7 @@ public:
     Kademlia(std::string node_name_input, std::string data_input, int kademliaID);
 
     bool
-    GetData(std::string input);
+    GetData(std::string DataName);
 
     void
     SetData(std::string input);
@@ -52,6 +54,12 @@ public:
 
     void
     Node_info();
+
+    //query資料時呼叫 決定下一個節點
+    Kademlia* QueryKbucket(std::string DataName)
+    {
+        return k_bucket[0];
+    };
 
 private:
     std::string node_name;

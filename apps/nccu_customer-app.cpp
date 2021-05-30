@@ -93,10 +93,18 @@ CustomerApp::StartApplication()
   // Schedule send of first interest
   SetRecord("initRecord");
   Simulator::Schedule(Seconds(1.0), &CustomerApp::SendRecord, this);
+  Simulator::Schedule(Seconds(1.5), &CustomerApp::SendRecord, this);
   Simulator::Schedule(Seconds(2.0), &CustomerApp::SendRecord, this);
+  Simulator::Schedule(Seconds(2.5), &CustomerApp::SendRecord, this);
   Simulator::Schedule(Seconds(3.0), &CustomerApp::SendRecord, this);
-  Simulator::Schedule(Seconds(4.0), &CustomerApp::SendRecord, this);
-  Simulator::Schedule(Seconds(5.0), &CustomerApp::SendRecord, this);
+
+  Simulator::Schedule(Seconds(4), &CustomerApp::SendQuery, this);
+  Simulator::Schedule(Seconds(7), &CustomerApp::SendQuery, this);
+  Simulator::Schedule(Seconds(10), &CustomerApp::SendQuery, this);
+  Simulator::Schedule(Seconds(13), &CustomerApp::SendQuery, this);
+  Simulator::Schedule(Seconds(16), &CustomerApp::SendQuery, this);
+
+
 }
 
 // Processing when application is stopped
@@ -120,7 +128,7 @@ CustomerApp::SendInterest()
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
-  interest->setInterestLifetime(ndn::time::seconds(1));
+  interest->setInterestLifetime(ndn::time::seconds(3));
 
   packet_count++;
 
@@ -179,14 +187,14 @@ CustomerApp::SendRecord()
 {
   std::string TargetNode = "9";
   ndn::Name temp;
-  temp.append("prefix").append("data").append("store").append("6");
+  temp.append("prefix").append("data").append("store").append(NodeName);
   temp.append(TargetNode).append(record + std::to_string(packet_count));
   auto interest = std::make_shared<ndn::Interest>(temp);
   packet_count++;
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
-  interest->setInterestLifetime(ndn::time::seconds(1));
+  interest->setInterestLifetime(ndn::time::seconds(3));
   NS_LOG_DEBUG("Sending Record for " << interest->getName());
 
   // Call trace (for logging purposes)
@@ -199,6 +207,28 @@ void
 CustomerApp::SetRecord(std::string input)
 {
   record = input;
+}
+
+void
+CustomerApp::SendQuery(){
+  ndn::Name temp;
+  temp.append("prefix").append("data").append("query").append(NodeName);
+  temp.append(query[query_count]);
+  query_count++;
+
+  auto interest = std::make_shared<ndn::Interest>(temp);
+  
+  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+  interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+
+  interest->setInterestLifetime(ndn::time::seconds(1));
+  NS_LOG_DEBUG("Sending Query for " << interest->getName());
+
+  // Call trace (for logging purposes)
+  m_transmittedInterests(interest, this, m_face);
+
+  m_appLink->onReceiveInterest(*interest);
+
 }
 
 } // namespace ns3

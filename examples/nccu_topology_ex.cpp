@@ -99,6 +99,22 @@ void set_data_store(std::string nodeName, std::string prefix, Kademlia* k_ptr )
   ndnGlobalRoutingHelper.AddOrigins(prefix, TargetNode);
 }
 
+void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_ptr )
+{
+  ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
+
+  std::ostringstream address;
+  address << k_ptr;
+  std::string location = address.str();
+
+  Ptr<Node> TargetNode = Names::Find<Node>(nodeName);
+  ndn::AppHelper app("DataManage");
+  app.SetPrefix(prefix);
+  app.SetAttribute("Kademlia", StringValue(location));
+  app.Install(TargetNode);
+  ndnGlobalRoutingHelper.AddOrigins(prefix, TargetNode);
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -128,26 +144,32 @@ main(int argc, char* argv[])
   // std::string prefix_clothes = "/prefix/clothes";
 
 
-  Ptr<Node> Node12 = Names::Find<Node>("Node12");
+  Ptr<Node> Node15 = Names::Find<Node>("Node15");
   ndn::AppHelper app1("CustomerApp");
-  //app1.SetPrefix("/prefix/data/store/6");
-  app1.SetAttribute("NodeName", StringValue("12"));
-  app1.Install(Node12);
-  //ndnGlobalRoutingHelper.AddOrigins("/prefix/data/store/6", Node12);
+  app1.SetPrefix("/prefix/data/download/15");
+  app1.SetAttribute("NodeName", StringValue("15"));
+  app1.Install(Node15);
+  //ndnGlobalRoutingHelper.AddOrigins("/prefix/data/store/6", Node15);
   
   
 
-
-  Kademlia node6("node6", "data6", 6);
-  Kademlia *P_6 = &node6;
-  Kademlia node8("node8", "data8", 8);
-  Kademlia *P_8 = &node8;
+  Kademlia Knode15("Node15", "data15", 15);
+  Kademlia *P_15 = &Knode15;
+  Kademlia Knode6("node6", "data6", 6);
+  Kademlia *P_6 = &Knode6;
+  Kademlia Knode8("node8", "data8", 8);
+  Kademlia *P_8 = &Knode8;
 
 
   //node6.Node_info();
+  set_data_store("Node15", "/prefix/data/store/15", P_15);
+  set_data_management("Node15", "/prefix/data/query/15", P_15);
+  P_15->Set_KBucket(P_6);
   set_data_store("Node6", "/prefix/data/store/6", P_6);
+  set_data_management("Node6", "/prefix/data/query/6", P_6);
   P_6->Set_KBucket(P_8);
   set_data_store("Node8", "/prefix/data/store/8", P_8);
+  set_data_management("Node8", "/prefix/data/query/8", P_8);
 
 
   // Ptr<Node> Node8 = Names::Find<Node>("Node8");
@@ -155,7 +177,7 @@ main(int argc, char* argv[])
   // app2.Install(Node8);
 
   // consumer_set("Node7", "/prefix/food/one", "10");
-  // consumer_set("Node12", "/prefix/clothes", "0");
+  // consumer_set("Node15", "/prefix/clothes", "0");
   // consumer_set("Node13", "/prefix/clothes", "5");
 
 
@@ -196,6 +218,11 @@ main(int argc, char* argv[])
   // cout << "***********done test" << endl;
 
 
+  ndn::FibHelper::AddRoute("Node8", "/prefix/data/query/15/8/data8", "Node2", 1);
+  ndn::FibHelper::AddRoute("Node2", "/prefix/data/query/15/8/data8", "Node4", 1);
+  ndn::FibHelper::AddRoute("Node4", "/prefix/data/query/15/8/data8", "Node14", 1);
+  ndn::FibHelper::AddRoute("Node14", "/prefix/data/query/15/8/data8", "Node15", 1);
+  
 
 
   Simulator::Stop(Seconds(20.0));

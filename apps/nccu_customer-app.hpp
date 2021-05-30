@@ -68,6 +68,10 @@ public:
   void
   SetNode_Pointer(Ptr<Node> input);
 
+  void
+  SendQuery();
+
+
 private:
   void
   SendInterest();
@@ -85,8 +89,14 @@ private:
 
   //本身節點的交易紀錄 用來送出給Data store
   std::string record;
+
   //用來製作興趣封包
   ndn::Name NodeName;
+
+  //送出Query使用
+  std::string query[5] = {"15/data8", "15/initRecord0", "15/initRecord1", "15/initRecord3", "15/trash"};
+  int query_count = 0;
+
 };
 
 } // namespace ns3
