@@ -93,6 +93,9 @@ private:
   //用來製作興趣封包
   ndn::Name NodeName;
 
+  //指定欲儲存的節點
+  ndn::Name TargetNode;
+
   //送出Query使用
   ndn::Name Query;
   //[5] = {"data8", "initRecord0", "initRecord1", "initRecord1", "trash"};

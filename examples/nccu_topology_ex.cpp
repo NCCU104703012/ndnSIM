@@ -148,6 +148,7 @@ main(int argc, char* argv[])
   ndn::AppHelper app1("CustomerApp");
   app1.SetPrefix("/prefix/data/download/15");
   app1.SetAttribute("NodeName", StringValue("15"));
+  app1.SetAttribute("TargetNode", StringValue("9"));
   app1.SetAttribute("Query", StringValue("data8/initRecord0/initRecord1/initRecord1/trash/"));
   app1.Install(Node15);
   ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/15", Node15);
@@ -182,6 +183,7 @@ main(int argc, char* argv[])
   ndn::AppHelper app2("CustomerApp");
   app2.SetPrefix("/prefix/data/download/11");
   app2.SetAttribute("NodeName", StringValue("11"));
+  app2.SetAttribute("TargetNode", StringValue("1"));
   app2.SetAttribute("Query", StringValue("data11/initRecord0/initRecord1/initRecord1/trash/"));
   app2.Install(Node11);
   ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/11", Node11);

@@ -76,7 +76,9 @@ CustomerApp::GetTypeId()
       .AddAttribute("NodeName", "string name of node", StringValue(""),
           MakeNameAccessor(&CustomerApp::NodeName), ndn::MakeNameChecker())
       .AddAttribute("Query", "string of query", StringValue(""),
-          MakeNameAccessor(&CustomerApp::Query), ndn::MakeNameChecker());
+          MakeNameAccessor(&CustomerApp::Query), ndn::MakeNameChecker())
+      .AddAttribute("TargetNode", "assign data store address", StringValue(""),
+          MakeNameAccessor(&CustomerApp::TargetNode), ndn::MakeNameChecker());
 
   return tid;
 }
@@ -221,10 +223,10 @@ CustomerApp::SetNode_Pointer(Ptr<Node> input)
 void
 CustomerApp::SendRecord()
 {
-  std::string TargetNode = "9";
+  
   ndn::Name temp;
   temp.append("prefix").append("data").append("store").append(NodeName);
-  temp.append(TargetNode).append(record + std::to_string(packet_count));
+  temp.append(TargetNode.toUri()).append(record + std::to_string(packet_count));
   auto interest = std::make_shared<ndn::Interest>(temp);
   packet_count++;
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
