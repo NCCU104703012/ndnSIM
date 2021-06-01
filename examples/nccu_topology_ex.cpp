@@ -62,6 +62,18 @@ namespace ns3 {
  *     NS_LOG=ndn.Consumer:ndn.Producer ./waf --run=nccu_topology_ex
  */
 
+std::string toBinary(int n)
+{
+    string r;
+    while (n != 0){
+        r += ( n % 2 == 0 ? "0" : "1" );
+        n /= 2;
+    }
+    reverse(r.begin(), r.end());
+    bitset<8> bs1(r);
+    return bs1.to_string();
+}
+
 void producer_set(std::string node, std::string prefix, std::string payloadsize){
   Ptr<Node> producer = Names::Find<Node>(node);
   ndn::AppHelper producerHelper("ns3::ndn::ProducerApp");
@@ -146,68 +158,73 @@ main(int argc, char* argv[])
 
   Ptr<Node> Node15 = Names::Find<Node>("Node15");
   ndn::AppHelper app1("CustomerApp");
-  app1.SetPrefix("/prefix/data/download/15");
-  app1.SetAttribute("NodeName", StringValue("15"));
-  app1.SetAttribute("TargetNode", StringValue("9"));
-  app1.SetAttribute("Query", StringValue("data8/initRecord0/initRecord1/initRecord1/trash/"));
+  app1.SetPrefix("/prefix/data/download/" + toBinary(15));
+  app1.SetAttribute("NodeName", StringValue(toBinary(15)));
+  app1.SetAttribute("TargetNode", StringValue(toBinary(0)));
+  app1.SetAttribute("Query", StringValue("Record123/initRecord0/initRecord1/initRecord1/trash/"));
+  app1.SetAttribute("Record", StringValue("Record123/initRecord0/initRecord1/initRecord1/trash/"));
   app1.Install(Node15);
-  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/15", Node15);
+  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(15), Node15);
   
   
 
-  Kademlia Knode15("Node15", "data15", 15);
+  Kademlia Knode15("Node15", "Node15", toBinary(15));
   Kademlia *P_15 = &Knode15;
-  Kademlia Knode6("node6", "data6", 6);
-  Kademlia *P_6 = &Knode6;
-  Kademlia Knode8("node8", "data8", 8);
+  Kademlia Knode13("node13", "Node13", toBinary(13));
+  Kademlia *P_13 = &Knode13;
+  Kademlia Knode10("node10", "Node10", toBinary(10));
+  Kademlia *P_10 = &Knode10;
+  Kademlia Knode8("node8", "Node8", toBinary(8));
   Kademlia *P_8 = &Knode8;
-  Kademlia Knode9("node9", "data9", 9);
-  Kademlia *P_9 = &Knode9;
 
 
-  //node6.Node_info();
-  set_data_store("Node15", "/prefix/data/store/15", P_15);
-  set_data_management("Node15", "/prefix/data/query/15", P_15);
-  P_15->Set_KBucket(P_6);
-  set_data_store("Node6", "/prefix/data/store/6", P_6);
-  set_data_management("Node6", "/prefix/data/query/6", P_6);
-  P_6->Set_KBucket(P_8);
-  set_data_store("Node8", "/prefix/data/store/8", P_8);
-  set_data_management("Node8", "/prefix/data/query/8", P_8);
-  P_8->Set_KBucket(P_9);
-  set_data_store("Node9", "/prefix/data/store/9", P_9);
-  set_data_management("Node9", "/prefix/data/query/9", P_9);
+  //node13.Node_info();
+  set_data_store("Node15", "/prefix/data/store/" + toBinary(15), P_15);
+  set_data_management("Node15", "/prefix/data/query/" + toBinary(15), P_15);
+  P_15->Set_KBucket(P_13);
+  set_data_store("Node13", "/prefix/data/store/" + toBinary(13), P_13);
+  set_data_management("Node13", "/prefix/data/query/" + toBinary(13), P_13);
+  P_13->Set_KBucket(P_10);
+  set_data_store("Node10", "/prefix/data/store/" + toBinary(10), P_10);
+  set_data_management("Node10", "/prefix/data/query/" + toBinary(10), P_10);
+  P_10->Set_KBucket(P_8);
+  set_data_store("Node8", "/prefix/data/store/" + toBinary(8), P_8);
+  set_data_management("Node8", "/prefix/data/query/" + toBinary(8), P_8);
+
+//================================================
+//設定第二條線
+//================================================
+
+  // Ptr<Node> Node11 = Names::Find<Node>("Node11");
+  // ndn::AppHelper app2("CustomerApp");
+  // app2.SetPrefix("/prefix/data/download/" + toBinary(11));
+  // app2.SetAttribute("NodeName", StringValue(toBinary(11)));
+  // app2.SetAttribute("TargetNode", StringValue(toBinary(0)));
+  // app2.SetAttribute("Query", StringValue("Record456/11_initRecord0/11_initRecord1/11_initRecord1/11_trash/"));
+  // app2.SetAttribute("Record", StringValue("Record456/11_initRecord0/11_initRecord1/11_initRecord1/11_trash/"));
+  // app2.Install(Node11);
+  // ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(11), Node11);
+  
+  
+
+  // Kademlia Knode11("Node11", "Node11", toBinary(11));
+  // Kademlia *P_11 = &Knode11;
+  // Kademlia Knode4("node4", "Node4", toBinary(4));
+  // Kademlia *P_4 = &Knode4;
+  // Kademlia Knode0("node0", "Node0", toBinary(0));
+  // Kademlia *P_0 = &Knode0;
 
 
-  Ptr<Node> Node11 = Names::Find<Node>("Node11");
-  ndn::AppHelper app2("CustomerApp");
-  app2.SetPrefix("/prefix/data/download/11");
-  app2.SetAttribute("NodeName", StringValue("11"));
-  app2.SetAttribute("TargetNode", StringValue("1"));
-  app2.SetAttribute("Query", StringValue("data11/initRecord0/initRecord1/initRecord1/trash/"));
-  app2.Install(Node11);
-  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/11", Node11);
+  // //node7.Node_info();
+  // set_data_store("Node11", "/prefix/data/store/" + toBinary(11), P_11);
+  // set_data_management("Node11", "/prefix/data/query/" + toBinary(11), P_11);
+  // P_11->Set_KBucket(P_10);
+  // set_data_store("Node4", "/prefix/data/store/" + toBinary(4), P_4);
+  // set_data_management("Node4", "/prefix/data/query/" + toBinary(4), P_4);
+  // P_4->Set_KBucket(P_0);
+  // set_data_store("Node0", "/prefix/data/store/" + toBinary(0), P_0);
+  // set_data_management("Node0", "/prefix/data/query/" + toBinary(0), P_0);
 
-  Kademlia Knode11("Node11", "data11", 11);
-  Kademlia *P_11 = &Knode11;
-  Kademlia Knode7("node7", "data7", 7);
-  Kademlia *P_7 = &Knode7;
-  Kademlia Knode4("node4", "data4", 4);
-  Kademlia *P_4 = &Knode4;
-  Kademlia Knode1("node1", "data1", 1);
-  Kademlia *P_1 = &Knode1;
-
-  set_data_store("Node11", "/prefix/data/store/11", P_11);
-  set_data_management("Node11", "/prefix/data/query/11", P_11);
-  P_11->Set_KBucket(P_7);
-  set_data_store("Node7", "/prefix/data/store/7", P_7);
-  set_data_management("Node7", "/prefix/data/query/7", P_7);
-  P_7->Set_KBucket(P_4);
-  set_data_store("Node4", "/prefix/data/store/4", P_4);
-  set_data_management("Node4", "/prefix/data/query/4", P_4);
-  P_4->Set_KBucket(P_1);
-  set_data_store("Node1", "/prefix/data/store/1", P_1);
-  set_data_management("Node1", "/prefix/data/query/1", P_1);
 
 
   // Calculate and install FIBs

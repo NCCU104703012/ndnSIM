@@ -78,7 +78,9 @@ CustomerApp::GetTypeId()
       .AddAttribute("Query", "string of query", StringValue(""),
           MakeNameAccessor(&CustomerApp::Query), ndn::MakeNameChecker())
       .AddAttribute("TargetNode", "assign data store address", StringValue(""),
-          MakeNameAccessor(&CustomerApp::TargetNode), ndn::MakeNameChecker());
+          MakeNameAccessor(&CustomerApp::TargetNode), ndn::MakeNameChecker())
+      .AddAttribute("Record", "assign Record", StringValue(""),
+          MakeNameAccessor(&CustomerApp::Record), ndn::MakeNameChecker());
 
   return tid;
 }
@@ -96,7 +98,6 @@ CustomerApp::StartApplication()
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
   // Schedule send of first interest
-  SetRecord("initRecord");
   Simulator::Schedule(Seconds(1.0), &CustomerApp::SendRecord, this);
   Simulator::Schedule(Seconds(1.5), &CustomerApp::SendRecord, this);
   Simulator::Schedule(Seconds(2.0), &CustomerApp::SendRecord, this);
@@ -129,13 +130,11 @@ CustomerApp::SendInterest()
 
 
   // Create and configure ndn::Interest
-  auto interest = std::make_shared<ndn::Interest>(m_prefix.append(std::to_string(packet_count)));
+  auto interest = std::make_shared<ndn::Interest>(m_prefix);
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
   interest->setInterestLifetime(ndn::time::seconds(3));
-
-  packet_count++;
 
   NS_LOG_DEBUG("Sending Interest packet for " << *interest);
 
@@ -223,12 +222,24 @@ CustomerApp::SetNode_Pointer(Ptr<Node> input)
 void
 CustomerApp::SendRecord()
 {
+  //record分割
+  int head = 0 , tail = Record.toUri().find("/");
+  std::string record_output;
+  for (int i = 0; i < record_count; i++)
+  {
+    head = tail;
+    tail = Record.toUri().find("/",head+1);
+  }
   
+  record_output = Record.toUri().substr(head, tail-head);
+
+
   ndn::Name temp;
   temp.append("prefix").append("data").append("store").append(NodeName);
-  temp.append(TargetNode.toUri()).append(record + std::to_string(packet_count));
+  temp.append(TargetNode.toUri()).append(record_output);
   auto interest = std::make_shared<ndn::Interest>(temp);
-  packet_count++;
+  record_count++;
+
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
@@ -241,11 +252,6 @@ CustomerApp::SendRecord()
   m_appLink->onReceiveInterest(*interest);
 }
 
-void
-CustomerApp::SetRecord(std::string input)
-{
-  record = input;
-}
 
 void
 CustomerApp::SendQuery(){

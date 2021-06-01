@@ -33,7 +33,7 @@ class Kademlia{
 public:
     Kademlia();
 
-    Kademlia(std::string node_name_input, std::string data_input, int kademliaID);
+    Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID);
 
     bool
     GetData(std::string DataName);
@@ -44,9 +44,12 @@ public:
     Kademlia*
     GetNext_Node(std::string TargetNode);
 
+    int
+    XOR(std::string input);
+
     std::string
     GetKId(){
-        return std::to_string(KId);
+        return KId;
     };
 
     void
@@ -63,7 +66,7 @@ public:
 
 private:
     std::string node_name;
-    int KId;
+    std::string KId;
     Data *dataList;
     Kademlia *k_bucket[5] = {NULL, NULL, NULL, NULL, NULL};
     int knum = 0;

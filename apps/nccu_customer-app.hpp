@@ -63,9 +63,6 @@ public:
   SendRecord();
 
   void
-  SetRecord(std::string input);
-
-  void
   SetNode_Pointer(Ptr<Node> input);
 
   void
@@ -84,11 +81,11 @@ private:
   uint32_t m_signature;
   ndn::Name m_keyLocator;
 
-  int packet_count = 0;
   Ptr<Node> parent_node ;
 
   //本身節點的交易紀錄 用來送出給Data store
-  std::string record;
+  ndn::Name Record;
+  int record_count = 1;
 
   //用來製作興趣封包
   ndn::Name NodeName;
@@ -98,7 +95,6 @@ private:
 
   //送出Query使用
   ndn::Name Query;
-  //[5] = {"data8", "initRecord0", "initRecord1", "initRecord1", "trash"};
   int query_count = 1;
 
 };

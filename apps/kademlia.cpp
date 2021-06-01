@@ -3,7 +3,7 @@
 #include <string>
 #include "kademlia.hpp"
 
-Kademlia::Kademlia(std::string node_name_input, std::string data_input, int kademliaID)
+Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID)
 {
     node_name = node_name_input;
     dataList = new Data();
@@ -29,19 +29,53 @@ Kademlia::GetData(std::string DataName){
 
 Kademlia *
 Kademlia::GetNext_Node(std::string TargetNode){
-    int distance = KId - std::stoi(TargetNode);
-    distance = abs(distance);
+    int distance = this->XOR(TargetNode);
+    //std::cout << "distance is : " << distance << std::endl;
     Kademlia *output = this;
-   for (int i = 0; i < knum; i++)
-   {
-       int temp = k_bucket[i]->KId;
-       if(abs(temp - std::stoi(TargetNode)) < distance)
-       {
-           output = k_bucket[i];
-       }
+
+    for (int i = 0; i < knum; i++)
+    {
+        std::string temp = k_bucket[i]->KId;
+        // std::cout << "input is : " << TargetNode << std::endl;
+        // std::cout << "kbucket is : " << temp << std::endl;
+        if (k_bucket[i]->XOR(TargetNode) < distance)
+        {
+            output = k_bucket[i];
+        }
+        
+    }
+    
+
+//     int distance = KId - std::stoi(TargetNode);
+//     distance = abs(distance);
+//     Kademlia *output = this;
+//    for (int i = 0; i < knum; i++)
+//    {
+//        int temp = k_bucket[i]->KId;
+//        if(abs(temp - std::stoi(TargetNode)) < distance)
+//        {
+//            output = k_bucket[i];
+//        }
        
-   }
-   return output;
+//    }
+    return output;
+}
+
+int
+Kademlia::XOR(std::string input)
+{
+    int distance = 0;
+    for (int i = 1; i < 9; i++)
+    {
+        std::string str1 = this->KId.substr(i,1);
+        std::string str2 = input.substr(i,1);
+        if (str1.compare(str2))
+        {
+            distance++;
+        }
+        
+    }
+    return distance;
 }
 
 
