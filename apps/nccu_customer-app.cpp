@@ -34,6 +34,7 @@
 #include "ns3/random-variable-stream.h"
 
 #include <iostream>
+#include <algorithm>
 #include <string> 
 #include <memory>
 
@@ -73,7 +74,9 @@ CustomerApp::GetTypeId()
                     "Name to be used for key locator.  If root, then key locator is not used",
                     ndn::NameValue(), MakeNameAccessor(&CustomerApp::m_keyLocator), ndn::MakeNameChecker())
       .AddAttribute("NodeName", "string name of node", StringValue(""),
-          MakeNameAccessor(&CustomerApp::NodeName), ndn::MakeNameChecker());
+          MakeNameAccessor(&CustomerApp::NodeName), ndn::MakeNameChecker())
+      .AddAttribute("Query", "string of query", StringValue(""),
+          MakeNameAccessor(&CustomerApp::Query), ndn::MakeNameChecker());
 
   return tid;
 }
@@ -244,9 +247,22 @@ CustomerApp::SetRecord(std::string input)
 
 void
 CustomerApp::SendQuery(){
+
+  //query分割
+  int head = 0 , tail = Query.toUri().find("/");
+  std::string query_output;
+  for (int i = 0; i < query_count; i++)
+  {
+    head = tail;
+    tail = Query.toUri().find("/",head+1);
+  }
+  
+  query_output = Query.toUri().substr(head, tail-head);
+  
+
   ndn::Name temp;
-  temp.append("prefix").append("data").append("query").append(NodeName).append("0");
-  temp.append(query[query_count]);
+  temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
+  temp.append(query_output);
   query_count++;
 
   auto interest = std::make_shared<ndn::Interest>(temp);

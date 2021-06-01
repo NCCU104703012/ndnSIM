@@ -94,8 +94,9 @@ private:
   ndn::Name NodeName;
 
   //送出Query使用
-  std::string query[5] = {"15/data8", "15/initRecord0", "15/initRecord1", "15/initRecord3", "15/trash"};
-  int query_count = 0;
+  ndn::Name Query;
+  //[5] = {"data8", "initRecord0", "initRecord1", "initRecord1", "trash"};
+  int query_count = 1;
 
 };
 

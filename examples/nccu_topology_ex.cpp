@@ -128,7 +128,7 @@ main(int argc, char* argv[])
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等
   ndn::StackHelper ndnHelper;
-  ndnHelper.setCsSize(0);
+  ndnHelper.setCsSize(5);
   ndnHelper.InstallAll();
 
   // Set BestRoute strategy
@@ -148,6 +148,7 @@ main(int argc, char* argv[])
   ndn::AppHelper app1("CustomerApp");
   app1.SetPrefix("/prefix/data/download/15");
   app1.SetAttribute("NodeName", StringValue("15"));
+  app1.SetAttribute("Query", StringValue("data8/initRecord0/initRecord1/initRecord1/trash/"));
   app1.Install(Node15);
   ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/15", Node15);
   
@@ -159,6 +160,8 @@ main(int argc, char* argv[])
   Kademlia *P_6 = &Knode6;
   Kademlia Knode8("node8", "data8", 8);
   Kademlia *P_8 = &Knode8;
+  Kademlia Knode9("node9", "data9", 9);
+  Kademlia *P_9 = &Knode9;
 
 
   //node6.Node_info();
@@ -170,21 +173,39 @@ main(int argc, char* argv[])
   P_6->Set_KBucket(P_8);
   set_data_store("Node8", "/prefix/data/store/8", P_8);
   set_data_management("Node8", "/prefix/data/query/8", P_8);
+  P_8->Set_KBucket(P_9);
+  set_data_store("Node9", "/prefix/data/store/9", P_9);
+  set_data_management("Node9", "/prefix/data/query/9", P_9);
 
 
-  // Ptr<Node> Node8 = Names::Find<Node>("Node8");
-  // ndn::AppHelper app2("ProudcerApp");
-  // app2.Install(Node8);
+  Ptr<Node> Node11 = Names::Find<Node>("Node11");
+  ndn::AppHelper app2("CustomerApp");
+  app2.SetPrefix("/prefix/data/download/11");
+  app2.SetAttribute("NodeName", StringValue("11"));
+  app2.SetAttribute("Query", StringValue("data11/initRecord0/initRecord1/initRecord1/trash/"));
+  app2.Install(Node11);
+  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/11", Node11);
 
-  // consumer_set("Node7", "/prefix/food/one", "10");
-  // consumer_set("Node15", "/prefix/clothes", "0");
-  // consumer_set("Node13", "/prefix/clothes", "5");
+  Kademlia Knode11("Node11", "data11", 11);
+  Kademlia *P_11 = &Knode11;
+  Kademlia Knode7("node7", "data7", 7);
+  Kademlia *P_7 = &Knode7;
+  Kademlia Knode4("node4", "data4", 4);
+  Kademlia *P_4 = &Knode4;
+  Kademlia Knode1("node1", "data1", 1);
+  Kademlia *P_1 = &Knode1;
 
-
-  // producer_set("Node10", "/prefix/food", "1024");
-  // producer_set("Node15", prefix_clothes, "1024");
-  // producer_set("Node9", prefix_clothes, "1024");
-
+  set_data_store("Node11", "/prefix/data/store/11", P_11);
+  set_data_management("Node11", "/prefix/data/query/11", P_11);
+  P_11->Set_KBucket(P_7);
+  set_data_store("Node7", "/prefix/data/store/7", P_7);
+  set_data_management("Node7", "/prefix/data/query/7", P_7);
+  P_7->Set_KBucket(P_4);
+  set_data_store("Node4", "/prefix/data/store/4", P_4);
+  set_data_management("Node4", "/prefix/data/query/4", P_4);
+  P_4->Set_KBucket(P_1);
+  set_data_store("Node1", "/prefix/data/store/1", P_1);
+  set_data_management("Node1", "/prefix/data/query/1", P_1);
 
 
   // Calculate and install FIBs
@@ -197,32 +218,6 @@ main(int argc, char* argv[])
    //Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::FailLink, Fail_node3, Fail_node4);
    //Simulator::Schedule(Seconds(3.0), ndn::LinkControlHelper::FailLink, Fail_node4, Fail_node0);
    //Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
-
-  // Kademlia node0("node0", "0");
-  // Kademlia node2("node2", "2");
-  // Kademlia node8("node8", "8");
-  // Kademlia node9("node9", "9");
-
-  // Kademlia *P_9 = &node9;
-  // Kademlia *P_0 = &node0;
-  // Kademlia *P_8 = &node8;
-  // Kademlia *P_2 = &node2;
-
-  // node0.SetNext(P_2);
-  // node2.SetNext(P_8);
-  // node8.SetNext(P_9);
-  // node9.SetNext(P_9);
-
-  // cout << "***********start test" << endl;
-  // Test_Kad(P_0, "9");
-  // cout << "***********done test" << endl;
-
-
-  ndn::FibHelper::AddRoute("Node8", "/prefix/data/query/15/8/data8", "Node2", 1);
-  ndn::FibHelper::AddRoute("Node2", "/prefix/data/query/15/8/data8", "Node4", 1);
-  ndn::FibHelper::AddRoute("Node4", "/prefix/data/query/15/8/data8", "Node14", 1);
-  ndn::FibHelper::AddRoute("Node14", "/prefix/data/query/15/8/data8", "Node15", 1);
-  
 
 
   Simulator::Stop(Seconds(20.0));

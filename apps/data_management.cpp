@@ -171,6 +171,9 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         break;
       }
     }
+
+    ndn::Name outInterest;
+
     //確認flag 若為1則為match到的source節點傳來興趣封包
     if (flag.compare("1") == 0)
     {
@@ -191,9 +194,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     }
 
     //確認是否有此資料 若無則從k桶找尋下一目標
-    ndn::Name outInterest;
-
-    if (GetK_ptr()->GetData(DataName))
+    else if(GetK_ptr()->GetData(DataName))
     {
       outInterest.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName);
 
