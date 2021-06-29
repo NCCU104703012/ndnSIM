@@ -215,13 +215,17 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     else
     {
       //從K桶找下一目標 目前用預設第一個節點
-      if (GetK_ptr()->QueryKbucket(DataName) == NULL)
+      std::size_t biTemp = std::hash<std::string>{}(DataName);
+      std::string binaryDataName = std::bitset<8>(biTemp).to_string();
+      NS_LOG_DEBUG("hash Record for " << binaryDataName << " " << DataName);
+
+      if (GetK_ptr()->GetNext_Node(binaryDataName) == GetK_ptr())
       {
         NS_LOG_DEBUG("NO match Data & next Node");
       }
       else
       {
-        TargetNode = (GetK_ptr()->QueryKbucket(DataName))->GetKId();
+        TargetNode = (GetK_ptr()->GetNext_Node(binaryDataName))->GetKId();
         outInterest.append("prefix").append("data").append("query").append(TargetNode).append("0").append(SourceNode).append(DataName);
 
         // Create and configure ndn::Interest

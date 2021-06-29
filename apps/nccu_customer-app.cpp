@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <string> 
 #include <memory>
+#include <unordered_map>
 
 NS_LOG_COMPONENT_DEFINE("CustomerApp");
 
@@ -77,10 +78,15 @@ CustomerApp::GetTypeId()
           MakeNameAccessor(&CustomerApp::NodeName), ndn::MakeNameChecker())
       .AddAttribute("Query", "string of query", StringValue(""),
           MakeNameAccessor(&CustomerApp::Query), ndn::MakeNameChecker())
-      .AddAttribute("TargetNode", "assign data store address", StringValue(""),
-          MakeNameAccessor(&CustomerApp::TargetNode), ndn::MakeNameChecker())
       .AddAttribute("Record", "assign Record", StringValue(""),
-          MakeNameAccessor(&CustomerApp::Record), ndn::MakeNameChecker());
+          MakeNameAccessor(&CustomerApp::Record), ndn::MakeNameChecker())
+      .AddAttribute(
+        "Kademlia",
+        "Kademlia struct",
+        StringValue(""),
+        MakeNameAccessor(&CustomerApp::k_ptr),
+        ndn::MakeNameChecker())
+        ;
 
   return tid;
 }
@@ -231,12 +237,15 @@ CustomerApp::SendRecord()
     tail = Record.toUri().find("/",head+1);
   }
   
-  record_output = Record.toUri().substr(head, tail-head);
+  record_output = Record.toUri().substr(head+1, tail-head-1);
 
+  std::size_t hashRecord = std::hash<std::string>{}(record_output);
+  std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
+  NS_LOG_DEBUG("hash Record for " << binaryRecord << " " << record_output);
 
   ndn::Name temp;
   temp.append("prefix").append("data").append("store").append(NodeName);
-  temp.append(TargetNode.toUri()).append(record_output);
+  temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(record_output);
   auto interest = std::make_shared<ndn::Interest>(temp);
   record_count++;
 
@@ -265,7 +274,7 @@ CustomerApp::SendQuery(){
     tail = Query.toUri().find("/",head+1);
   }
   
-  query_output = Query.toUri().substr(head, tail-head);
+  query_output = Query.toUri().substr(head+1, tail-head-1);
   
 
   ndn::Name temp;

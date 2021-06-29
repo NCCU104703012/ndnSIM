@@ -23,6 +23,7 @@
 #define CUSTOMER_APP_H_
 
 #include "ns3/ndnSIM/apps/ndn-app.hpp"
+#include "apps/kademlia.hpp"
 
 namespace ns3 {
 
@@ -68,6 +69,19 @@ public:
   void
   SendQuery();
 
+  //將kademlia struct位址從字串轉成指標
+  Kademlia*
+  GetK_ptr()
+  {
+    std::stringstream ss;
+    std::string temp = k_ptr.toUri().substr(1);
+    ss << temp;
+    long long unsigned int i;
+    ss >> std::hex >> i;
+    Kademlia *output = reinterpret_cast<Kademlia *>(i);
+    return output;
+  };
+
 
 private:
   void
@@ -96,6 +110,9 @@ private:
   //送出Query使用
   ndn::Name Query;
   int query_count = 1;
+
+  //k_ptr內容為"/0x00000" 不為純位址 要注意
+  ndn::Name k_ptr;
 
 };
 

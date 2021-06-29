@@ -74,25 +74,25 @@ std::string toBinary(int n)
     return bs1.to_string();
 }
 
-void producer_set(std::string node, std::string prefix, std::string payloadsize){
-  Ptr<Node> producer = Names::Find<Node>(node);
-  ndn::AppHelper producerHelper("ns3::ndn::ProducerApp");
-  ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
-  producerHelper.SetPrefix(prefix);
-  producerHelper.SetAttribute("PayloadSize", StringValue(payloadsize));
-  producerHelper.Install(producer);
-  ndnGlobalRoutingHelper.AddOrigins(prefix, producer);
-}
+// void producer_set(std::string node, std::string prefix, std::string payloadsize){
+//   Ptr<Node> producer = Names::Find<Node>(node);
+//   ndn::AppHelper producerHelper("ns3::ndn::ProducerApp");
+//   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
+//   producerHelper.SetPrefix(prefix);
+//   producerHelper.SetAttribute("PayloadSize", StringValue(payloadsize));
+//   producerHelper.Install(producer);
+//   ndnGlobalRoutingHelper.AddOrigins(prefix, producer);
+// }
 
-void consumer_set(std::string node, std::string prefix, std::string frequency){
-  Ptr<Node> consumer = Names::Find<Node>(node);
-  ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
-  //ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
-  consumerHelper.SetPrefix(prefix);
-  consumerHelper.SetAttribute("Frequency", StringValue(frequency)); // 100 interests a second
-  consumerHelper.Install(consumer);
-  //ndnGlobalRoutingHelper.AddOrigins(prefix, consumer);
-}
+// void consumer_set(std::string node, std::string prefix, std::string frequency){
+//   Ptr<Node> consumer = Names::Find<Node>(node);
+//   ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
+//   //ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
+//   consumerHelper.SetPrefix(prefix);
+//   consumerHelper.SetAttribute("Frequency", StringValue(frequency)); // 100 interests a second
+//   consumerHelper.Install(consumer);
+//   //ndnGlobalRoutingHelper.AddOrigins(prefix, consumer);
+// }
 
 
 void set_data_store(std::string nodeName, std::string prefix, Kademlia* k_ptr )
@@ -156,40 +156,229 @@ main(int argc, char* argv[])
   // std::string prefix_clothes = "/prefix/clothes";
 
 
-  Ptr<Node> Node15 = Names::Find<Node>("Node15");
-  ndn::AppHelper app1("CustomerApp");
-  app1.SetPrefix("/prefix/data/download/" + toBinary(15));
-  app1.SetAttribute("NodeName", StringValue(toBinary(15)));
-  app1.SetAttribute("TargetNode", StringValue(toBinary(0)));
-  app1.SetAttribute("Query", StringValue("Record123/initRecord0/initRecord1/initRecord1/trash/"));
-  app1.SetAttribute("Record", StringValue("Record123/initRecord0/initRecord1/initRecord1/trash/"));
-  app1.Install(Node15);
-  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(15), Node15);
-  
-  
-
+  Kademlia Knode0("Node0", "Node0", toBinary(0));
+  Kademlia *P_0 = &Knode0;
+  Kademlia Knode1("Node1", "Node1", toBinary(1));
+  Kademlia *P_1 = &Knode1;
+  Kademlia Knode2("Node2", "Node2", toBinary(2));
+  Kademlia *P_2 = &Knode2;
+  Kademlia Knode3("Node3", "Node3", toBinary(3));
+  Kademlia *P_3 = &Knode3;
+  Kademlia Knode4("Node4", "Node4", toBinary(4));
+  Kademlia *P_4 = &Knode4;
+  Kademlia Knode5("Node5", "Node5", toBinary(5));
+  Kademlia *P_5 = &Knode5;
+  Kademlia Knode6("Node6", "Node6", toBinary(6));
+  Kademlia *P_6 = &Knode6;
+  Kademlia Knode7("Node7", "Node7", toBinary(7));
+  Kademlia *P_7 = &Knode7;
+  Kademlia Knode8("Node8", "Node8", toBinary(8));
+  Kademlia *P_8 = &Knode8;
+  Kademlia Knode9("Node9", "Node9", toBinary(9));
+  Kademlia *P_9 = &Knode9;
+  Kademlia Knode10("Node10", "Node10", toBinary(10));
+  Kademlia *P_10 = &Knode10;
+  Kademlia Knode11("Node11", "Node11", toBinary(11));
+  Kademlia *P_11 = &Knode11;
+  Kademlia Knode12("Node12", "Node12", toBinary(12));
+  Kademlia *P_12 = &Knode12;
+  Kademlia Knode13("Node13", "Node13", toBinary(13));
+  Kademlia *P_13 = &Knode13;
+  Kademlia Knode14("Node14", "Node14", toBinary(14));
+  Kademlia *P_14 = &Knode14;
   Kademlia Knode15("Node15", "Node15", toBinary(15));
   Kademlia *P_15 = &Knode15;
-  Kademlia Knode13("node13", "Node13", toBinary(13));
-  Kademlia *P_13 = &Knode13;
-  Kademlia Knode10("node10", "Node10", toBinary(10));
-  Kademlia *P_10 = &Knode10;
-  Kademlia Knode8("node8", "Node8", toBinary(8));
-  Kademlia *P_8 = &Knode8;
+  Kademlia Knode16("Node16", "Node16", toBinary(16));
+  Kademlia *P_16 = &Knode16;
 
 
   //node13.Node_info();
-  set_data_store("Node15", "/prefix/data/store/" + toBinary(15), P_15);
-  set_data_management("Node15", "/prefix/data/query/" + toBinary(15), P_15);
-  P_15->Set_KBucket(P_13);
-  set_data_store("Node13", "/prefix/data/store/" + toBinary(13), P_13);
-  set_data_management("Node13", "/prefix/data/query/" + toBinary(13), P_13);
-  P_13->Set_KBucket(P_10);
-  set_data_store("Node10", "/prefix/data/store/" + toBinary(10), P_10);
-  set_data_management("Node10", "/prefix/data/query/" + toBinary(10), P_10);
-  P_10->Set_KBucket(P_8);
+  set_data_store("Node0", "/prefix/data/store/" + toBinary(0), P_0);
+  set_data_management("Node0", "/prefix/data/query/" + toBinary(0), P_0);
+  P_0->Set_KBucket(P_1);
+  P_0->Set_KBucket(P_2);
+  P_0->Set_KBucket(P_3);
+  P_0->Set_KBucket(P_4);
+  P_0->Set_KBucket(P_5);
+  P_0->Set_KBucket(P_8);
+  P_0->Set_KBucket(P_11);
+  P_0->Set_KBucket(P_14);
+
+  set_data_store("Node1", "/prefix/data/store/" + toBinary(1), P_1);
+  set_data_management("Node1", "/prefix/data/query/" + toBinary(1), P_1);
+  P_1->Set_KBucket(P_5);
+  P_1->Set_KBucket(P_2);
+  P_1->Set_KBucket(P_3);
+  P_1->Set_KBucket(P_0);
+  P_1->Set_KBucket(P_4);
+  P_1->Set_KBucket(P_6);
+  P_1->Set_KBucket(P_7);
+  P_1->Set_KBucket(P_8);
+  P_1->Set_KBucket(P_11);
+
+  set_data_store("Node2", "/prefix/data/store/" + toBinary(2), P_2);
+  set_data_management("Node2", "/prefix/data/query/" + toBinary(2), P_2);
+  P_2->Set_KBucket(P_1);
+  P_2->Set_KBucket(P_0);
+  P_2->Set_KBucket(P_4);
+  P_2->Set_KBucket(P_8);
+  P_2->Set_KBucket(P_3);
+  P_2->Set_KBucket(P_5);
+  P_2->Set_KBucket(P_9);
+  P_2->Set_KBucket(P_10);
+  P_2->Set_KBucket(P_14);
+
+  set_data_store("Node3", "/prefix/data/store/" + toBinary(3), P_3);
+  set_data_management("Node3", "/prefix/data/query/" + toBinary(3), P_3);
+  P_3->Set_KBucket(P_1);
+  P_3->Set_KBucket(P_0);
+  P_3->Set_KBucket(P_4);
+  P_3->Set_KBucket(P_11);
+  P_3->Set_KBucket(P_5);
+  P_3->Set_KBucket(P_2);
+  P_3->Set_KBucket(P_14);
+  P_3->Set_KBucket(P_12);
+  P_3->Set_KBucket(P_13);
+
+  set_data_store("Node4", "/prefix/data/store/" + toBinary(4), P_4);
+  set_data_management("Node4", "/prefix/data/query/" + toBinary(4), P_4);
+  P_4->Set_KBucket(P_0);
+  P_4->Set_KBucket(P_2);
+  P_4->Set_KBucket(P_3);
+  P_4->Set_KBucket(P_14);
+  P_4->Set_KBucket(P_8);
+  P_4->Set_KBucket(P_1);
+  P_4->Set_KBucket(P_11);
+  P_4->Set_KBucket(P_15);
+  P_4->Set_KBucket(P_16);
+  
+
+  set_data_store("Node5", "/prefix/data/store/" + toBinary(5), P_5);
+  set_data_management("Node5", "/prefix/data/query/" + toBinary(5), P_5);
+  P_5->Set_KBucket(P_0);
+  P_5->Set_KBucket(P_1);
+  P_5->Set_KBucket(P_2);
+  P_5->Set_KBucket(P_3);
+  P_5->Set_KBucket(P_6);
+  P_5->Set_KBucket(P_7);
+
+  set_data_store("Node6", "/prefix/data/store/" + toBinary(6), P_6);
+  set_data_management("Node6", "/prefix/data/query/" + toBinary(6), P_6);
+  P_6->Set_KBucket(P_1);
+  P_6->Set_KBucket(P_5);
+  P_6->Set_KBucket(P_7);
+  
+  set_data_store("Node7", "/prefix/data/store/" + toBinary(7), P_7);
+  set_data_management("Node7", "/prefix/data/query/" + toBinary(7), P_7);
+  P_7->Set_KBucket(P_1);
+  P_7->Set_KBucket(P_5);
+  P_7->Set_KBucket(P_6);
+
   set_data_store("Node8", "/prefix/data/store/" + toBinary(8), P_8);
   set_data_management("Node8", "/prefix/data/query/" + toBinary(8), P_8);
+  P_8->Set_KBucket(P_1);
+  P_8->Set_KBucket(P_0);
+  P_8->Set_KBucket(P_4);
+  P_8->Set_KBucket(P_2);
+  P_8->Set_KBucket(P_9);
+  P_8->Set_KBucket(P_10);
+
+  set_data_store("Node9", "/prefix/data/store/" + toBinary(9), P_9);
+  set_data_management("Node9", "/prefix/data/query/" + toBinary(9), P_9);
+  P_9->Set_KBucket(P_2);
+  P_9->Set_KBucket(P_8);
+  P_9->Set_KBucket(P_10);
+  
+  set_data_store("Node10", "/prefix/data/store/" + toBinary(10), P_10);
+  set_data_management("Node10", "/prefix/data/query/" + toBinary(10), P_10);
+  P_10->Set_KBucket(P_2);
+  P_10->Set_KBucket(P_8);
+  P_10->Set_KBucket(P_9);
+
+  set_data_store("Node11", "/prefix/data/store/" + toBinary(11), P_11);
+  set_data_management("Node11", "/prefix/data/query/" + toBinary(11), P_11);
+  P_11->Set_KBucket(P_0);
+  P_11->Set_KBucket(P_1);
+  P_11->Set_KBucket(P_4);
+  P_11->Set_KBucket(P_3);
+  P_11->Set_KBucket(P_12);
+  P_11->Set_KBucket(P_13);
+  
+  set_data_store("Node12", "/prefix/data/store/" + toBinary(12), P_12);
+  set_data_management("Node12", "/prefix/data/query/" + toBinary(12), P_12);
+  P_12->Set_KBucket(P_3);
+  P_12->Set_KBucket(P_11);
+  P_12->Set_KBucket(P_13);
+
+  set_data_store("Node13", "/prefix/data/store/" + toBinary(13), P_13);
+  set_data_management("Node13", "/prefix/data/query/" + toBinary(13), P_13);
+  P_13->Set_KBucket(P_3);
+  P_13->Set_KBucket(P_11);
+  P_13->Set_KBucket(P_12);
+
+  set_data_store("Node14", "/prefix/data/store/" + toBinary(14), P_14);
+  set_data_management("Node14", "/prefix/data/query/" + toBinary(14), P_14);
+  P_14->Set_KBucket(P_0);
+  P_14->Set_KBucket(P_2);
+  P_14->Set_KBucket(P_3);
+  P_14->Set_KBucket(P_4);
+  P_14->Set_KBucket(P_15);
+  P_14->Set_KBucket(P_16);
+
+  set_data_store("Node15", "/prefix/data/store/" + toBinary(15), P_15);
+  set_data_management("Node15", "/prefix/data/query/" + toBinary(15), P_15);
+  P_15->Set_KBucket(P_4);
+  P_15->Set_KBucket(P_14);
+  P_15->Set_KBucket(P_16);
+
+
+  set_data_store("Node16", "/prefix/data/store/" + toBinary(16), P_16);
+  set_data_management("Node16", "/prefix/data/query/" + toBinary(16), P_16);
+  P_16->Set_KBucket(P_4);
+  P_16->Set_KBucket(P_14);
+  P_16->Set_KBucket(P_15);
+
+
+  // set_data_store("Node15", "/prefix/data/store/" + toBinary(15), P_15);
+  // set_data_management("Node15", "/prefix/data/query/" + toBinary(15), P_15);
+  // P_15->Set_KBucket(P_13);
+  // set_data_store("Node13", "/prefix/data/store/" + toBinary(13), P_13);
+  // set_data_management("Node13", "/prefix/data/query/" + toBinary(13), P_13);
+  // P_13->Set_KBucket(P_10);
+  // set_data_store("Node10", "/prefix/data/store/" + toBinary(10), P_10);
+  // set_data_management("Node10", "/prefix/data/query/" + toBinary(10), P_10);
+  // P_10->Set_KBucket(P_8);
+  // set_data_store("Node8", "/prefix/data/store/" + toBinary(8), P_8);
+  // set_data_management("Node8", "/prefix/data/query/" + toBinary(8), P_8);
+
+
+
+
+
+
+  std::ostringstream address;
+  address << P_0;
+  std::string location = address.str();
+
+  Ptr<Node> Node0 = Names::Find<Node>("Node0");
+  ndn::AppHelper app1("CustomerApp");
+  app1.SetPrefix("/prefix/data/download/" + toBinary(0));
+  app1.SetAttribute("NodeName", StringValue(toBinary(0)));
+  app1.SetAttribute("Kademlia", StringValue(location));
+  app1.SetAttribute("Query", StringValue("Record123/initRecord0/initRecord1/initRecord1/trash123/"));
+  app1.SetAttribute("Record", StringValue("Record123/initRecord0/initRecord1/initRecord1/trash/"));
+  app1.Install(Node0);
+  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(0), Node0);
+
+/* 複數Order測試
+  Order Order15("Record123/initRecord0/initRecord1/initRecord1/trash/", 5);
+  Order* O_15 = &Order15;
+  std::ostringstream address;
+  address << O_15;
+  std::string location = address.str();
+  */
+
+
 
 //================================================
 //設定第二條線

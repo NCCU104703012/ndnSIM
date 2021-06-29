@@ -4,6 +4,30 @@
 
 #include <iostream>
 
+class Order
+{
+private:
+    /* data */
+    std::string dataList;
+    int targetNum;
+    int tempNum;
+    Order* nextPtr;
+
+public:
+    Order(std::string dataString, int targetNumber)
+    {
+    dataList = dataString;
+    targetNum = targetNumber;
+    tempNum = 0;
+    };
+
+    void setNext(Order* ptr);
+    Order* getNext();
+    Order* getTail();
+    ~Order(){};
+};
+
+
 class Data{
 
 public:
@@ -68,7 +92,7 @@ private:
     std::string node_name;
     std::string KId;
     Data *dataList;
-    Kademlia *k_bucket[5] = {NULL, NULL, NULL, NULL, NULL};
+    Kademlia *k_bucket[15] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
     int knum = 0;
 };
 

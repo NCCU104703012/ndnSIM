@@ -157,3 +157,23 @@ Data::GetData(std::string DataName)
     }
     return NULL;
 }
+
+//---------------------Class Order-------------------------
+
+void Order::setNext(Order* ptr){
+    nextPtr = ptr;
+}
+    
+    
+Order* Order::getNext(){
+    return nextPtr;
+}
+
+Order* Order::getTail(){
+    Order* output = this;
+    while (output->getNext() != NULL)
+    {
+        output = output->getNext();
+    }
+    return output;
+}
