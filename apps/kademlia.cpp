@@ -163,17 +163,22 @@ Data::GetData(std::string DataName)
 void Order::setNext(Order* ptr){
     nextPtr = ptr;
 }
-    
-    
-Order* Order::getNext(){
-    return nextPtr;
-}
+
 
 Order* Order::getTail(){
-    Order* output = this;
-    while (output->getNext() != NULL)
+    Order *outputPtr = this;
+    Order *tempPtr = this->getNext();
+    while (tempPtr != NULL)
     {
-        output = output->getNext();
+        outputPtr = tempPtr;
+        tempPtr = tempPtr->getNext();
     }
-    return output;
+    return outputPtr;
+}
+
+void
+Order::AddOrder(std::string dataString, double timeString, int targetNumber)
+{
+    Order *inputData = new Order(dataString, timeString, targetNumber);
+    this->setNext(inputData);
 }

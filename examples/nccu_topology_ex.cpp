@@ -353,8 +353,19 @@ main(int argc, char* argv[])
 
 
 
-  Order order0("Record123/initRecord0/initRecord1/initRecord1/trash123/","4/7/10/13/16/", 5);
+  Order order0("Record123",4, 5);
   Order* Optr_0 = & order0;
+
+  Optr_0->AddOrder("initRecord0", 7, 5);
+  Optr_0 = Optr_0->getNext();
+  Optr_0->AddOrder("initRecord1", 10, 5);
+  Optr_0 = Optr_0->getNext();
+  Optr_0->AddOrder("initRecord1", 13, 5);
+  Optr_0 = Optr_0->getNext();
+  Optr_0->AddOrder("trash123", 16, 5);
+  Optr_0 = Optr_0->getNext();
+
+  Optr_0 = & order0;
 
   std::ostringstream address;
   address << P_0;

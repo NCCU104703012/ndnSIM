@@ -9,18 +9,19 @@ class Order
 private:
     /* data */
     std::string dataList;
-    std::string timeStamp;
+    double timeStamp;
     int targetNum;
     int tempNum;
     Order* nextPtr;
 
 public:
-    Order(std::string dataString, std::string timeString, int targetNumber)
+    Order(std::string dataString, double timeString, int targetNumber)
     {
     dataList = dataString;
     timeStamp = timeString;
     targetNum = targetNumber;
     tempNum = 0;
+    nextPtr = NULL;
     };
 
     std::string
@@ -28,7 +29,7 @@ public:
         return dataList;
     };
 
-    std::string
+    double
     getTimeStamp(){
         return timeStamp;
     };
@@ -38,8 +39,16 @@ public:
         return targetNum;
     };
 
-    void setNext(Order* ptr);
-    Order* getNext();
+    Order* getNext(){
+        return nextPtr;
+    };
+
+    void
+    setNext(Order* ptr);
+
+    void
+    AddOrder(std::string dataString, double timeString, int targetNumber);
+
     Order* getTail();
     ~Order(){};
 };

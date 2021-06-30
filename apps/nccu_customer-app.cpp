@@ -116,17 +116,11 @@ CustomerApp::StartApplication()
   // Simulator::Schedule(Seconds(13), &CustomerApp::SendQuery, this);
   // Simulator::Schedule(Seconds(16), &CustomerApp::SendQuery, this);
 
-  std::string timeList = GetO_ptr()->getTimeStamp();
-  int head = 0, tail;
+  Order* O_ptr = GetO_ptr();
   for (int i = 0; i < GetO_ptr()->getTargetNum() ; i++)
   {
-    tail = timeList.find_first_of("/", head);
-
-    //std::cout << timeList.substr(head, tail-head) << std::endl;
-
-    double temp = std::stod(timeList.substr(head, tail-head));
-    Simulator::Schedule(Seconds(temp), &CustomerApp::SendQuery, this);
-    head = tail+1;
+    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::SendQuery, this);
+    O_ptr = O_ptr->getNext();
   }
   
 
@@ -282,17 +276,25 @@ void
 CustomerApp::SendQuery(){
 
   //query分割
-  std::string orderName = GetO_ptr()->getDatalist();
+  // std::string orderName = GetO_ptr()->getDatalist();
 
-  int head = 0 , tail = orderName.find_first_of("/");
-  std::string query_output;
+  // int head = 0 , tail = orderName.find_first_of("/");
+   std::string query_output;
+  // for (int i = 0; i < query_count; i++)
+  // {
+  //   head = tail+1;
+  //   tail = orderName.find_first_of("/",head);
+  // }
+  
+  // query_output = orderName.substr(head, tail-head);
+
+  Order* O_ptr= GetO_ptr() ;
   for (int i = 0; i < query_count; i++)
   {
-    head = tail+1;
-    tail = orderName.find_first_of("/",head);
+    O_ptr = O_ptr->getNext();
   }
   
-  query_output = orderName.substr(head, tail-head);
+  query_output = O_ptr->getDatalist();
   
 
   ndn::Name temp;
