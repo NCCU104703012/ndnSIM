@@ -110,11 +110,25 @@ CustomerApp::StartApplication()
   Simulator::Schedule(Seconds(2.5), &CustomerApp::SendRecord, this);
   Simulator::Schedule(Seconds(3.0), &CustomerApp::SendRecord, this);
 
-  Simulator::Schedule(Seconds(4), &CustomerApp::SendQuery, this);
-  Simulator::Schedule(Seconds(7), &CustomerApp::SendQuery, this);
-  Simulator::Schedule(Seconds(10), &CustomerApp::SendQuery, this);
-  Simulator::Schedule(Seconds(13), &CustomerApp::SendQuery, this);
-  Simulator::Schedule(Seconds(16), &CustomerApp::SendQuery, this);
+  // Simulator::Schedule(Seconds(4), &CustomerApp::SendQuery, this);
+  // Simulator::Schedule(Seconds(7), &CustomerApp::SendQuery, this);
+  // Simulator::Schedule(Seconds(10), &CustomerApp::SendQuery, this);
+  // Simulator::Schedule(Seconds(13), &CustomerApp::SendQuery, this);
+  // Simulator::Schedule(Seconds(16), &CustomerApp::SendQuery, this);
+
+  std::string timeList = GetO_ptr()->getTimeStamp();
+  int head = 0, tail;
+  for (int i = 0; i < GetO_ptr()->getTargetNum() ; i++)
+  {
+    tail = timeList.find_first_of("/", head);
+
+    //std::cout << timeList.substr(head, tail-head) << std::endl;
+
+    double temp = std::stod(timeList.substr(head, tail-head));
+    Simulator::Schedule(Seconds(temp), &CustomerApp::SendQuery, this);
+    head = tail+1;
+  }
+  
 
 
 }
@@ -165,8 +179,8 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     
     for (int i = 0; i < 6; i++)
     {
-      head = inputString.find("/", head);
-      tail = inputString.find("/", head+1);
+      head = inputString.find_first_of("/", head);
+      tail = inputString.find_first_of("/", head+1);
       std::string temp = inputString.substr(head+1, tail-head-1);
 
       //std::cout  << temp << std::endl;
@@ -229,15 +243,17 @@ void
 CustomerApp::SendRecord()
 {
   //record分割
-  int head = 0 , tail = Record.toUri().find("/");
+  std::cout << Record << std::endl;
+
+  int head = 0 , tail = Record.toUri().find_first_of("/");
   std::string record_output;
-  for (int i = 0; i < record_count; i++)
+  for (int i = 0; i <= record_count; i++)
   {
-    head = tail;
-    tail = Record.toUri().find("/",head+1);
+    head = tail+1;
+    tail = Record.toUri().find_first_of("/",head);
   }
   
-  record_output = Record.toUri().substr(head+1, tail-head-1);
+  record_output = Record.toUri().substr(head, tail-head);
 
   std::size_t hashRecord = std::hash<std::string>{}(record_output);
   std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
@@ -266,15 +282,17 @@ void
 CustomerApp::SendQuery(){
 
   //query分割
-  int head = 0 , tail = Query.toUri().find("/");
+  std::string orderName = GetO_ptr()->getDatalist();
+
+  int head = 0 , tail = orderName.find_first_of("/");
   std::string query_output;
   for (int i = 0; i < query_count; i++)
   {
-    head = tail;
-    tail = Query.toUri().find("/",head+1);
+    head = tail+1;
+    tail = orderName.find_first_of("/",head);
   }
   
-  query_output = Query.toUri().substr(head+1, tail-head-1);
+  query_output = orderName.substr(head, tail-head);
   
 
   ndn::Name temp;

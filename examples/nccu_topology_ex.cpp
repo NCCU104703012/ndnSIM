@@ -353,22 +353,28 @@ main(int argc, char* argv[])
 
 
 
-
-
+  Order order0("Record123/initRecord0/initRecord1/initRecord1/trash123/","4/7/10/13/16/", 5);
+  Order* Optr_0 = & order0;
 
   std::ostringstream address;
   address << P_0;
   std::string location = address.str();
+
+  std::ostringstream address2;
+  address2 << Optr_0;
+  std::string queryString = address2.str();
+
 
   Ptr<Node> Node0 = Names::Find<Node>("Node0");
   ndn::AppHelper app1("CustomerApp");
   app1.SetPrefix("/prefix/data/download/" + toBinary(0));
   app1.SetAttribute("NodeName", StringValue(toBinary(0)));
   app1.SetAttribute("Kademlia", StringValue(location));
-  app1.SetAttribute("Query", StringValue("Record123/initRecord0/initRecord1/initRecord1/trash123/"));
+  app1.SetAttribute("Query", StringValue(queryString));
   app1.SetAttribute("Record", StringValue("Record123/initRecord0/initRecord1/initRecord1/trash/"));
   app1.Install(Node0);
   ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(0), Node0);
+
 
 /* 複數Order測試
   Order Order15("Record123/initRecord0/initRecord1/initRecord1/trash/", 5);

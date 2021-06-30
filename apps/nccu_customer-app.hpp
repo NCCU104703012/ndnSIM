@@ -82,6 +82,19 @@ public:
     return output;
   };
 
+  //將Query從 Name 轉換成指標
+  Order*
+  GetO_ptr()
+  {
+    std::stringstream ss;
+    std::string temp = Query.toUri().substr(1);
+    ss << temp;
+    long long unsigned int i;
+    ss >> std::hex >> i;
+    Order *output = reinterpret_cast<Order *>(i);
+    return output;
+  };
+
 
 private:
   void
@@ -99,7 +112,7 @@ private:
 
   //本身節點的交易紀錄 用來送出給Data store
   ndn::Name Record;
-  int record_count = 1;
+  int record_count = 0;
 
   //用來製作興趣封包
   ndn::Name NodeName;
@@ -109,7 +122,7 @@ private:
 
   //送出Query使用
   ndn::Name Query;
-  int query_count = 1;
+  int query_count = 0;
 
   //k_ptr內容為"/0x00000" 不為純位址 要注意
   ndn::Name k_ptr;

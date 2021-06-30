@@ -9,16 +9,33 @@ class Order
 private:
     /* data */
     std::string dataList;
+    std::string timeStamp;
     int targetNum;
     int tempNum;
     Order* nextPtr;
 
 public:
-    Order(std::string dataString, int targetNumber)
+    Order(std::string dataString, std::string timeString, int targetNumber)
     {
     dataList = dataString;
+    timeStamp = timeString;
     targetNum = targetNumber;
     tempNum = 0;
+    };
+
+    std::string
+    getDatalist(){
+        return dataList;
+    };
+
+    std::string
+    getTimeStamp(){
+        return timeStamp;
+    };
+
+    int
+    getTargetNum(){
+        return targetNum;
     };
 
     void setNext(Order* ptr);
