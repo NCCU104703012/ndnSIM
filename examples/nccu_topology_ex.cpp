@@ -127,6 +127,45 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
   ndnGlobalRoutingHelper.AddOrigins(prefix, TargetNode);
 }
 
+void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, std::string recordString)
+{
+  ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
+  Order* Optr_head = new Order("init", 0, targetNum+1);
+  Order* Optr = Optr_head;
+  int head = 0;
+  int tail = 0;
+  int timeStamp = 7;
+  
+  for (int i = 0; i < targetNum; i++)
+  {
+    head = tail;
+    tail = query.find_first_of("/", head);
+    Optr->AddOrder(query.substr(head, tail-head), timeStamp, targetNum+1);
+    Optr = Optr->getNext();
+    tail++;
+    timeStamp = timeStamp + 3;
+  }
+
+  std::ostringstream address;
+  address << kptr;
+  std::string location = address.str();
+
+  std::ostringstream address2;
+  address2 << Optr_head;
+  std::string queryString = address2.str();
+
+
+  Ptr<Node> Node0 = Names::Find<Node>("Node" + to_string(nodeNum) );
+  ndn::AppHelper app1("CustomerApp");
+  app1.SetPrefix("/prefix/data/download/" + toBinary(nodeNum));
+  app1.SetAttribute("NodeName", StringValue(toBinary(nodeNum)));
+  app1.SetAttribute("Kademlia", StringValue(location));
+  app1.SetAttribute("Query", StringValue(queryString));
+  app1.SetAttribute("Record", StringValue(recordString));
+  app1.Install(Node0);
+  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(nodeNum), Node0);
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -352,48 +391,8 @@ main(int argc, char* argv[])
   // set_data_management("Node8", "/prefix/data/query/" + toBinary(8), P_8);
 
 
+  set_customerApp(5, "Record123/initRecord0/initRecord1/initRecord1/trash123/", P_0, 0, "Record123/initRecord0/initRecord1/initRecord1/trash/");
 
-  Order order0("Record123",4, 5);
-  Order* Optr_0 = & order0;
-
-  Optr_0->AddOrder("initRecord0", 7, 5);
-  Optr_0 = Optr_0->getNext();
-  Optr_0->AddOrder("initRecord1", 10, 5);
-  Optr_0 = Optr_0->getNext();
-  Optr_0->AddOrder("initRecord1", 13, 5);
-  Optr_0 = Optr_0->getNext();
-  Optr_0->AddOrder("trash123", 16, 5);
-  Optr_0 = Optr_0->getNext();
-
-  Optr_0 = & order0;
-
-  std::ostringstream address;
-  address << P_0;
-  std::string location = address.str();
-
-  std::ostringstream address2;
-  address2 << Optr_0;
-  std::string queryString = address2.str();
-
-
-  Ptr<Node> Node0 = Names::Find<Node>("Node0");
-  ndn::AppHelper app1("CustomerApp");
-  app1.SetPrefix("/prefix/data/download/" + toBinary(0));
-  app1.SetAttribute("NodeName", StringValue(toBinary(0)));
-  app1.SetAttribute("Kademlia", StringValue(location));
-  app1.SetAttribute("Query", StringValue(queryString));
-  app1.SetAttribute("Record", StringValue("Record123/initRecord0/initRecord1/initRecord1/trash/"));
-  app1.Install(Node0);
-  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(0), Node0);
-
-
-/* 複數Order測試
-  Order Order15("Record123/initRecord0/initRecord1/initRecord1/trash/", 5);
-  Order* O_15 = &Order15;
-  std::ostringstream address;
-  address << O_15;
-  std::string location = address.str();
-  */
 
 
 

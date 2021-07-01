@@ -62,7 +62,7 @@ public:
         head = this;
     }
 
-    void AddData(std::string inputName);
+    void AddData(std::string inputName, std::string inputType);
 
     Data* GetData(std::string DataName);
 
@@ -76,6 +76,7 @@ public:
     std::string UserID;
     std::string age;
     std::string item;
+    std::string type;
 };
 
 class Kademlia{
@@ -89,7 +90,7 @@ public:
     GetData(std::string DataName);
 
     void
-    SetData(std::string input);
+    SetData(std::string input, std::string type);
 
     Kademlia*
     GetNext_Node(std::string TargetNode);

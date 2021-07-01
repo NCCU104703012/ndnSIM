@@ -147,9 +147,9 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   std::string inputString = interest->getName().toUri();
 
     int head = 0, tail;
-    std::string DataName, TargetNode;
+    std::string DataName, TargetNode, itemType;
     
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i <= 6; i++)
     {
       head = inputString.find("/", head);
       tail = inputString.find("/", head+1);
@@ -168,12 +168,16 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         DataName = temp;
         //NS_LOG_DEBUG("dataname = " << DataName);
         break;
+      case 6:
+        itemType = temp;
+        //NS_LOG_DEBUG("dataname = " << DataName);
+        break;
       }
     }
 
   if (GetK_ptr() == GetK_ptr()->GetNext_Node(TargetNode))
   {
-    GetK_ptr()->SetData(DataName);
+    GetK_ptr()->SetData(DataName, itemType);
     GetK_ptr()->Node_info();
   }
   else

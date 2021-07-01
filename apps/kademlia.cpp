@@ -97,21 +97,22 @@ Kademlia::Set_KBucket(Kademlia *KNode)
 }
 
 void
-Kademlia::SetData(std::string input)
+Kademlia::SetData(std::string input, std::string type)
 {
-    dataList->AddData(input);
+    dataList->AddData(input, type);
 }
 
 //---------------------Class Data-------------------------
 
 void
-Data::AddData(std::string inputName)
+Data::AddData(std::string inputName, std::string inputType)
 {
     Data *inputData = new Data();
     Data *tailPtr = this->GetTail();
     inputData->head = tailPtr->head;
     tailPtr->next = inputData;
     inputData->Name = inputName;
+    inputData->type = inputType;
 }
 
 void

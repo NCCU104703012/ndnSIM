@@ -237,7 +237,6 @@ void
 CustomerApp::SendRecord()
 {
   //record分割
-  std::cout << Record << std::endl;
 
   int head = 0 , tail = Record.toUri().find_first_of("/");
   std::string record_output;
@@ -255,7 +254,7 @@ CustomerApp::SendRecord()
 
   ndn::Name temp;
   temp.append("prefix").append("data").append("store").append(NodeName);
-  temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(record_output);
+  temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(record_output).append("Item_type123");
   auto interest = std::make_shared<ndn::Interest>(temp);
   record_count++;
 
