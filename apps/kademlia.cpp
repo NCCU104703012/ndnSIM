@@ -189,6 +189,13 @@ Order::AddOrder(std::string dataString, double timeString, int targetNumber)
         prePtr = tempPtr;
         tempPtr = tempPtr->getNext();
     }
-    inputData->setNext(tempPtr);
-    prePtr->setNext(inputData);
+    if (tempPtr->getNext() == NULL && timeString > tempPtr->getTimeStamp())
+    {
+        tempPtr->setNext(inputData);
+    }
+    else
+    {
+        inputData->setNext(tempPtr);
+        prePtr->setNext(inputData);
+    }
 }

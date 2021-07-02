@@ -136,7 +136,6 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
 
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   Order* Optr_head = new Order("init", 0, targetNum+1);
-  Order* Optr = Optr_head;
   int head = 0;
   int tail = 0;
   
@@ -148,7 +147,6 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
     head = tail;
     tail = query.find_first_of("/", head);
     Optr_head->AddOrder(query.substr(head, tail-head), timeStamp, targetNum+1);
-    //Optr = Optr->getNext();
     tail++;
   }
 
@@ -397,7 +395,7 @@ main(int argc, char* argv[])
   // set_data_management("Node8", "/prefix/data/query/" + toBinary(8), P_8);
 
 
-  set_customerApp(5, "Record123/initRecord0/initRecord1/initRecord1/trash123/", P_0, 0, "Record123/initRecord0/initRecord1/initRecord1/trash/");
+  set_customerApp(5, "Record123/initRecord0/initRecord1/initRecord1/trash123/", P_8, 8, "Record123/initRecord0/initRecord1/initRecord1/trash/");
 
 
 
