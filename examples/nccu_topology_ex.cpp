@@ -35,6 +35,8 @@
 #include "ns3/ndnSIM/apps/data_management.hpp"
 #include "ns3/ndnSIM/apps/data_store.hpp"
 
+#include <random>
+
 
 namespace ns3 {
 
@@ -129,21 +131,25 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
 
 void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, std::string recordString)
 {
+  std::default_random_engine generator(time(NULL));
+  std::poisson_distribution<int> poisson(10);
+
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   Order* Optr_head = new Order("init", 0, targetNum+1);
   Order* Optr = Optr_head;
   int head = 0;
   int tail = 0;
-  int timeStamp = 7;
+  
   
   for (int i = 0; i < targetNum; i++)
   {
+    double timeStamp = poisson(generator);
+    std::cout << timeStamp << std::endl;
     head = tail;
     tail = query.find_first_of("/", head);
-    Optr->AddOrder(query.substr(head, tail-head), timeStamp, targetNum+1);
-    Optr = Optr->getNext();
+    Optr_head->AddOrder(query.substr(head, tail-head), timeStamp, targetNum+1);
+    //Optr = Optr->getNext();
     tail++;
-    timeStamp = timeStamp + 3;
   }
 
   std::ostringstream address;
@@ -392,7 +398,6 @@ main(int argc, char* argv[])
 
 
   set_customerApp(5, "Record123/initRecord0/initRecord1/initRecord1/trash123/", P_0, 0, "Record123/initRecord0/initRecord1/initRecord1/trash/");
-
 
 
 

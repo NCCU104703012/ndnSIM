@@ -180,6 +180,15 @@ Order* Order::getTail(){
 void
 Order::AddOrder(std::string dataString, double timeString, int targetNumber)
 {
-    Order *inputData = new Order(dataString, timeString, targetNumber);
-    this->setNext(inputData);
+    Order* inputData = new Order(dataString, timeString, targetNumber);
+    Order* tempPtr = this;
+    Order* prePtr = this;
+
+    while (timeString > tempPtr->getTimeStamp() && tempPtr->getNext() != NULL)
+    {
+        prePtr = tempPtr;
+        tempPtr = tempPtr->getNext();
+    }
+    inputData->setNext(tempPtr);
+    prePtr->setNext(inputData);
 }

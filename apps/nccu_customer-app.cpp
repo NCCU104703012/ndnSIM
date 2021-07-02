@@ -120,6 +120,7 @@ CustomerApp::StartApplication()
   for (int i = 0; i < GetO_ptr()->getTargetNum() ; i++)
   {
     Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::SendQuery, this);
+    std::cout << O_ptr->getTimeStamp() << std::endl;
     O_ptr = O_ptr->getNext();
   }
   
