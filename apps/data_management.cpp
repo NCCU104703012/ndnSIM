@@ -142,9 +142,9 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   std::string inputString = interest->getName().toUri();
 
     int head = 0, tail;
-    std::string DataName, TargetNode, SourceNode, flag;
+    std::string DataName, TargetNode, SourceNode, flag, itemType;
     
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < 8; i++)
     {
       head = inputString.find("/", head);
       tail = inputString.find("/", head+1);
@@ -169,6 +169,10 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         DataName = temp;
         //NS_LOG_DEBUG("dataname = " << DataName);
         break;
+      case 7:
+        itemType = temp;
+        //NS_LOG_DEBUG("dataname = " << DataName);
+        break;
       }
     }
 
@@ -178,7 +182,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     if (flag.compare("1") == 0)
     {
       ndn::Name outData;
-      outData.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName);
+      outData.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
 
       auto data = std::make_shared<ndn::Data>(interest->getName());
       data->setFreshnessPeriod(ndn::time::milliseconds(1000));
@@ -196,7 +200,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     //確認是否有此資料 若無則從k桶找尋下一目標
     else if(GetK_ptr()->GetData(DataName))
     {
-      outInterest.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName);
+      outInterest.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
 
       // Create and configure ndn::Interest
       auto interest = std::make_shared<ndn::Interest>(outInterest);
@@ -228,7 +232,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       else
       {
         TargetNode = (GetK_ptr()->GetNext_Node(binaryDataName))->GetKId();
-        outInterest.append("prefix").append("data").append("query").append(TargetNode).append("0").append(SourceNode).append(DataName);
+        outInterest.append("prefix").append("data").append("query").append(TargetNode).append("0").append(SourceNode).append(DataName).append(itemType);
 
         // Create and configure ndn::Interest
         auto interest = std::make_shared<ndn::Interest>(outInterest);

@@ -3,30 +3,34 @@
 #define KADEMLIA_
 
 #include <iostream>
+#include <set>
 
 class Order
 {
 private:
     /* data */
-    std::string dataList;
+    std::string orderName;
     double timeStamp;
     int targetNum;
     int tempNum;
+    int fulfill_data_num;
     Order* nextPtr;
+    std::set<std::string> dataList = {};
 
 public:
     Order(std::string dataString, double timeString, int targetNumber)
     {
-    dataList = dataString;
+    orderName = dataString;
     timeStamp = timeString;
     targetNum = targetNumber;
     tempNum = 0;
+    fulfill_data_num = 0;
     nextPtr = NULL;
     };
 
     std::string
-    getDatalist(){
-        return dataList;
+    getOrderName(){
+        return orderName;
     };
 
     double
@@ -38,6 +42,17 @@ public:
     getTargetNum(){
         return targetNum;
     };
+
+    std::set<std::string>
+    getDataList(){
+        return dataList;
+    }
+
+    void
+    setDataList(std::string input){
+        dataList.insert(input);
+    }
+
 
     Order* getNext(){
         return nextPtr;
