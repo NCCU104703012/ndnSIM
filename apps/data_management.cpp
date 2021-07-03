@@ -221,7 +221,9 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
       if (GetK_ptr()->GetNext_Node(binaryDataName) == GetK_ptr())
       {
+        std::cout << "******************" << std::endl;
         NS_LOG_DEBUG("NO match Data & next Node");
+        std::cout << "******************" << std::endl;
       }
       else
       {

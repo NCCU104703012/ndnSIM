@@ -185,7 +185,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     ndn::Name next ;
     std::string nextTarget = GetK_ptr()->GetNext_Node(TargetNode)->GetKId();
 
-    next.append("prefix").append("data").append("store").append(nextTarget).append(TargetNode).append(DataName);
+    next.append("prefix").append("data").append("store").append(nextTarget).append(TargetNode).append(DataName).append(itemType);
     auto next_interest = std::make_shared<ndn::Interest>(next);
     Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
     next_interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));

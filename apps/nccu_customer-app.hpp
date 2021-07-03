@@ -67,7 +67,10 @@ public:
   SetNode_Pointer(Ptr<Node> input);
 
   void
-  SendQuery();
+  InitSendQuery();
+
+  void
+  SendQuery(Order* O_ptr, std::string inputData);
 
   //將kademlia struct位址從字串轉成指標
   Kademlia*
@@ -94,6 +97,16 @@ public:
     Order *output = reinterpret_cast<Order *>(i);
     return output;
   };
+
+  std::set<std::string>
+  GetDataSet(){
+    return dataSet;
+  };
+
+  void
+  SetDataSet(std::string inputData){
+    dataSet.insert(inputData);
+  }
 
 
 private:
@@ -126,6 +139,9 @@ private:
 
   //k_ptr內容為"/0x00000" 不為純位址 要注意
   ndn::Name k_ptr;
+
+  //儲存商家清單 已知的資料清單 用來生成order需要query的項目
+  std::set<std::string> dataSet = {};
 
 };
 

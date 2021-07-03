@@ -116,15 +116,24 @@ CustomerApp::StartApplication()
   // Simulator::Schedule(Seconds(13), &CustomerApp::SendQuery, this);
   // Simulator::Schedule(Seconds(16), &CustomerApp::SendQuery, this);
 
-  Order* O_ptr = GetO_ptr();
-  for (int i = 0; i < GetO_ptr()->getTargetNum() ; i++)
+  Order* O_ptr = GetO_ptr()->getNext();
+  // for (int i = 0; i < GetO_ptr()->getTargetNum() ; i++)
+  // {
+  //   Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::SendQuery, this);
+  //   std::cout << O_ptr->getTimeStamp() << std::endl;
+  //   if (O_ptr->getNext() != NULL)
+  //   {
+  //     O_ptr = O_ptr->getNext();
+  //   }
+  // }
+
+  while (O_ptr != NULL)
   {
-    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::SendQuery, this);
+    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::InitSendQuery, this);
     std::cout << O_ptr->getTimeStamp() << std::endl;
     O_ptr = O_ptr->getNext();
   }
   
-
 
 }
 
@@ -222,7 +231,9 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 {
   NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
 
+  std::cout << "******************" << std::endl;
   std::cout << "DATA received for name " << data->getName() << std::endl;
+  std::cout << "******************" << std::endl;
 }
 
 void
@@ -249,13 +260,17 @@ CustomerApp::SendRecord()
   
   record_output = Record.toUri().substr(head, tail-head);
 
+  //將record加入dataSet中
+  this->SetDataSet("food/" + record_output);
+
+  //生成興趣封包
   std::size_t hashRecord = std::hash<std::string>{}(record_output);
   std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
   NS_LOG_DEBUG("hash Record for " << binaryRecord << " " << record_output);
 
   ndn::Name temp;
   temp.append("prefix").append("data").append("store").append(NodeName);
-  temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(record_output).append("Item_type123");
+  temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(record_output).append("food");
   auto interest = std::make_shared<ndn::Interest>(temp);
   record_count++;
 
@@ -273,7 +288,7 @@ CustomerApp::SendRecord()
 
 
 void
-CustomerApp::SendQuery(){
+CustomerApp::InitSendQuery(){
 
   //query分割
   // std::string orderName = GetO_ptr()->getDatalist();
@@ -289,32 +304,74 @@ CustomerApp::SendQuery(){
   // query_output = orderName.substr(head, tail-head);
 
   Order* O_ptr= GetO_ptr() ;
-  for (int i = 0; i < query_count; i++)
+  for (int i = 0; i <= query_count; i++)
   {
     O_ptr = O_ptr->getNext();
   }
-  
-  query_output = O_ptr->getDatalist();
-  
-
-  ndn::Name temp;
-  temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
-  temp.append(query_output);
   query_count++;
 
-  auto interest = std::make_shared<ndn::Interest>(temp);
+  SendQuery(O_ptr, O_ptr->getDatalist());
+
+  // query_output = O_ptr->getDatalist();
+
+  // ndn::Name temp;
+  // temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
+  // temp.append(query_output);
   
-  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
-  interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
-  interest->setInterestLifetime(ndn::time::seconds(1));
-  NS_LOG_DEBUG("Sending Query for " << interest->getName());
+  // auto interest = std::make_shared<ndn::Interest>(temp);
+  
+  // Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+  // interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
-  // Call trace (for logging purposes)
-  m_transmittedInterests(interest, this, m_face);
+  // interest->setInterestLifetime(ndn::time::seconds(1));
+  // NS_LOG_DEBUG("Sending Query for " << interest->getName());
 
-  m_appLink->onReceiveInterest(*interest);
+  // // Call trace (for logging purposes)
+  // m_transmittedInterests(interest, this, m_face);
 
+  // m_appLink->onReceiveInterest(*interest);
+
+}
+
+void
+CustomerApp::SendQuery(Order* O_ptr, std::string inputData){
+  std::set<std::string> dataSet = this->GetDataSet();
+  //std::set<std::string>::iterator matching = dataSet.find("food/" + O_ptr->getDatalist());
+  // if (matching != dataSet.end())
+  // {
+  //   std::cout << "found in set : "  <<  std::endl;
+  // }
+
+  std::set<std::string>::iterator i;
+  for (i = dataSet.begin(); i != dataSet.end(); ++i) {
+    std::string dataString = *i;
+    if (dataString.find(inputData) >= 0)
+    {
+      std::cout << "found in set : "  << dataString <<  std::endl;
+      std::string query_output;
+      query_output = dataString.substr(dataString.find_first_of("/"), dataString.size()-dataString.find_first_of("/"));
+
+      ndn::Name temp;
+      temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
+      temp.append(query_output);
+      
+
+      auto interest = std::make_shared<ndn::Interest>(temp);
+      
+      Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+      interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+
+      interest->setInterestLifetime(ndn::time::seconds(1));
+      NS_LOG_DEBUG("Sending Query for " << interest->getName());
+
+      // Call trace (for logging purposes)
+      m_transmittedInterests(interest, this, m_face);
+
+      m_appLink->onReceiveInterest(*interest);
+    }
+  }
+  
 }
 
 } // namespace ns3

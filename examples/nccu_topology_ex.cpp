@@ -36,6 +36,7 @@
 #include "ns3/ndnSIM/apps/data_store.hpp"
 
 #include <random>
+#include <set>
 
 
 namespace ns3 {
@@ -76,26 +77,6 @@ std::string toBinary(int n)
     return bs1.to_string();
 }
 
-// void producer_set(std::string node, std::string prefix, std::string payloadsize){
-//   Ptr<Node> producer = Names::Find<Node>(node);
-//   ndn::AppHelper producerHelper("ns3::ndn::ProducerApp");
-//   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
-//   producerHelper.SetPrefix(prefix);
-//   producerHelper.SetAttribute("PayloadSize", StringValue(payloadsize));
-//   producerHelper.Install(producer);
-//   ndnGlobalRoutingHelper.AddOrigins(prefix, producer);
-// }
-
-// void consumer_set(std::string node, std::string prefix, std::string frequency){
-//   Ptr<Node> consumer = Names::Find<Node>(node);
-//   ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
-//   //ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
-//   consumerHelper.SetPrefix(prefix);
-//   consumerHelper.SetAttribute("Frequency", StringValue(frequency)); // 100 interests a second
-//   consumerHelper.Install(consumer);
-//   //ndnGlobalRoutingHelper.AddOrigins(prefix, consumer);
-// }
-
 
 void set_data_store(std::string nodeName, std::string prefix, Kademlia* k_ptr )
 {
@@ -135,7 +116,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   std::poisson_distribution<int> poisson(10);
 
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
-  Order* Optr_head = new Order("init", 0, targetNum+1);
+  Order* Optr_head = new Order("init", 0, targetNum);
   int head = 0;
   int tail = 0;
   
@@ -183,7 +164,7 @@ main(int argc, char* argv[])
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等
   ndn::StackHelper ndnHelper;
-  ndnHelper.setCsSize(5);
+  ndnHelper.setCsSize(0);
   ndnHelper.InstallAll();
 
   // Set BestRoute strategy
@@ -192,11 +173,6 @@ main(int argc, char* argv[])
   // Installing global routing interface on all nodes
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll();
-
-  // // Getting containers for the consumer/producer
-  // // 分為food & clothes兩類
-  // std::string prefix_DataStore = "/prefix/data/store";
-  // std::string prefix_clothes = "/prefix/clothes";
 
 
   Kademlia Knode0("Node0", "Node0", toBinary(0));
@@ -382,21 +358,24 @@ main(int argc, char* argv[])
   P_16->Set_KBucket(P_15);
 
 
-  // set_data_store("Node15", "/prefix/data/store/" + toBinary(15), P_15);
-  // set_data_management("Node15", "/prefix/data/query/" + toBinary(15), P_15);
-  // P_15->Set_KBucket(P_13);
-  // set_data_store("Node13", "/prefix/data/store/" + toBinary(13), P_13);
-  // set_data_management("Node13", "/prefix/data/query/" + toBinary(13), P_13);
-  // P_13->Set_KBucket(P_10);
-  // set_data_store("Node10", "/prefix/data/store/" + toBinary(10), P_10);
-  // set_data_management("Node10", "/prefix/data/query/" + toBinary(10), P_10);
-  // P_10->Set_KBucket(P_8);
-  // set_data_store("Node8", "/prefix/data/store/" + toBinary(8), P_8);
-  // set_data_management("Node8", "/prefix/data/query/" + toBinary(8), P_8);
+
+  set_customerApp(2, "food/food/", P_10, 10, "Record123/initRecord0/initRecord1/initRecord1/trash/");
 
 
-  set_customerApp(5, "Record123/initRecord0/initRecord1/initRecord1/trash123/", P_8, 8, "Record123/initRecord0/initRecord1/initRecord1/trash/");
-
+  //Order set 測試
+  std::set<std::string> str = {"John", "Kelly", "Amanda", "Kim"};
+  // search for the iterator of given string in set
+    std::set<std::string>::iterator it = str.find("Kim");
+    // Check if iterator it is valid
+    if (it != str.end())
+    {
+        std::cout << "'Kim' found in set" << std::endl;
+    }
+    else
+    {
+      std::cout << "'Kim' not found" << std::endl;
+    }
+    
 
 
 //================================================
