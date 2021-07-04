@@ -12,8 +12,7 @@ private:
     std::string orderName;
     double timeStamp;
     int targetNum;
-    int tempNum;
-    int fulfill_data_num;
+    std::set<std::string> fulfill_data_list = {};
     Order* nextPtr;
     std::set<std::string> dataList = {};
 
@@ -23,8 +22,6 @@ public:
     orderName = dataString;
     timeStamp = timeString;
     targetNum = targetNumber;
-    tempNum = 0;
-    fulfill_data_num = 0;
     nextPtr = NULL;
     };
 
@@ -48,6 +45,21 @@ public:
         return dataList;
     }
 
+    std::set<std::string>
+    getFulfill_List(){
+        return fulfill_data_list;
+    }
+
+    void
+    replace_Datalist(std::set<std::string> inputList){
+        dataList = inputList;
+    }
+
+    void
+    setFulfill_List(std::string input){
+        fulfill_data_list.insert(input);
+    }
+
     void
     setDataList(std::string input){
         dataList.insert(input);
@@ -63,6 +75,14 @@ public:
 
     void
     AddOrder(std::string dataString, double timeString, int targetNumber);
+
+    //搜尋整個order資料結構 滿足所需資料的所有order
+    void
+    checkDataList(std::string DataName, std::string itemtype);
+    
+    //確認此筆order是否完成
+    void  
+    checkFulFill();
 
     Order* getTail();
     ~Order(){};

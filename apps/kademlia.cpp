@@ -199,3 +199,31 @@ Order::AddOrder(std::string dataString, double timeString, int targetNumber)
         prePtr->setNext(inputData);
     }
 }
+
+//搜尋整個order資料結構 滿足所需資料的所有order
+void
+Order::checkDataList(std::string DataName, std::string itemtype)
+{
+    std::set<std::string> tempList = this->getDataList();
+    if (tempList.find(itemtype + "/" + DataName) != tempList.end())
+    {
+        tempList.erase(itemtype + "/" + DataName);
+        this->setFulfill_List(itemtype + "/" + DataName);
+        this->replace_Datalist(tempList);
+        this->checkFulFill();
+    }
+    
+}
+    
+//確認此筆order是否完成
+void  
+Order::checkFulFill()
+{
+    if (static_cast<int>(this->getDataList().size()) == 0)
+    {
+       std::cout << "******************" << std::endl;
+       std::cout << "This Order is done!!!" << std::endl;
+       std::cout << "******************" << std::endl;
+    }
+    
+}

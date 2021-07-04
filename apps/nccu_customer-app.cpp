@@ -234,10 +234,55 @@ void
 CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 {
   NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
+  
+  std::string inputString = data->getName().toUri();
 
-  std::cout << "******************" << std::endl;
-  std::cout << "DATA received for name " << data->getName() << std::endl;
-  std::cout << "******************" << std::endl;
+    int head = 0, tail;
+    std::string DataName, TargetNode, SourceNode, flag, itemtype, DataString;
+    
+    for (int i = 0; i < 8; i++)
+    {
+      head = inputString.find_first_of("/", head);
+      tail = inputString.find_first_of("/", head+1);
+      std::string temp = inputString.substr(head+1, tail-head-1);
+
+      //std::cout  << temp << std::endl;
+      head = tail;
+
+      switch (i)
+      {
+      case 3:
+        TargetNode = temp;
+        //NS_LOG_DEBUG("targetnode = " << TargetNode);
+        break;
+      case 4:
+        SourceNode = temp;
+        //NS_LOG_DEBUG("sourcenode = " << SourceNode);
+        break;
+      case 5:
+        DataName = temp;
+        //NS_LOG_DEBUG("dataname = " << DataName);
+        break;
+      case 6:
+        DataString = temp;
+        //NS_LOG_DEBUG("itemtype = " << itemtype);
+        break;
+      case 7:
+        itemtype = temp;
+        //NS_LOG_DEBUG("itemtype = " << itemtype);
+        break;
+      }
+    }
+
+    Order* O_ptr = GetO_ptr()->getNext();
+    
+    while (O_ptr != NULL)
+    {
+      //尚未實作
+      O_ptr->checkDataList(DataString, itemtype);
+      O_ptr = O_ptr->getNext();
+    }
+    
 }
 
 void

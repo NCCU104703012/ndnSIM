@@ -360,21 +360,6 @@ main(int argc, char* argv[])
 
 
   set_customerApp(2, "food/food/", P_10, 10, "Record123/initRecord0/initRecord1/initRecord1/trash/");
-
-
-  //Order set 測試
-  std::set<std::string> str = {"John", "Kelly", "Amanda", "Kim"};
-  // search for the iterator of given string in set
-    std::set<std::string>::iterator it = str.find("Kim");
-    // Check if iterator it is valid
-    if (it != str.end())
-    {
-        std::cout << "'Kim' found in set" << std::endl;
-    }
-    else
-    {
-      std::cout << "'Kim' not found" << std::endl;
-    }
     
 
 
