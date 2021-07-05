@@ -359,7 +359,7 @@ main(int argc, char* argv[])
 
 
 
-  set_customerApp(2, "food/food/", P_10, 10, "Record123/initRecord0/initRecord1/initRecord1/trash/");
+  set_customerApp(5, "food/food/food/food/food/", P_4, 4, "Record123/initRecord0/initRecord1/initRecord1/trash/");
     
 
 

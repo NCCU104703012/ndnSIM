@@ -13,8 +13,9 @@ private:
     double timeStamp;
     int targetNum;
     std::set<std::string> fulfill_data_list = {};
-    Order* nextPtr;
+    Order* nextPtr = NULL;
     std::set<std::string> dataList = {};
+    bool terminate = true;
 
 public:
     Order(std::string dataString, double timeString, int targetNumber)
@@ -23,6 +24,7 @@ public:
     timeStamp = timeString;
     targetNum = targetNumber;
     nextPtr = NULL;
+    terminate = true;
     };
 
     std::string
@@ -65,6 +67,15 @@ public:
         dataList.insert(input);
     }
 
+    void
+    setTerminate(bool input){
+        terminate = input;
+    }
+
+    bool
+    getTerminate(){
+        return terminate;
+    }
 
     Order* getNext(){
         return nextPtr;
@@ -81,7 +92,7 @@ public:
     checkDataList(std::string DataName, std::string itemtype);
     
     //確認此筆order是否完成
-    void  
+    bool  
     checkFulFill();
 
     Order* getTail();
@@ -123,6 +134,12 @@ public:
 
     bool
     GetData(std::string DataName);
+
+    
+    std::string
+    GetNodeName(){
+        return node_name;
+    };
 
     void
     SetData(std::string input, std::string type);

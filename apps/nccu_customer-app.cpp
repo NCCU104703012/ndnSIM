@@ -261,15 +261,15 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
         break;
       case 5:
         DataName = temp;
-        //NS_LOG_DEBUG("dataname = " << DataName);
+        // NS_LOG_DEBUG("dataname = " << DataName);
         break;
       case 6:
         DataString = temp;
-        //NS_LOG_DEBUG("itemtype = " << itemtype);
+        // NS_LOG_DEBUG("DataString = " << DataString);
         break;
       case 7:
         itemtype = temp;
-        //NS_LOG_DEBUG("itemtype = " << itemtype);
+        // NS_LOG_DEBUG("itemtype = " << itemtype);
         break;
       }
     }
@@ -278,9 +278,54 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
     
     while (O_ptr != NULL)
     {
-      //尚未實作
-      O_ptr->checkDataList(DataString, itemtype);
+      if (!O_ptr->getTerminate())
+      {
+        O_ptr->checkDataList(DataString, itemtype);
+      }
       O_ptr = O_ptr->getNext();
+    }
+
+    O_ptr = GetO_ptr()->getNext();
+
+    while (O_ptr != NULL)
+    {
+      if (O_ptr->checkFulFill() && !O_ptr->getTerminate())
+      {
+        //生成一筆新的紀錄 並送出儲存
+        std::string newRecord = "newRecord_" + GetK_ptr()->GetNodeName() + "_" + std::to_string(new_record_count);
+
+        this->SetDataSet("food/" + newRecord);
+
+        std::size_t hashRecord = std::hash<std::string>{}(newRecord);
+        std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
+        NS_LOG_DEBUG("hash Record for " << binaryRecord << " " << newRecord);
+
+        ndn::Name temp;
+        temp.append("prefix").append("data").append("store").append(NodeName);
+        temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(newRecord).append("food");
+        auto interest = std::make_shared<ndn::Interest>(temp);
+        new_record_count++;
+
+        Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+        interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+
+        interest->setInterestLifetime(ndn::time::seconds(3));
+        NS_LOG_DEBUG("Sending Record for " << interest->getName());
+
+        // Call trace (for logging purposes)
+        m_transmittedInterests(interest, this, m_face);
+
+        m_appLink->onReceiveInterest(*interest);
+
+        //將已滿足order terminate -> ture
+        O_ptr->setTerminate(true);
+        O_ptr = O_ptr->getNext();
+      }
+      else
+      {
+        O_ptr = O_ptr->getNext();
+      }
+      
     }
     
 }
@@ -352,6 +397,9 @@ CustomerApp::InitSendQuery(){
 
 void
 CustomerApp::SendQuery(Order* O_ptr, std::string inputData){
+
+  //將terminate設為false
+  O_ptr->setTerminate(false);
 
   std::set<std::string> dataSet = this->GetDataSet();
   std::set<std::string>::iterator i;

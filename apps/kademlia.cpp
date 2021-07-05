@@ -210,20 +210,26 @@ Order::checkDataList(std::string DataName, std::string itemtype)
         tempList.erase(itemtype + "/" + DataName);
         this->setFulfill_List(itemtype + "/" + DataName);
         this->replace_Datalist(tempList);
-        this->checkFulFill();
+        //this->checkFulFill();
     }
     
 }
     
 //確認此筆order是否完成
-void  
+bool  
 Order::checkFulFill()
 {
     if (static_cast<int>(this->getDataList().size()) == 0)
     {
-       std::cout << "******************" << std::endl;
-       std::cout << "This Order is done!!!" << std::endl;
-       std::cout << "******************" << std::endl;
+    //    std::cout << "******************" << std::endl;
+    //    std::cout << "This Order is done!!!" << std::endl;
+    //    std::cout << "******************" << std::endl;
+       return true;
+    }
+    else
+    {
+        return false;
     }
     
 }
+
