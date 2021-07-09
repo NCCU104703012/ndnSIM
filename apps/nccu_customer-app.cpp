@@ -104,17 +104,18 @@ CustomerApp::StartApplication()
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
   // Schedule send of first interest
-  Simulator::Schedule(Seconds(1.0), &CustomerApp::SendRecord, this);
-  Simulator::Schedule(Seconds(1.5), &CustomerApp::SendRecord, this);
-  Simulator::Schedule(Seconds(2.0), &CustomerApp::SendRecord, this);
-  Simulator::Schedule(Seconds(2.5), &CustomerApp::SendRecord, this);
-  Simulator::Schedule(Seconds(3.0), &CustomerApp::SendRecord, this);
+  // Simulator::Schedule(Seconds(1.0), &CustomerApp::SendRecord, this);
+  // Simulator::Schedule(Seconds(1.5), &CustomerApp::SendRecord, this);
+  // Simulator::Schedule(Seconds(2.0), &CustomerApp::SendRecord, this);
+  // Simulator::Schedule(Seconds(2.5), &CustomerApp::SendRecord, this);
+  // Simulator::Schedule(Seconds(3.0), &CustomerApp::SendRecord, this);
 
   // Simulator::Schedule(Seconds(4), &CustomerApp::SendQuery, this);
   // Simulator::Schedule(Seconds(7), &CustomerApp::SendQuery, this);
   // Simulator::Schedule(Seconds(10), &CustomerApp::SendQuery, this);
   // Simulator::Schedule(Seconds(13), &CustomerApp::SendQuery, this);
-  // Simulator::Schedule(Seconds(16), &CustomerApp::SendQuery, this);
+  
+  Simulator::Schedule(Seconds(1), &CustomerApp::SendQuery_shop, this);
 
   Order* O_ptr = GetO_ptr()->getNext();
   // for (int i = 0; i < GetO_ptr()->getTargetNum() ; i++)
@@ -179,7 +180,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
    std::string inputString = interest->getName().toUri();
 
     int head = 0, tail;
-    std::string DataName, TargetNode, SourceNode, flag, itemtype;
+    std::string DataName, TargetNode, SourceNode, flag, itemtype, queryType;
     
     for (int i = 0; i < 7; i++)
     {
@@ -211,21 +212,30 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
     }
 
-  ndn::Name InsName;
-  InsName.append("prefix").append("data").append("query").append(SourceNode).append("1").append(TargetNode).append(DataName).append(itemtype);
+  //若興去封包是其他節點的Order委託
+  if (SourceNode == "Node0")
+  {
+    //新增order並處理 並註明是來自其他節點的order 後續完成後需回傳至原節點
+    std::cout<< "input packet is service query!" << std::endl;
+  }
+  else
+  {
+    ndn::Name InsName;
+    InsName.append("prefix").append("data").append("query").append(SourceNode).append("1").append(TargetNode).append(DataName).append(itemtype);
 
-  auto outinterest = std::make_shared<ndn::Interest>(InsName);
-  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
-  outinterest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+    auto outinterest = std::make_shared<ndn::Interest>(InsName);
+    Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+    outinterest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
-  outinterest->setInterestLifetime(ndn::time::seconds(1));
+    outinterest->setInterestLifetime(ndn::time::seconds(1));
 
-  NS_LOG_DEBUG("Sending Interest packet for " << *outinterest);
+    NS_LOG_DEBUG("Sending Interest packet for " << *outinterest);
 
-  // Call trace (for logging purposes)
-  m_transmittedInterests(outinterest, this, m_face);
+    // Call trace (for logging purposes)
+    m_transmittedInterests(outinterest, this, m_face);
 
-  m_appLink->onReceiveInterest(*outinterest);
+    m_appLink->onReceiveInterest(*outinterest);
+  }
 
 }
 
@@ -404,6 +414,39 @@ CustomerApp::SendQuery(Order* O_ptr, std::string inputData){
   std::set<std::string> dataSet = this->GetDataSet();
   std::set<std::string>::iterator i;
 
+  //當沒有任何資料可以query時，假設有自家菜單可以滿足，直接生成record
+  if (dataSet.begin() == dataSet.end())
+  {
+    std::string newRecord = "newRecord_" + GetK_ptr()->GetNodeName() + "_" + std::to_string(new_record_count);
+
+    this->SetDataSet("food/" + newRecord);
+
+    std::size_t hashRecord = std::hash<std::string>{}(newRecord);
+    std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
+    NS_LOG_DEBUG("hash Record for " << binaryRecord << " " << newRecord);
+
+    ndn::Name temp;
+    temp.append("prefix").append("data").append("store").append(NodeName);
+    temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(newRecord).append("food");
+    auto interest = std::make_shared<ndn::Interest>(temp);
+    new_record_count++;
+
+    Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+    interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+
+    interest->setInterestLifetime(ndn::time::seconds(3));
+    NS_LOG_DEBUG("Sending Record for " << interest->getName());
+
+    // Call trace (for logging purposes)
+    m_transmittedInterests(interest, this, m_face);
+
+    m_appLink->onReceiveInterest(*interest);
+
+    //將已滿足order terminate -> ture
+    O_ptr->setTerminate(true);
+  }
+  
+
   for (i = dataSet.begin(); i != dataSet.end(); ++i) {
     std::string dataString = *i;
     if (dataString.find(inputData) >= 0)
@@ -412,7 +455,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string inputData){
       O_ptr->setDataList(dataString);
 
       //Query送出
-      std::cout << "found in set : "  << dataString <<  std::endl;
+      //std::cout << "found in set : "  << dataString <<  std::endl;
       std::string query_output, itemType;
       query_output = dataString.substr(dataString.find_first_of("/"), dataString.size()-dataString.find_first_of("/"));
       itemType = dataString.substr(0, dataString.find_first_of("/"));
@@ -438,6 +481,28 @@ CustomerApp::SendQuery(Order* O_ptr, std::string inputData){
     }
   }
   
+}
+
+
+void
+CustomerApp::SendQuery_shop(){
+  ndn::Name temp;
+  temp.append("prefix").append("data").append("download").append("00000000").append("Node0").append("00000000").append("00000000").append("00000000");
+      
+
+  auto interest = std::make_shared<ndn::Interest>(temp);
+      
+  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+  interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+
+  interest->setInterestLifetime(ndn::time::seconds(1));
+  interest->setDefaultCanBePrefix(1);
+  NS_LOG_DEBUG("Sending Query for " << interest->getName());
+
+  // Call trace (for logging purposes)
+  m_transmittedInterests(interest, this, m_face);
+
+  m_appLink->onReceiveInterest(*interest);
 }
 
 } // namespace ns3

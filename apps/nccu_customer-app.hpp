@@ -108,6 +108,19 @@ public:
     dataSet.insert(inputData);
   }
 
+  std::set<std::string>
+  GetShopSet(){
+    return shopSet;
+  };
+
+  void
+  SetShopSet(std::string inputData){
+    shopSet.insert(inputData);
+  }
+
+  void
+  SendQuery_shop();
+
 
 private:
   void
@@ -145,6 +158,8 @@ private:
 
   //儲存商家清單 已知的資料清單 用來生成order需要query的項目
   std::set<std::string> dataSet = {};
+
+  std::set<std::string> shopSet = {};
 
 };
 

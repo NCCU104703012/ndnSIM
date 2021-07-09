@@ -162,7 +162,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       {
       case 4:
         TargetNode = temp;
-        //NS_LOG_DEBUG("targetnode = " << TargetNode);
+        NS_LOG_DEBUG("targetnode = " << TargetNode);
         break;
       case 5:
         DataName = temp;
@@ -174,8 +174,11 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         break;
       }
     }
+  
+  std::size_t hashRecord = std::hash<std::string>{}(DataName);
+  std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
 
-  if (GetK_ptr() == GetK_ptr()->GetNext_Node(TargetNode))
+  if (GetK_ptr() == GetK_ptr()->GetNext_Node(binaryRecord))
   {
     GetK_ptr()->SetData(DataName, itemType);
     GetK_ptr()->Node_info();
@@ -183,7 +186,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   else
   {
     ndn::Name next ;
-    std::string nextTarget = GetK_ptr()->GetNext_Node(TargetNode)->GetKId();
+    std::string nextTarget = GetK_ptr()->GetNext_Node(binaryRecord)->GetKId();
 
     next.append("prefix").append("data").append("store").append(nextTarget).append(TargetNode).append(DataName).append(itemType);
     auto next_interest = std::make_shared<ndn::Interest>(next);

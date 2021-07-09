@@ -110,7 +110,7 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
   ndnGlobalRoutingHelper.AddOrigins(prefix, TargetNode);
 }
 
-void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, std::string recordString)
+void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum)
 {
   std::default_random_engine generator(time(NULL));
   std::poisson_distribution<int> poisson(10);
@@ -146,9 +146,9 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   app1.SetAttribute("NodeName", StringValue(toBinary(nodeNum)));
   app1.SetAttribute("Kademlia", StringValue(location));
   app1.SetAttribute("Query", StringValue(queryString));
-  app1.SetAttribute("Record", StringValue(recordString));
   app1.Install(Node0);
   ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(nodeNum), Node0);
+  
 }
 
 int
@@ -164,7 +164,7 @@ main(int argc, char* argv[])
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等
   ndn::StackHelper ndnHelper;
-  ndnHelper.setCsSize(0);
+  ndnHelper.setCsSize(1);
   ndnHelper.InstallAll();
 
   // Set BestRoute strategy
@@ -359,44 +359,26 @@ main(int argc, char* argv[])
 
 
 
-  set_customerApp(5, "food/food/food/food/food/", P_4, 4, "Record123/initRecord0/initRecord1/initRecord1/trash/");
+  set_customerApp(5, "food/food/food/food/food/", P_0, 0);
+  set_customerApp(5, "food/food/food/food/food/", P_1, 1);
+  set_customerApp(5, "food/food/food/food/food/", P_2, 2);
+  set_customerApp(5, "food/food/food/food/food/", P_3, 3);
+  set_customerApp(5, "food/food/food/food/food/", P_4, 4);
+
+  set_customerApp(5, "food/food/food/food/food/", P_5, 5);
+  set_customerApp(5, "food/food/food/food/food/", P_6, 6);
+  set_customerApp(5, "food/food/food/food/food/", P_7, 7);
+  set_customerApp(5, "food/food/food/food/food/", P_8, 8);
+  set_customerApp(5, "food/food/food/food/food/", P_9, 9);
+
+  set_customerApp(5, "food/food/food/food/food/", P_10, 10);
+  set_customerApp(5, "food/food/food/food/food/", P_11, 11);
+  set_customerApp(5, "food/food/food/food/food/", P_12, 12);
+  set_customerApp(5, "food/food/food/food/food/", P_13, 13);
+  set_customerApp(5, "food/food/food/food/food/", P_14, 14);
+  set_customerApp(5, "food/food/food/food/food/", P_15, 15);
+  set_customerApp(5, "food/food/food/food/food/", P_16, 16);
     
-
-
-//================================================
-//設定第二條線
-//================================================
-
-  // Ptr<Node> Node11 = Names::Find<Node>("Node11");
-  // ndn::AppHelper app2("CustomerApp");
-  // app2.SetPrefix("/prefix/data/download/" + toBinary(11));
-  // app2.SetAttribute("NodeName", StringValue(toBinary(11)));
-  // app2.SetAttribute("TargetNode", StringValue(toBinary(0)));
-  // app2.SetAttribute("Query", StringValue("Record456/11_initRecord0/11_initRecord1/11_initRecord1/11_trash/"));
-  // app2.SetAttribute("Record", StringValue("Record456/11_initRecord0/11_initRecord1/11_initRecord1/11_trash/"));
-  // app2.Install(Node11);
-  // ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(11), Node11);
-  
-  
-
-  // Kademlia Knode11("Node11", "Node11", toBinary(11));
-  // Kademlia *P_11 = &Knode11;
-  // Kademlia Knode4("node4", "Node4", toBinary(4));
-  // Kademlia *P_4 = &Knode4;
-  // Kademlia Knode0("node0", "Node0", toBinary(0));
-  // Kademlia *P_0 = &Knode0;
-
-
-  // //node7.Node_info();
-  // set_data_store("Node11", "/prefix/data/store/" + toBinary(11), P_11);
-  // set_data_management("Node11", "/prefix/data/query/" + toBinary(11), P_11);
-  // P_11->Set_KBucket(P_10);
-  // set_data_store("Node4", "/prefix/data/store/" + toBinary(4), P_4);
-  // set_data_management("Node4", "/prefix/data/query/" + toBinary(4), P_4);
-  // P_4->Set_KBucket(P_0);
-  // set_data_store("Node0", "/prefix/data/store/" + toBinary(0), P_0);
-  // set_data_management("Node0", "/prefix/data/query/" + toBinary(0), P_0);
-
 
 
   // Calculate and install FIBs
