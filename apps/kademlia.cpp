@@ -200,6 +200,19 @@ Order::AddOrder(std::string dataString, double timeString, int targetNumber)
     }
 }
 
+Order*
+Order::AddOrder_toTail(std::string dataString, double timeString, int targetNumber)
+{
+    Order* inputData = new Order(dataString, timeString, targetNumber);
+    Order* tempPtr = this;
+    while (tempPtr->getNext() != NULL)
+    {
+        tempPtr = tempPtr->getNext();
+    }
+    tempPtr->setNext(inputData);
+    return inputData;
+}
+
 //搜尋整個order資料結構 滿足所需資料的所有order
 void
 Order::checkDataList(std::string DataName, std::string itemtype)

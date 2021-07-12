@@ -64,13 +64,16 @@ public:
   SendRecord();
 
   void
+  SendInterest(ndn::Name prefix, std::string logging);
+
+  void
   SetNode_Pointer(Ptr<Node> input);
 
   void
   InitSendQuery();
 
   void
-  SendQuery(Order* O_ptr, std::string inputData);
+  SendQuery(Order* O_ptr, std::string inputData, bool isOrder_from_otherNode);
 
   //將kademlia struct位址從字串轉成指標
   Kademlia*
@@ -107,19 +110,6 @@ public:
   SetDataSet(std::string inputData){
     dataSet.insert(inputData);
   }
-
-  std::set<std::string>
-  GetShopSet(){
-    return shopSet;
-  };
-
-  void
-  SetShopSet(std::string inputData){
-    shopSet.insert(inputData);
-  }
-
-  void
-  SendQuery_shop();
 
 
 private:
@@ -158,8 +148,6 @@ private:
 
   //儲存商家清單 已知的資料清單 用來生成order需要query的項目
   std::set<std::string> dataSet = {};
-
-  std::set<std::string> shopSet = {};
 
 };
 

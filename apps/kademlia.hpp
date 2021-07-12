@@ -16,6 +16,9 @@ private:
     Order* nextPtr = NULL;
     std::set<std::string> dataList = {};
     bool terminate = true;
+    bool hasSource_node = false;
+    std::string sourceNode;
+    std::set<std::string> shopList = {};
 
 public:
     Order(std::string dataString, double timeString, int targetNumber)
@@ -28,64 +31,63 @@ public:
     };
 
     std::string
-    getOrderName(){
-        return orderName;
-    };
+    getOrderName(){return orderName;};
 
     double
-    getTimeStamp(){
-        return timeStamp;
-    };
+    getTimeStamp(){return timeStamp;};
 
     int
-    getTargetNum(){
-        return targetNum;
-    };
+    getTargetNum(){return targetNum;};
 
     std::set<std::string>
-    getDataList(){
-        return dataList;
-    }
+    getDataList(){return dataList;}
 
     std::set<std::string>
-    getFulfill_List(){
-        return fulfill_data_list;
-    }
+    getShopList(){return shopList;}
 
-    void
-    replace_Datalist(std::set<std::string> inputList){
-        dataList = inputList;
-    }
+    std::set<std::string>
+    getFulfill_List(){return fulfill_data_list;}
 
-    void
-    setFulfill_List(std::string input){
-        fulfill_data_list.insert(input);
-    }
-
-    void
-    setDataList(std::string input){
-        dataList.insert(input);
-    }
-
-    void
-    setTerminate(bool input){
-        terminate = input;
-    }
+    std::string
+    getSourceNode(){return sourceNode;}
 
     bool
-    getTerminate(){
-        return terminate;
-    }
+    getHasSourceNode(){return hasSource_node;}
 
-    Order* getNext(){
-        return nextPtr;
-    };
+    void
+    replace_Datalist(std::set<std::string> inputList){dataList = inputList;}
+
+    void
+    setFulfill_List(std::string input){fulfill_data_list.insert(input);}
+
+    void
+    setDataList(std::string input){dataList.insert(input);}
+
+    void
+    setShopList(std::string input){shopList.insert(input);}
+
+    void
+    setTerminate(bool input){terminate = input;}
+
+    void
+    setSourceNode(std::string input){sourceNode = input;}
+
+    void
+    setHasSourceNode(bool input){hasSource_node = input;}
+
+    bool
+    getTerminate(){return terminate;}
+
+    Order* getNext(){return nextPtr;};
 
     void
     setNext(Order* ptr);
 
     void
     AddOrder(std::string dataString, double timeString, int targetNumber);
+
+    Order*
+    AddOrder_toTail(std::string dataString, double timeString, int targetNumber);
 
     //搜尋整個order資料結構 滿足所需資料的所有order
     void

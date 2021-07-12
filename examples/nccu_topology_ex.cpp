@@ -110,7 +110,7 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
   ndnGlobalRoutingHelper.AddOrigins(prefix, TargetNode);
 }
 
-void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum)
+void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, std::string shopList)
 {
   std::default_random_engine generator(time(NULL));
   std::poisson_distribution<int> poisson(10);
@@ -119,7 +119,12 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   Order* Optr_head = new Order("init", 0, targetNum);
   int head = 0;
   int tail = 0;
-  
+
+  //加入shopList
+  if (shopList.length() != 0)
+  {
+    Optr_head->setShopList(shopList);
+  }
   
   for (int i = 0; i < targetNum; i++)
   {
@@ -358,26 +363,27 @@ main(int argc, char* argv[])
   P_16->Set_KBucket(P_15);
 
 
+  int targetNum = 0;
 
-  set_customerApp(5, "food/food/food/food/food/", P_0, 0);
-  set_customerApp(5, "food/food/food/food/food/", P_1, 1);
-  set_customerApp(5, "food/food/food/food/food/", P_2, 2);
-  set_customerApp(5, "food/food/food/food/food/", P_3, 3);
-  set_customerApp(5, "food/food/food/food/food/", P_4, 4);
+  set_customerApp(5, "food/food/food/food/food/", P_0, 0, "00000001");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_1, 1, "");
+  set_customerApp(5, "food/food/food/food/food/", P_2, 2, "00000000");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_3, 3, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_4, 4, "");
 
-  set_customerApp(5, "food/food/food/food/food/", P_5, 5);
-  set_customerApp(5, "food/food/food/food/food/", P_6, 6);
-  set_customerApp(5, "food/food/food/food/food/", P_7, 7);
-  set_customerApp(5, "food/food/food/food/food/", P_8, 8);
-  set_customerApp(5, "food/food/food/food/food/", P_9, 9);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_5, 5, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_6, 6, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_7, 7, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_8, 8, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_9, 9, "");
 
-  set_customerApp(5, "food/food/food/food/food/", P_10, 10);
-  set_customerApp(5, "food/food/food/food/food/", P_11, 11);
-  set_customerApp(5, "food/food/food/food/food/", P_12, 12);
-  set_customerApp(5, "food/food/food/food/food/", P_13, 13);
-  set_customerApp(5, "food/food/food/food/food/", P_14, 14);
-  set_customerApp(5, "food/food/food/food/food/", P_15, 15);
-  set_customerApp(5, "food/food/food/food/food/", P_16, 16);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_10, 10, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_11, 11, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_12, 12, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_13, 13, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_14, 14, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_15, 15, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_16, 16, "");
     
 
 
