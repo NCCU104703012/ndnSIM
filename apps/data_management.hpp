@@ -79,6 +79,8 @@ public:
   };
 
 private:
+
+  //此function暫未使用
   void
   SendInterest();
 
@@ -93,7 +95,6 @@ private:
   //k_ptr內容為"/0x00000" 不為純位址 要注意
   ndn::Name k_ptr;
 
-  int packet_count = 0;
   Ptr<Node> parent_node ;
 };
 

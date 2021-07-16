@@ -30,34 +30,17 @@ Kademlia::GetData(std::string DataName){
 Kademlia *
 Kademlia::GetNext_Node(std::string TargetNode){
     int distance = this->XOR(TargetNode);
-    //std::cout << "distance is : " << distance << std::endl;
     Kademlia *output = this;
 
     for (int i = 0; i < knum; i++)
     {
         std::string temp = k_bucket[i]->KId;
-        // std::cout << "input is : " << TargetNode << std::endl;
-        // std::cout << "kbucket is : " << temp << std::endl;
         if (k_bucket[i]->XOR(TargetNode) < distance)
         {
             output = k_bucket[i];
         }
         
     }
-    
-
-//     int distance = KId - std::stoi(TargetNode);
-//     distance = abs(distance);
-//     Kademlia *output = this;
-//    for (int i = 0; i < knum; i++)
-//    {
-//        int temp = k_bucket[i]->KId;
-//        if(abs(temp - std::stoi(TargetNode)) < distance)
-//        {
-//            output = k_bucket[i];
-//        }
-       
-//    }
     return output;
 }
 
@@ -178,9 +161,9 @@ Order* Order::getTail(){
 }
 
 void
-Order::AddOrder(std::string dataString, double timeString, int targetNumber)
+Order::AddOrder(std::string orderName, std::string dataString, double timeString, int targetNumber)
 {
-    Order* inputData = new Order(dataString, timeString, targetNumber);
+    Order* inputData = new Order(orderName, dataString, timeString, targetNumber);
     Order* tempPtr = this;
     Order* prePtr = this;
 
@@ -201,9 +184,9 @@ Order::AddOrder(std::string dataString, double timeString, int targetNumber)
 }
 
 Order*
-Order::AddOrder_toTail(std::string dataString, double timeString, int targetNumber)
+Order::AddOrder_toTail(std::string orderName, std::string dataString, double timeString, int targetNumber)
 {
-    Order* inputData = new Order(dataString, timeString, targetNumber);
+    Order* inputData = new Order(orderName, dataString, timeString, targetNumber);
     Order* tempPtr = this;
     while (tempPtr->getNext() != NULL)
     {

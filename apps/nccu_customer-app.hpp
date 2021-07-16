@@ -63,17 +63,20 @@ public:
   void
   SendRecord();
 
+  //輸入前綴 送出興趣封包
   void
   SendInterest(ndn::Name prefix, std::string logging);
 
-  void
-  SetNode_Pointer(Ptr<Node> input);
-
+  //將初始設定轉換成Order 並排序 會在CustomerApp開始時執行
   void
   InitSendQuery();
 
+  //根據Order內容 找出符合的資料 送出興趣封包
   void
-  SendQuery(Order* O_ptr, std::string inputData, bool isOrder_from_otherNode);
+  SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_otherNode);
+
+  void
+  SetNode_Pointer(Ptr<Node> input){parent_node = input;}
 
   //將kademlia struct位址從字串轉成指標
   Kademlia*

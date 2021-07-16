@@ -37,6 +37,7 @@
 
 #include <random>
 #include <set>
+#include <time.h>
 
 
 namespace ns3 {
@@ -64,6 +65,10 @@ namespace ns3 {
  *
  *     NS_LOG=ndn.Consumer:ndn.Producer ./waf --run=nccu_topology_ex
  */
+
+// std::random_device rd;
+// std::default_random_engine generator{rd()};
+
 
 std::string toBinary(int n)
 {
@@ -110,31 +115,33 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
   ndnGlobalRoutingHelper.AddOrigins(prefix, TargetNode);
 }
 
-void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, std::string shopList)
+void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, int shopList)
 {
-  std::default_random_engine generator(time(NULL));
   std::poisson_distribution<int> poisson(10);
-
+  std::default_random_engine generator(time(NULL));
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
-  Order* Optr_head = new Order("init", 0, targetNum);
+  Order* Optr_head = new Order("init", "init", 0, targetNum);
   int head = 0;
   int tail = 0;
 
   //加入shopList
-  if (shopList.length() != 0)
+  if (shopList != -1)
   {
-    Optr_head->setShopList(shopList);
+    Optr_head->setShopList(toBinary(shopList));
   }
   
   for (int i = 0; i < targetNum; i++)
   {
+    std::string orderName = "newRecord_Node" + to_string(nodeNum) + "_" + to_string(i);
+
     double timeStamp = poisson(generator);
-    std::cout << timeStamp << std::endl;
+    std::cout << timeStamp << " ";
     head = tail;
     tail = query.find_first_of("/", head);
-    Optr_head->AddOrder(query.substr(head, tail-head), timeStamp, targetNum+1);
+    Optr_head->AddOrder(orderName, query.substr(head, tail-head), timeStamp, targetNum+1);
     tail++;
   }
+  std::cout <<  std::endl;
 
   std::ostringstream address;
   address << kptr;
@@ -169,7 +176,7 @@ main(int argc, char* argv[])
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等
   ndn::StackHelper ndnHelper;
-  ndnHelper.setCsSize(1);
+  ndnHelper.setCsSize(2);
   ndnHelper.InstallAll();
 
   // Set BestRoute strategy
@@ -365,25 +372,25 @@ main(int argc, char* argv[])
 
   int targetNum = 0;
 
-  set_customerApp(5, "food/food/food/food/food/", P_0, 0, "00000001");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_1, 1, "");
-  set_customerApp(5, "food/food/food/food/food/", P_2, 2, "00000000");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_3, 3, "");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_4, 4, "");
+  set_customerApp(0, "food/food/food/food/food/", P_0, 0, -1);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_1, 1, 2);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_2, 2, 3);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_3, 3, 4);
+  set_customerApp(10, "food/food/food/food/food/", P_4, 4, -1);
 
-  set_customerApp(targetNum, "food/food/food/food/food/", P_5, 5, "");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_6, 6, "");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_7, 7, "");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_8, 8, "");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_9, 9, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_5, 5, 6);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_6, 6, 7);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_7, 7, 8);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_8, 8, 9);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_9, 9, 10);
 
-  set_customerApp(targetNum, "food/food/food/food/food/", P_10, 10, "");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_11, 11, "");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_12, 12, "");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_13, 13, "");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_14, 14, "");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_15, 15, "");
-  set_customerApp(targetNum, "food/food/food/food/food/", P_16, 16, "");
+  set_customerApp(targetNum, "food/food/food/food/food/", P_10, 10, 11);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_11, 11, 12);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_12, 12, 13);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_13, 13, 14);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_14, 14, 15);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_15, 15, 16);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_16, 16, 0);
     
 
 
@@ -396,10 +403,11 @@ main(int argc, char* argv[])
   Ptr<Node> Fail_node2 = Names::Find<Node>("Node2");
    //Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::FailLink, Fail_node3, Fail_node4);
    //Simulator::Schedule(Seconds(3.0), ndn::LinkControlHelper::FailLink, Fail_node4, Fail_node0);
-   //Simulator::Schedule(Seconds(20.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
+  //  Simulator::Schedule(Seconds(1.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
+  //  Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::UpLink, Fail_node0, Fail_node2);
 
 
-  Simulator::Stop(Seconds(20.0));
+  Simulator::Stop(Seconds(100.0));
 
   Simulator::Run();
   Simulator::Destroy();

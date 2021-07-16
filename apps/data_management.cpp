@@ -115,13 +115,12 @@ DataManage::SendInterest()
 
 
   // Create and configure ndn::Interest
-  auto interest = std::make_shared<ndn::Interest>(m_prefix.append(std::to_string(packet_count)));
+  auto interest = std::make_shared<ndn::Interest>(m_prefix);
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
   interest->setInterestLifetime(ndn::time::seconds(3));
 
-  packet_count++;
 
   NS_LOG_DEBUG("Sending Interest packet for " << *interest);
 

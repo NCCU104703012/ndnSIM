@@ -147,7 +147,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   std::string inputString = interest->getName().toUri();
 
     int head = 0, tail;
-    std::string DataName, TargetNode, itemType;
+    std::string DataName, TargetNode, itemType, SourceNode;
     
     for (int i = 0; i <= 6; i++)
     {
@@ -160,9 +160,13 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
       switch (i)
       {
-      case 4:
+      case 3:
         TargetNode = temp;
-        NS_LOG_DEBUG("targetnode = " << TargetNode);
+        //NS_LOG_DEBUG("targetnode = " << TargetNode);
+        break;
+      case 4:
+        SourceNode = temp;
+        //NS_LOG_DEBUG("targetnode = " << TargetNode);
         break;
       case 5:
         DataName = temp;
@@ -182,13 +186,29 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   {
     GetK_ptr()->SetData(DataName, itemType);
     GetK_ptr()->Node_info();
+
+    ndn::Name next ;
+    next.append("prefix").append("data").append("download").append(SourceNode).append("NULL").append(DataName).append("Store_complete");
+    auto next_interest = std::make_shared<ndn::Interest>(next);
+    Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+    next_interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+
+    next_interest->setInterestLifetime(ndn::time::seconds(3));
+
+
+    NS_LOG_DEBUG("Store_complete! Sending Interest packet to Source node : " << *next_interest);
+
+  
+    m_transmittedInterests(next_interest, this, m_face);
+
+    m_appLink->onReceiveInterest(*next_interest);
   }
   else
   {
     ndn::Name next ;
     std::string nextTarget = GetK_ptr()->GetNext_Node(binaryRecord)->GetKId();
 
-    next.append("prefix").append("data").append("store").append(nextTarget).append(TargetNode).append(DataName).append(itemType);
+    next.append("prefix").append("data").append("store").append(nextTarget).append(SourceNode).append(DataName).append(itemType);
     auto next_interest = std::make_shared<ndn::Interest>(next);
     Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
     next_interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));

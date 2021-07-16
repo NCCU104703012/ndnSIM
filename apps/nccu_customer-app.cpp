@@ -149,10 +149,10 @@ CustomerApp::StartApplication()
   while (O_ptr != NULL)
   {
     Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::InitSendQuery, this);
-    std::cout << O_ptr->getTimeStamp() << std::endl;
+    std::cout << O_ptr->getTimeStamp() << " ";
     O_ptr = O_ptr->getNext();
   }
-  
+  std::cout << std::endl;
 
 }
 
@@ -231,12 +231,20 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
     }
 
+  if (itemtype == "Store_complete")
+  {
+    this->SetDataSet("food/" + DataName);
+    NS_LOG_DEBUG("DataSet add : " << DataName);
+    return;
+  }
+  
+
   //若興去封包是其他節點的Order委託
   if (itemtype == "serviceQuery")
   {
     //新增order並處理 並註明是來自其他節點的order 後續完成後需回傳至原節點
-    std::cout<< "input packet is service query!" << std::endl;
-    Order* newOrder = GetO_ptr()->AddOrder_toTail(SourceNode, 0, 0);
+    //std::cout<< "input packet is service query!" << std::endl;
+    Order* newOrder = GetO_ptr()->AddOrder_toTail("this is not a Source Order", SourceNode, 0, 0);
     newOrder->setHasSourceNode(true);
     newOrder->setSourceNode(SourceNode);
     SendQuery(newOrder, "food", true);
@@ -335,17 +343,17 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
         else
         {
           //生成一筆新的紀錄 並送出儲存
-          std::string newRecord = "newRecord_" + GetK_ptr()->GetNodeName() + "_" + std::to_string(new_record_count);
+          std::string newRecord = O_ptr->getOrderName();
 
-          this->SetDataSet("food/" + newRecord);
+          //this->SetDataSet("food/" + newRecord);
 
           std::size_t hashRecord = std::hash<std::string>{}(newRecord);
           std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
-          NS_LOG_DEBUG("hash Record for " << binaryRecord << " " << newRecord);
+          NS_LOG_DEBUG("Order Complete : " << newRecord );
 
           ndn::Name temp;
           temp.append("prefix").append("data").append("store").append(NodeName);
-          temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(newRecord).append("food");
+          temp.append(NodeName).append(newRecord).append("food");
           new_record_count++;
 
           SendInterest(temp, "Sending Record for ");
@@ -363,13 +371,6 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
     }
     
 }
-
-void
-CustomerApp::SetNode_Pointer(Ptr<Node> input)
-{
-  parent_node = input;
-}
-
 
 
 //送出一筆交易紀錄
@@ -415,13 +416,13 @@ CustomerApp::InitSendQuery(){
   }
   query_count++;
 
-  SendQuery(O_ptr, O_ptr->getOrderName(), false);
+  SendQuery(O_ptr, O_ptr->getItemType(), false);
 
 }
 
 void
-CustomerApp::SendQuery(Order* O_ptr, std::string inputData, bool isOrder_from_otherNode){
-
+CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_otherNode){
+  std::cout << "Start process Order: " << O_ptr->getOrderName() << std::endl;
   //將terminate設為false
   O_ptr->setTerminate(false);
 
@@ -442,7 +443,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string inputData, bool isOrder_from_ot
       NS_LOG_DEBUG("setDataList: " << dataString);
 
       ndn::Name prefixInterest;
-      prefixInterest.append("prefix").append("data").append("download").append(dataString).append(NodeName).append("DataName").append("serviceQuery");
+      prefixInterest.append("prefix").append("data").append("download").append(dataString).append(NodeName).append(O_ptr->getOrderName()).append("serviceQuery");
 
       SendInterest(prefixInterest, "Sending Service Query for ");
     }
@@ -451,7 +452,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string inputData, bool isOrder_from_ot
   //當沒有任何資料可以query時，假設有自家菜單可以滿足，直接生成record
   if (dataSet.begin() == dataSet.end() && !isOrder_from_otherNode && (shopSet.begin() == shopSet.end()))
   {
-    std::string newRecord = "newRecord_" + GetK_ptr()->GetNodeName() + "_" + std::to_string(new_record_count);
+    std::string newRecord = O_ptr->getOrderName();
 
     this->SetDataSet("food/" + newRecord);
 
@@ -464,7 +465,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string inputData, bool isOrder_from_ot
     temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(newRecord).append("food");
     new_record_count++;
 
-    SendInterest(temp, "Sending Query for ");
+    SendInterest(temp, "Sending Record for ");
 
     //將已滿足order terminate -> ture
     O_ptr->setTerminate(true);
@@ -482,7 +483,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string inputData, bool isOrder_from_ot
 
   for (i = dataSet.begin(); i != dataSet.end(); ++i) {
     std::string dataString = *i;
-    if (dataString.find(inputData) >= 0)
+    if (dataString.find(serviceType) >= 0)
     {
       //將資料存入Order中
       O_ptr->setDataList(dataString);
@@ -494,7 +495,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string inputData, bool isOrder_from_ot
 
       ndn::Name temp;
       temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
-      temp.append(query_output).append(itemType);
+      temp.append(query_output).append(itemType).append(query_output + std::to_string(time(NULL)));
       
       SendInterest(temp, "Sending Query for ");
     }

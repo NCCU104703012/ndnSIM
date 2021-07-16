@@ -10,6 +10,7 @@ class Order
 private:
     /* data */
     std::string orderName;
+    std::string itemType;
     double timeStamp;
     int targetNum;
     std::set<std::string> fulfill_data_list = {};
@@ -21,14 +22,18 @@ private:
     std::set<std::string> shopList = {};
 
 public:
-    Order(std::string dataString, double timeString, int targetNumber)
+    Order(std::string order_name, std::string dataString, double timeString, int targetNumber)
     {
-    orderName = dataString;
+    orderName = order_name;
+    itemType = dataString;
     timeStamp = timeString;
     targetNum = targetNumber;
     nextPtr = NULL;
     terminate = true;
     };
+
+    std::string
+    getItemType(){return itemType;};
 
     std::string
     getOrderName(){return orderName;};
@@ -54,6 +59,7 @@ public:
     bool
     getHasSourceNode(){return hasSource_node;}
 
+    //用新的datalist整個替換
     void
     replace_Datalist(std::set<std::string> inputList){dataList = inputList;}
 
@@ -83,11 +89,13 @@ public:
     void
     setNext(Order* ptr);
 
+    //將新的order 依照 timeStamp 插入 OrderList中 
     void
-    AddOrder(std::string dataString, double timeString, int targetNumber);
+    AddOrder(std::string orderName, std::string dataString, double timeString, int targetNumber);
 
+    //將order加入orderList尾端
     Order*
-    AddOrder_toTail(std::string dataString, double timeString, int targetNumber);
+    AddOrder_toTail(std::string orderName, std::string dataString, double timeString, int targetNumber);
 
     //搜尋整個order資料結構 滿足所需資料的所有order
     void
