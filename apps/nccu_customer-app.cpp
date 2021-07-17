@@ -244,7 +244,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   {
     //新增order並處理 並註明是來自其他節點的order 後續完成後需回傳至原節點
     //std::cout<< "input packet is service query!" << std::endl;
-    Order* newOrder = GetO_ptr()->AddOrder_toTail("this is not a Source Order", SourceNode, 0, 0);
+    Order* newOrder = GetO_ptr()->AddOrder_toTail("MicroOrder_" + DataName, SourceNode, 0, 0);
     newOrder->setHasSourceNode(true);
     newOrder->setSourceNode(SourceNode);
     SendQuery(newOrder, "food", true);
@@ -255,7 +255,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     ndn::Name InsName;
     InsName.append("prefix").append("data").append("query").append(SourceNode).append("1").append(TargetNode).append(DataName).append(itemtype);
 
-    SendInterest(InsName, "Sending Interest packet for ");
+    SendInterest(InsName, "Found data, send interest packet to download it ");
   }
 
 }
@@ -296,11 +296,11 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
         break;
       case 6:
         DataString = temp;
-         //NS_LOG_DEBUG("DataString = " << DataString);
+        NS_LOG_DEBUG("DataString = " << DataString);
         break;
       case 7:
         itemtype = temp;
-        // NS_LOG_DEBUG("itemtype = " << itemtype);
+        NS_LOG_DEBUG("itemtype = " << itemtype);
         break;
       }
     }
@@ -311,7 +311,10 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
     {
       if (!O_ptr->getTerminate())
       {
-        O_ptr->checkDataList(DataString, itemtype);
+        if (O_ptr->checkDataList(DataString, itemtype))
+        {
+          NS_LOG_DEBUG("fulfill order: " << O_ptr->getOrderName() <<" data name: " << DataString);
+        }
       }
       O_ptr = O_ptr->getNext();
     }
@@ -326,19 +329,21 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
         {
           ndn::Name returnServiceQuery;
           //returnServiceQuery.append("prefix").append("service").append("return").append(O_ptr->getSourceNode()).append(NodeName);
-          returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(NodeName).append(NodeName).append("food");
+          returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(O_ptr->getOrderName()).append("food");
 
-          auto data = std::make_shared<ndn::Data>(returnServiceQuery);
-          data->setFreshnessPeriod(ndn::time::milliseconds(1000));
-          data->setContent(std::make_shared< ::ndn::Buffer>(1024));
-          ndn::StackHelper::getKeyChain().sign(*data);
+          // auto data = std::make_shared<ndn::Data>(returnServiceQuery);
+          // data->setFreshnessPeriod(ndn::time::milliseconds(1000));
+          // data->setContent(std::make_shared< ::ndn::Buffer>(1024));
+          // ndn::StackHelper::getKeyChain().sign(*data);
 
-          NS_LOG_DEBUG("Sending Data packet for return Service" << data->getName());
+          // NS_LOG_DEBUG("Sending Data packet for return Service" << data->getName());
 
-          // Call trace (for logging purposes)
-          m_transmittedDatas(data, this, m_face);
+          // // Call trace (for logging purposes)
+          // m_transmittedDatas(data, this, m_face);
 
-          m_appLink->onReceiveData(*data);
+          // m_appLink->onReceiveData(*data);
+          O_ptr->setTerminate(true);
+          SendInterest(returnServiceQuery, "MicroService return!!");
         }
         else
         {
@@ -422,7 +427,8 @@ CustomerApp::InitSendQuery(){
 
 void
 CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_otherNode){
-  std::cout << "Start process Order: " << O_ptr->getOrderName() << std::endl;
+
+  NS_LOG_DEBUG("Start process Order: " << O_ptr->getOrderName());
   //將terminate設為false
   O_ptr->setTerminate(false);
 
@@ -440,7 +446,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
 
       //將資料存入Order中
       O_ptr->setDataList("food/" + dataString);
-      NS_LOG_DEBUG("setDataList: " << dataString);
+      NS_LOG_DEBUG("setDataList: " << dataString << "in order: " << O_ptr->getOrderName());
 
       ndn::Name prefixInterest;
       prefixInterest.append("prefix").append("data").append("download").append(dataString).append(NodeName).append(O_ptr->getOrderName()).append("serviceQuery");
@@ -475,7 +481,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
   if (dataSet.begin() == dataSet.end() && isOrder_from_otherNode )
   {
     ndn::Name returnServiceQuery;
-    returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(NodeName).append("food");
+    returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(NodeName).append("food").append(O_ptr->getOrderName());
 
     SendInterest(returnServiceQuery, "Return service for ");
     return;
@@ -492,6 +498,11 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
       std::string query_output, itemType;
       query_output = dataString.substr(dataString.find_first_of("/"), dataString.size()-dataString.find_first_of("/"));
       itemType = dataString.substr(0, dataString.find_first_of("/"));
+
+      if (isOrder_from_otherNode)
+      {
+        NS_LOG_DEBUG("store data: " << query_output << " in order: " << O_ptr->getOrderName());
+      }
 
       ndn::Name temp;
       temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);

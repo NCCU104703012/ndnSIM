@@ -98,12 +98,15 @@ public:
     AddOrder_toTail(std::string orderName, std::string dataString, double timeString, int targetNumber);
 
     //搜尋整個order資料結構 滿足所需資料的所有order
-    void
+    bool
     checkDataList(std::string DataName, std::string itemtype);
     
     //確認此筆order是否完成
     bool  
     checkFulFill();
+
+    void
+    deleteOrder(Order* preOrder);
 
     Order* getTail();
     ~Order(){};

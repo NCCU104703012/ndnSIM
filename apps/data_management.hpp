@@ -78,6 +78,19 @@ public:
     return output;
   };
 
+  //將Query從 Name 轉換成指標
+  Order*
+  GetO_ptr()
+  {
+    std::stringstream ss;
+    std::string temp = Query.toUri().substr(1);
+    ss << temp;
+    long long unsigned int i;
+    ss >> std::hex >> i;
+    Order *output = reinterpret_cast<Order *>(i);
+    return output;
+  };
+
 private:
 
   //此function暫未使用
@@ -94,6 +107,9 @@ private:
 
   //k_ptr內容為"/0x00000" 不為純位址 要注意
   ndn::Name k_ptr;
+
+  //送出Query使用
+  ndn::Name Query;
 
   Ptr<Node> parent_node ;
 };

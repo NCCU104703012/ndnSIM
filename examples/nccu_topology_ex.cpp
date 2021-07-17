@@ -68,7 +68,7 @@ namespace ns3 {
 
 // std::random_device rd;
 // std::default_random_engine generator{rd()};
-
+std::default_random_engine generator(time(NULL));
 
 std::string toBinary(int n)
 {
@@ -99,7 +99,7 @@ void set_data_store(std::string nodeName, std::string prefix, Kademlia* k_ptr )
   ndnGlobalRoutingHelper.AddOrigins(prefix, TargetNode);
 }
 
-void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_ptr )
+void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_ptr, std::string o_ptr_string )
 {
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
 
@@ -111,6 +111,7 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
   ndn::AppHelper app("DataManage");
   app.SetPrefix(prefix);
   app.SetAttribute("Kademlia", StringValue(location));
+  app.SetAttribute("Query", StringValue(o_ptr_string));
   app.Install(TargetNode);
   ndnGlobalRoutingHelper.AddOrigins(prefix, TargetNode);
 }
@@ -118,7 +119,7 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
 void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, int shopList)
 {
   std::poisson_distribution<int> poisson(10);
-  std::default_random_engine generator(time(NULL));
+  
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   Order* Optr_head = new Order("init", "init", 0, targetNum);
   int head = 0;
@@ -161,6 +162,8 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   app1.Install(Node0);
   ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(nodeNum), Node0);
   
+  //設定data management模組
+  set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + toBinary(nodeNum), kptr, queryString);
 }
 
 int
@@ -176,7 +179,7 @@ main(int argc, char* argv[])
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等
   ndn::StackHelper ndnHelper;
-  ndnHelper.setCsSize(2);
+  ndnHelper.setCsSize(50);
   ndnHelper.InstallAll();
 
   // Set BestRoute strategy
@@ -225,7 +228,7 @@ main(int argc, char* argv[])
 
   //node13.Node_info();
   set_data_store("Node0", "/prefix/data/store/" + toBinary(0), P_0);
-  set_data_management("Node0", "/prefix/data/query/" + toBinary(0), P_0);
+  //set_data_management("Node0", "/prefix/data/query/" + toBinary(0), P_0);
   P_0->Set_KBucket(P_1);
   P_0->Set_KBucket(P_2);
   P_0->Set_KBucket(P_3);
@@ -236,7 +239,7 @@ main(int argc, char* argv[])
   P_0->Set_KBucket(P_14);
 
   set_data_store("Node1", "/prefix/data/store/" + toBinary(1), P_1);
-  set_data_management("Node1", "/prefix/data/query/" + toBinary(1), P_1);
+  //set_data_management("Node1", "/prefix/data/query/" + toBinary(1), P_1);
   P_1->Set_KBucket(P_5);
   P_1->Set_KBucket(P_2);
   P_1->Set_KBucket(P_3);
@@ -248,7 +251,7 @@ main(int argc, char* argv[])
   P_1->Set_KBucket(P_11);
 
   set_data_store("Node2", "/prefix/data/store/" + toBinary(2), P_2);
-  set_data_management("Node2", "/prefix/data/query/" + toBinary(2), P_2);
+  //set_data_management("Node2", "/prefix/data/query/" + toBinary(2), P_2);
   P_2->Set_KBucket(P_1);
   P_2->Set_KBucket(P_0);
   P_2->Set_KBucket(P_4);
@@ -260,7 +263,7 @@ main(int argc, char* argv[])
   P_2->Set_KBucket(P_14);
 
   set_data_store("Node3", "/prefix/data/store/" + toBinary(3), P_3);
-  set_data_management("Node3", "/prefix/data/query/" + toBinary(3), P_3);
+  //set_data_management("Node3", "/prefix/data/query/" + toBinary(3), P_3);
   P_3->Set_KBucket(P_1);
   P_3->Set_KBucket(P_0);
   P_3->Set_KBucket(P_4);
@@ -272,7 +275,7 @@ main(int argc, char* argv[])
   P_3->Set_KBucket(P_13);
 
   set_data_store("Node4", "/prefix/data/store/" + toBinary(4), P_4);
-  set_data_management("Node4", "/prefix/data/query/" + toBinary(4), P_4);
+  //set_data_management("Node4", "/prefix/data/query/" + toBinary(4), P_4);
   P_4->Set_KBucket(P_0);
   P_4->Set_KBucket(P_2);
   P_4->Set_KBucket(P_3);
@@ -285,7 +288,7 @@ main(int argc, char* argv[])
   
 
   set_data_store("Node5", "/prefix/data/store/" + toBinary(5), P_5);
-  set_data_management("Node5", "/prefix/data/query/" + toBinary(5), P_5);
+  //set_data_management("Node5", "/prefix/data/query/" + toBinary(5), P_5);
   P_5->Set_KBucket(P_0);
   P_5->Set_KBucket(P_1);
   P_5->Set_KBucket(P_2);
@@ -294,19 +297,19 @@ main(int argc, char* argv[])
   P_5->Set_KBucket(P_7);
 
   set_data_store("Node6", "/prefix/data/store/" + toBinary(6), P_6);
-  set_data_management("Node6", "/prefix/data/query/" + toBinary(6), P_6);
+  //set_data_management("Node6", "/prefix/data/query/" + toBinary(6), P_6);
   P_6->Set_KBucket(P_1);
   P_6->Set_KBucket(P_5);
   P_6->Set_KBucket(P_7);
   
   set_data_store("Node7", "/prefix/data/store/" + toBinary(7), P_7);
-  set_data_management("Node7", "/prefix/data/query/" + toBinary(7), P_7);
+  //set_data_management("Node7", "/prefix/data/query/" + toBinary(7), P_7);
   P_7->Set_KBucket(P_1);
   P_7->Set_KBucket(P_5);
   P_7->Set_KBucket(P_6);
 
   set_data_store("Node8", "/prefix/data/store/" + toBinary(8), P_8);
-  set_data_management("Node8", "/prefix/data/query/" + toBinary(8), P_8);
+ // set_data_management("Node8", "/prefix/data/query/" + toBinary(8), P_8);
   P_8->Set_KBucket(P_1);
   P_8->Set_KBucket(P_0);
   P_8->Set_KBucket(P_4);
@@ -315,19 +318,19 @@ main(int argc, char* argv[])
   P_8->Set_KBucket(P_10);
 
   set_data_store("Node9", "/prefix/data/store/" + toBinary(9), P_9);
-  set_data_management("Node9", "/prefix/data/query/" + toBinary(9), P_9);
+  //set_data_management("Node9", "/prefix/data/query/" + toBinary(9), P_9);
   P_9->Set_KBucket(P_2);
   P_9->Set_KBucket(P_8);
   P_9->Set_KBucket(P_10);
   
   set_data_store("Node10", "/prefix/data/store/" + toBinary(10), P_10);
-  set_data_management("Node10", "/prefix/data/query/" + toBinary(10), P_10);
+  //set_data_management("Node10", "/prefix/data/query/" + toBinary(10), P_10);
   P_10->Set_KBucket(P_2);
   P_10->Set_KBucket(P_8);
   P_10->Set_KBucket(P_9);
 
   set_data_store("Node11", "/prefix/data/store/" + toBinary(11), P_11);
-  set_data_management("Node11", "/prefix/data/query/" + toBinary(11), P_11);
+  //set_data_management("Node11", "/prefix/data/query/" + toBinary(11), P_11);
   P_11->Set_KBucket(P_0);
   P_11->Set_KBucket(P_1);
   P_11->Set_KBucket(P_4);
@@ -336,19 +339,19 @@ main(int argc, char* argv[])
   P_11->Set_KBucket(P_13);
   
   set_data_store("Node12", "/prefix/data/store/" + toBinary(12), P_12);
-  set_data_management("Node12", "/prefix/data/query/" + toBinary(12), P_12);
+  //set_data_management("Node12", "/prefix/data/query/" + toBinary(12), P_12);
   P_12->Set_KBucket(P_3);
   P_12->Set_KBucket(P_11);
   P_12->Set_KBucket(P_13);
 
   set_data_store("Node13", "/prefix/data/store/" + toBinary(13), P_13);
-  set_data_management("Node13", "/prefix/data/query/" + toBinary(13), P_13);
+  //set_data_management("Node13", "/prefix/data/query/" + toBinary(13), P_13);
   P_13->Set_KBucket(P_3);
   P_13->Set_KBucket(P_11);
   P_13->Set_KBucket(P_12);
 
   set_data_store("Node14", "/prefix/data/store/" + toBinary(14), P_14);
-  set_data_management("Node14", "/prefix/data/query/" + toBinary(14), P_14);
+  //set_data_management("Node14", "/prefix/data/query/" + toBinary(14), P_14);
   P_14->Set_KBucket(P_0);
   P_14->Set_KBucket(P_2);
   P_14->Set_KBucket(P_3);
@@ -357,26 +360,25 @@ main(int argc, char* argv[])
   P_14->Set_KBucket(P_16);
 
   set_data_store("Node15", "/prefix/data/store/" + toBinary(15), P_15);
-  set_data_management("Node15", "/prefix/data/query/" + toBinary(15), P_15);
+  //set_data_management("Node15", "/prefix/data/query/" + toBinary(15), P_15);
   P_15->Set_KBucket(P_4);
   P_15->Set_KBucket(P_14);
   P_15->Set_KBucket(P_16);
 
 
   set_data_store("Node16", "/prefix/data/store/" + toBinary(16), P_16);
-  set_data_management("Node16", "/prefix/data/query/" + toBinary(16), P_16);
+  //set_data_management("Node16", "/prefix/data/query/" + toBinary(16), P_16);
   P_16->Set_KBucket(P_4);
   P_16->Set_KBucket(P_14);
   P_16->Set_KBucket(P_15);
 
-
   int targetNum = 0;
 
-  set_customerApp(0, "food/food/food/food/food/", P_0, 0, -1);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_1, 1, 2);
+  set_customerApp(10, "food/food/food/food/food/", P_0, 0, 1);
+  set_customerApp(0, "food/food/food/food/food/", P_1, 1, 2);
   set_customerApp(targetNum, "food/food/food/food/food/", P_2, 2, 3);
   set_customerApp(targetNum, "food/food/food/food/food/", P_3, 3, 4);
-  set_customerApp(10, "food/food/food/food/food/", P_4, 4, -1);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_4, 4, 5);
 
   set_customerApp(targetNum, "food/food/food/food/food/", P_5, 5, 6);
   set_customerApp(targetNum, "food/food/food/food/food/", P_6, 6, 7);

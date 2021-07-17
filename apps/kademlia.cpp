@@ -196,8 +196,8 @@ Order::AddOrder_toTail(std::string orderName, std::string dataString, double tim
     return inputData;
 }
 
-//搜尋整個order資料結構 滿足所需資料的所有order
-void
+//搜尋此order有無資料，有則回傳true，並修改dataList，fulfillList
+bool
 Order::checkDataList(std::string DataName, std::string itemtype)
 {
     std::set<std::string> tempList = this->getDataList();
@@ -206,8 +206,9 @@ Order::checkDataList(std::string DataName, std::string itemtype)
         tempList.erase(itemtype + "/" + DataName);
         this->setFulfill_List(itemtype + "/" + DataName);
         this->replace_Datalist(tempList);
-        //this->checkFulFill();
+        return true;
     }
+    return false;
     
 }
     
@@ -227,5 +228,12 @@ Order::checkFulFill()
         return false;
     }
     
+}
+
+void
+Order::deleteOrder(Order* preOrder)
+{
+    preOrder->setNext(nextPtr);
+    delete this;
 }
 

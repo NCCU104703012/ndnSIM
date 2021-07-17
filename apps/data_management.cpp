@@ -72,6 +72,8 @@ DataManage::GetTypeId()
       .AddAttribute("KeyLocator",
                     "Name to be used for key locator.  If root, then key locator is not used",
                     ndn::NameValue(), MakeNameAccessor(&DataManage::m_keyLocator), ndn::MakeNameChecker())
+      .AddAttribute("Query", "string of query", StringValue(""),
+          MakeNameAccessor(&DataManage::Query), ndn::MakeNameChecker())
       .AddAttribute(
         "Kademlia",
         "Kademlia struct",
@@ -180,6 +182,22 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     //確認flag 若為1則為match到的source節點傳來興趣封包
     if (flag.compare("1") == 0)
     {
+      Order* Optr = GetO_ptr()->getNext();
+      Order* preOrder = GetO_ptr();
+      while (Optr != NULL)
+      {
+        if (Optr->getSourceNode() == SourceNode && Optr->getTerminate())
+        {
+          Optr->deleteOrder(preOrder);
+          Optr = NULL;
+        }
+        else
+        {
+          preOrder = Optr;
+          Optr = Optr->getNext();
+        }
+      }
+
       ndn::Name outData;
       outData.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
 
