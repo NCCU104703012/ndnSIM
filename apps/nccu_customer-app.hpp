@@ -75,6 +75,10 @@ public:
   void
   SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_otherNode);
 
+  //送出興趣封包 通知所有未完成的order ＆ record
+  void
+  OrderTimeout();
+
   void
   SetNode_Pointer(Ptr<Node> input){parent_node = input;}
 
@@ -114,6 +118,12 @@ public:
     dataSet.insert(inputData);
   }
 
+  int
+  GetSerial_num(){return serial_num;};
+
+  void
+  SetSerial_num(int input){serial_num = input;};
+
 
 private:
   void
@@ -151,6 +161,8 @@ private:
 
   //儲存商家清單 已知的資料清單 用來生成order需要query的項目
   std::set<std::string> dataSet = {};
+
+  int serial_num = 1;
 
 };
 

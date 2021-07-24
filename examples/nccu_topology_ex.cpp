@@ -142,7 +142,20 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
     Optr_head->AddOrder(orderName, query.substr(head, tail-head), timeStamp, targetNum+1);
     tail++;
   }
+
+  //將排序好的order加入流水號 以便query function 參考
+  Order* tempPtr = Optr_head;
+  int serial_num = 0;
+  while (tempPtr != NULL)
+  {
+    tempPtr->setSerial_num(serial_num);
+    serial_num++;
+    tempPtr = tempPtr->getNext();
+    //std::cout << "set serialnum: " << serial_num << "  " << tempPtr->getOrderName() << std::endl;
+  }
+
   std::cout <<  std::endl;
+
 
   std::ostringstream address;
   address << kptr;

@@ -149,6 +149,7 @@ CustomerApp::StartApplication()
   while (O_ptr != NULL)
   {
     Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::InitSendQuery, this);
+    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+0.01), &CustomerApp::OrderTimeout, this);
     std::cout << O_ptr->getTimeStamp() << " ";
     O_ptr = O_ptr->getNext();
   }
@@ -234,7 +235,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   if (itemtype == "Store_complete")
   {
     this->SetDataSet("food/" + DataName);
-    NS_LOG_DEBUG("DataSet add : " << DataName);
+    NS_LOG_DEBUG("DataSet-add " << DataName);
     return;
   }
   
@@ -250,6 +251,34 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     SendQuery(newOrder, "food", true);
     return;
   }
+  else if (itemtype == "timeout")
+  {
+    Order* O_ptr = GetO_ptr()->getNext();
+    while (O_ptr != NULL)
+    {
+      if (O_ptr->getSourceNode() == SourceNode && !O_ptr->getTerminate())
+      {
+        break;
+      }
+      else
+      {
+        O_ptr = O_ptr->getNext();
+      }
+    }
+
+    if (O_ptr == NULL)
+    {
+      NS_LOG_DEBUG("error: timeout get but orderList is NULL");
+      return ;
+    }
+
+    ndn::Name returnServiceQuery;
+    returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(NodeName).append("food");
+    O_ptr->setTerminate(true);
+    SendInterest(returnServiceQuery, "MicroService return for timeout!!");
+    
+  }
+  
   else
   {
     ndn::Name InsName;
@@ -296,11 +325,11 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
         break;
       case 6:
         DataString = temp;
-        NS_LOG_DEBUG("DataString = " << DataString);
+        //NS_LOG_DEBUG("DataString = " << DataString);
         break;
       case 7:
         itemtype = temp;
-        NS_LOG_DEBUG("itemtype = " << itemtype);
+        //NS_LOG_DEBUG("itemtype = " << itemtype);
         break;
       }
     }
@@ -313,7 +342,7 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
       {
         if (O_ptr->checkDataList(DataString, itemtype))
         {
-          NS_LOG_DEBUG("fulfill order: " << O_ptr->getOrderName() <<" data name: " << DataString);
+          NS_LOG_DEBUG("fulfill-order " << O_ptr->getOrderName() <<" data-name " << DataString);
         }
       }
       O_ptr = O_ptr->getNext();
@@ -354,7 +383,7 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 
           std::size_t hashRecord = std::hash<std::string>{}(newRecord);
           std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
-          NS_LOG_DEBUG("Order Complete : " << newRecord );
+          NS_LOG_DEBUG("Order-Complete " << newRecord );
 
           ndn::Name temp;
           temp.append("prefix").append("data").append("store").append(NodeName);
@@ -426,9 +455,54 @@ CustomerApp::InitSendQuery(){
 }
 
 void
+CustomerApp::OrderTimeout(){
+    int serial_num = this->GetSerial_num();
+    this->SetSerial_num(this->GetSerial_num()+1);
+
+    Order* targetOrder = GetO_ptr();
+    std::set<std::string> shopSet = GetO_ptr()->getShopList();
+
+    while (targetOrder->getSerial_num() != serial_num && targetOrder != NULL)
+    {
+      targetOrder = targetOrder->getNext();
+      if (targetOrder == NULL)
+      {
+        std::cout << "TargetOrder == NULL !!!!!" <<std::endl;
+        return ;
+      }
+    }
+
+    if (targetOrder->getTerminate())
+    {
+      std::cout << "TargetOrder is terminate !!!!!" <<std::endl;
+      return;
+    }
+    
+
+    std::set<std::string>::iterator i;
+    std::set<std::string> dataList = targetOrder->getDataList();
+    for (i = dataList.begin(); i != dataList.end(); ++i)
+    {
+      std::string dataString = *i;
+      std::string targetNode;
+      targetNode = dataString.substr(dataString.find("/") +1);
+
+      if (shopSet.find(targetNode) == shopSet.end())
+      {
+        continue;
+      }
+
+      ndn::Name prefixInterest;
+      prefixInterest.append("prefix").append("data").append("download").append(targetNode).append(NodeName).append(targetOrder->getOrderName()).append("timeout");
+
+      SendInterest(prefixInterest, "Sending Service timeout for ");
+    }
+}
+
+void
 CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_otherNode){
 
-  NS_LOG_DEBUG("Start process Order: " << O_ptr->getOrderName());
+  NS_LOG_DEBUG("Start-process-Order " << O_ptr->getOrderName());
   //將terminate設為false
   O_ptr->setTerminate(false);
 
@@ -446,7 +520,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
 
       //將資料存入Order中
       O_ptr->setDataList("food/" + dataString);
-      NS_LOG_DEBUG("setDataList: " << dataString << "in order: " << O_ptr->getOrderName());
+      NS_LOG_DEBUG("setDataList " << dataString << " in-order " << O_ptr->getOrderName());
 
       ndn::Name prefixInterest;
       prefixInterest.append("prefix").append("data").append("download").append(dataString).append(NodeName).append(O_ptr->getOrderName()).append("serviceQuery");
@@ -501,7 +575,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
 
       if (isOrder_from_otherNode)
       {
-        NS_LOG_DEBUG("store data: " << query_output << " in order: " << O_ptr->getOrderName());
+        NS_LOG_DEBUG("store-data " << query_output << " in-order " << O_ptr->getOrderName());
       }
 
       ndn::Name temp;

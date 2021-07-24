@@ -185,7 +185,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   if (GetK_ptr() == GetK_ptr()->GetNext_Node(binaryRecord))
   {
     GetK_ptr()->SetData(DataName, itemType);
-    GetK_ptr()->Node_info();
+    //GetK_ptr()->Node_info();
 
     ndn::Name next ;
     next.append("prefix").append("data").append("download").append(SourceNode).append("NULL").append(DataName).append("Store_complete");
@@ -196,7 +196,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     next_interest->setInterestLifetime(ndn::time::seconds(3));
 
 
-    NS_LOG_DEBUG("Store_complete! Sending Interest packet to Source node : " << *next_interest);
+    NS_LOG_DEBUG("Store-data-complete " << DataName);
 
   
     m_transmittedInterests(next_interest, this, m_face);

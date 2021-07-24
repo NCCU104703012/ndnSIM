@@ -13,6 +13,10 @@ private:
     std::string itemType;
     double timeStamp;
     int targetNum;
+
+    //設置order順序流水號 方便進行query function
+    int serial_num ;
+
     std::set<std::string> fulfill_data_list = {};
     Order* nextPtr = NULL;
     std::set<std::string> dataList = {};
@@ -30,19 +34,20 @@ public:
     targetNum = targetNumber;
     nextPtr = NULL;
     terminate = true;
+    serial_num = -1;
     };
 
     std::string
-    getItemType(){return itemType;};
+    getItemType(){return itemType;}
 
     std::string
-    getOrderName(){return orderName;};
+    getOrderName(){return orderName;}
 
     double
-    getTimeStamp(){return timeStamp;};
+    getTimeStamp(){return timeStamp;}
 
     int
-    getTargetNum(){return targetNum;};
+    getTargetNum(){return targetNum;}
 
     std::set<std::string>
     getDataList(){return dataList;}
@@ -58,6 +63,9 @@ public:
 
     bool
     getHasSourceNode(){return hasSource_node;}
+
+    int
+    getSerial_num(){return serial_num;};
 
     //用新的datalist整個替換
     void
@@ -81,10 +89,13 @@ public:
     void
     setHasSourceNode(bool input){hasSource_node = input;}
 
+    void
+    setSerial_num(int input){serial_num = input;}
+
     bool
     getTerminate(){return terminate;}
 
-    Order* getNext(){return nextPtr;};
+    Order* getNext(){return nextPtr;}
 
     void
     setNext(Order* ptr);
