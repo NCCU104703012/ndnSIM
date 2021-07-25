@@ -71,6 +71,10 @@ public:
   void
   InitSendQuery();
 
+  //實際送出record 封包
+  void
+  InitSendData();
+
   //根據Order內容 找出符合的資料 送出興趣封包
   void
   SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_otherNode);
@@ -80,7 +84,20 @@ public:
   OrderTimeout();
 
   void
-  SetNode_Pointer(Ptr<Node> input){parent_node = input;}
+  SetNode_Pointer(Ptr<Node> input){parent_node = input;};
+
+  //將Guest 轉換成指標
+  Guest*
+  GetG_ptr()
+  {
+    std::stringstream ss;
+    std::string temp = Guest_list.toUri().substr(1);
+    ss << temp;
+    long long unsigned int i;
+    ss >> std::hex >> i;
+    Guest *output = reinterpret_cast<Guest *>(i);
+    return output;
+  };
 
   //將kademlia struct位址從字串轉成指標
   Kademlia*
@@ -161,6 +178,9 @@ private:
 
   //儲存商家清單 已知的資料清單 用來生成order需要query的項目
   std::set<std::string> dataSet = {};
+
+  //儲存poisson進入的顧客 用來生成record
+  ndn::Name Guest_list;
 
   int serial_num = 1;
 

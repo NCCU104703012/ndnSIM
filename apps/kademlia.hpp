@@ -199,6 +199,36 @@ private:
     int knum = 0;
 };
 
+class Guest
+{
+private:
+    Guest* nextPtr = NULL;
+    double timestamp = 0;
+    std::string recordName = "NULL";
+public:
+    Guest(std::string recordInput, double timeInput){
+        recordName = recordInput;
+        timestamp = timeInput;
+        nextPtr = NULL;
+    };
+    ~Guest(){
+        
+    };
+
+    Guest*
+    getNext(){return nextPtr;};
+
+    double
+    getTimeStamp(){return timestamp;};
+
+    std::string
+    getRecordName(){return recordName;};
+
+    void
+    setNext(Guest* inputPtr){nextPtr = inputPtr;};
+};
+
+
 
 
 #endif 

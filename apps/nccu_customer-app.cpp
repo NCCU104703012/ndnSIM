@@ -78,6 +78,8 @@ CustomerApp::GetTypeId()
           MakeNameAccessor(&CustomerApp::NodeName), ndn::MakeNameChecker())
       .AddAttribute("Query", "string of query", StringValue(""),
           MakeNameAccessor(&CustomerApp::Query), ndn::MakeNameChecker())
+      .AddAttribute("Guest", "string of guest list", StringValue(""),
+          MakeNameAccessor(&CustomerApp::Guest_list), ndn::MakeNameChecker())
       .AddAttribute("Record", "assign Record", StringValue(""),
           MakeNameAccessor(&CustomerApp::Record), ndn::MakeNameChecker())
       .AddAttribute(
@@ -136,6 +138,7 @@ CustomerApp::StartApplication()
   // Simulator::Schedule(Seconds(1), &CustomerApp::SendQuery_shop, this);
 
   Order* O_ptr = GetO_ptr()->getNext();
+  Guest* G_ptr = GetG_ptr();
   // for (int i = 0; i < GetO_ptr()->getTargetNum() ; i++)
   // {
   //   Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::SendQuery, this);
@@ -153,6 +156,13 @@ CustomerApp::StartApplication()
     std::cout << O_ptr->getTimeStamp() << " ";
     O_ptr = O_ptr->getNext();
   }
+
+  while (G_ptr != NULL)
+  {
+    Simulator::Schedule(Seconds(G_ptr->getTimeStamp()), &CustomerApp::InitSendData, this);
+    G_ptr = G_ptr->getNext();
+  }
+  
   std::cout << std::endl;
 
 }
@@ -381,16 +391,16 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 
           //this->SetDataSet("food/" + newRecord);
 
-          std::size_t hashRecord = std::hash<std::string>{}(newRecord);
-          std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
+          // std::size_t hashRecord = std::hash<std::string>{}(newRecord);
+          // std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
           NS_LOG_DEBUG("Order-Complete " << newRecord );
 
-          ndn::Name temp;
-          temp.append("prefix").append("data").append("store").append(NodeName);
-          temp.append(NodeName).append(newRecord).append("food");
-          new_record_count++;
+          // ndn::Name temp;
+          // temp.append("prefix").append("data").append("store").append(NodeName);
+          // temp.append(NodeName).append(newRecord).append("food");
+          // new_record_count++;
 
-          SendInterest(temp, "Sending Record for ");
+          // SendInterest(temp, "Sending Record for ");
         }
 
         //將已滿足order terminate -> ture
@@ -452,6 +462,31 @@ CustomerApp::InitSendQuery(){
 
   SendQuery(O_ptr, O_ptr->getItemType(), false);
 
+}
+
+void
+CustomerApp::InitSendData(){
+  Guest* G_ptr = GetG_ptr();
+  Guest* newG_ptr = G_ptr->getNext();
+  std::string newRecord = G_ptr->getRecordName();
+
+  std::ostringstream address;
+  address << newG_ptr;
+  ndn::Name newGuest_ptr; 
+  newGuest_ptr.append(address.str());
+  Guest_list = newGuest_ptr;
+  delete(G_ptr);
+
+  std::size_t hashRecord = std::hash<std::string>{}(newRecord);
+  std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
+  NS_LOG_DEBUG("Guest coming: " << newRecord );
+
+  ndn::Name temp;
+  temp.append("prefix").append("data").append("store").append(NodeName);
+  temp.append(NodeName).append(newRecord).append("food");
+  
+
+  SendInterest(temp, "");
 }
 
 void

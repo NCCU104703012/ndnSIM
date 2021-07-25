@@ -118,8 +118,8 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
 
 void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, int shopList)
 {
-  std::poisson_distribution<int> poisson(10);
-  
+  std::poisson_distribution<int> poisson(20);
+  std::poisson_distribution<int> poisson_record(100);
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   Order* Optr_head = new Order("init", "init", 0, targetNum);
   int head = 0;
@@ -130,16 +130,35 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   {
     Optr_head->setShopList(toBinary(shopList));
   }
+
+  //產生Guest list
+  int record_count = 0;
+  double totalTime = (double)poisson_record(generator)/100;
+  Guest* Gptr_head = new Guest("newRecord_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
+  Guest* Gptr_temp = Gptr_head;
+  // //產生20筆資料
+  for (int i = 0; i < 20; i++)
+  {
+    record_count++;
+    totalTime = totalTime + (double)poisson_record(generator)/100;
+    Guest* newEntry = new Guest("newRecord_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
+    Gptr_temp->setNext(newEntry);
+    Gptr_temp = Gptr_temp->getNext();
+  }
   
+
+  
+  //加入order
+  totalTime = 0;
   for (int i = 0; i < targetNum; i++)
   {
     std::string orderName = "newRecord_Node" + to_string(nodeNum) + "_" + to_string(i);
 
-    double timeStamp = poisson(generator);
-    std::cout << timeStamp << " ";
+    totalTime = totalTime + (double)poisson(generator)/10;
+    std::cout << totalTime << " ";
     head = tail;
     tail = query.find_first_of("/", head);
-    Optr_head->AddOrder(orderName, query.substr(head, tail-head), timeStamp, targetNum+1);
+    Optr_head->AddOrder(orderName, query.substr(head, tail-head), totalTime, targetNum+1);
     tail++;
   }
 
@@ -165,6 +184,10 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   address2 << Optr_head;
   std::string queryString = address2.str();
 
+  std::ostringstream address3;
+  address3 << Gptr_head;
+  std::string gptrString = address3.str();
+
 
   Ptr<Node> Node0 = Names::Find<Node>("Node" + to_string(nodeNum) );
   ndn::AppHelper app1("CustomerApp");
@@ -172,6 +195,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   app1.SetAttribute("NodeName", StringValue(toBinary(nodeNum)));
   app1.SetAttribute("Kademlia", StringValue(location));
   app1.SetAttribute("Query", StringValue(queryString));
+  app1.SetAttribute("Guest", StringValue(gptrString));
   app1.Install(Node0);
   ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(nodeNum), Node0);
   
