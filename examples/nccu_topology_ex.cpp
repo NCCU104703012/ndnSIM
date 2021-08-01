@@ -137,7 +137,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   Guest* Gptr_head = new Guest("newRecord_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
   Guest* Gptr_temp = Gptr_head;
   // //產生20筆資料
-  for (int i = 0; i < 20; i++)
+  for (int i = 0; i < 0; i++)
   {
     record_count++;
     totalTime = totalTime + (double)poisson_record(generator)/100;

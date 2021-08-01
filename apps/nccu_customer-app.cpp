@@ -94,11 +94,12 @@ CustomerApp::GetTypeId()
 }
 
 void
-CustomerApp::SendInterest(ndn::Name prefix, std::string logging){
+CustomerApp::SendInterest(ndn::Name prefix, std::string logging, bool freshness){
   auto interest = std::make_shared<ndn::Interest>(prefix);
       
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+  interest->setMustBeFresh(freshness);
 
   interest->setInterestLifetime(ndn::time::seconds(3));
   if (logging.length() != 0)
@@ -175,29 +176,29 @@ CustomerApp::StopApplication()
   ndn::App::StopApplication();
 }
 
-void
-CustomerApp::SendInterest()
-{
-  /////////////////////////////////////
-  // Sending one Interest packet out //
-  /////////////////////////////////////
+// void
+// CustomerApp::SendInterest()
+// {
+//   /////////////////////////////////////
+//   // Sending one Interest packet out //
+//   /////////////////////////////////////
 
 
-  // Create and configure ndn::Interest
-  auto interest = std::make_shared<ndn::Interest>(m_prefix);
-  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
-  interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+//   // Create and configure ndn::Interest
+//   auto interest = std::make_shared<ndn::Interest>(m_prefix);
+//   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+//   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
 
-  interest->setInterestLifetime(ndn::time::seconds(3));
-  //interest->setDefaultCanBePrefix(true);
+//   interest->setInterestLifetime(ndn::time::seconds(3));
+//   //interest->setDefaultCanBePrefix(true);
 
-  NS_LOG_DEBUG("Sending Interest packet for " << *interest);
+//   NS_LOG_DEBUG("Sending Interest packet for " << *interest);
 
-  // Call trace (for logging purposes)
-  m_transmittedInterests(interest, this, m_face);
+//   // Call trace (for logging purposes)
+//   m_transmittedInterests(interest, this, m_face);
 
-  m_appLink->onReceiveInterest(*interest);
-}
+//   m_appLink->onReceiveInterest(*interest);
+// }
 
 // Callback that will be called when Interest arrives
 void
@@ -285,17 +286,25 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     ndn::Name returnServiceQuery;
     returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(NodeName).append("food");
     O_ptr->setTerminate(true);
-    SendInterest(returnServiceQuery, "MicroService return for timeout!!");
+    SendInterest(returnServiceQuery, "MicroService return for timeout!!", true);
     
   }
   
+  else if(DataName == SourceNode)
+  {
+    ndn::Name InsName;
+    InsName.append("prefix").append("data").append("query").append(SourceNode).append("1").append(DataName).append(itemtype);
+
+    SendInterest(InsName, "Micro service done, send interest packet to download it ", true);
+  }
   else
   {
     ndn::Name InsName;
-    InsName.append("prefix").append("data").append("query").append(SourceNode).append("1").append(TargetNode).append(DataName).append(itemtype);
+    InsName.append("prefix").append("data").append("query").append(SourceNode).append("1").append(DataName).append(itemtype);
 
-    SendInterest(InsName, "Found data, send interest packet to download it ");
+    SendInterest(InsName, "Found data, send interest packet to download it ", false);
   }
+  
 
 }
 
@@ -322,22 +331,18 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
       switch (i)
       {
       case 3:
-        TargetNode = temp;
-        //NS_LOG_DEBUG("targetnode = " << TargetNode);
-        break;
-      case 4:
         SourceNode = temp;
         //NS_LOG_DEBUG("sourcenode = " << SourceNode);
         break;
-      case 5:
-        DataName = temp;
+      case 4:
+        flag = temp;
          //NS_LOG_DEBUG("dataname = " << DataName);
         break;
-      case 6:
+      case 5:
         DataString = temp;
         //NS_LOG_DEBUG("DataString = " << DataString);
         break;
-      case 7:
+      case 6:
         itemtype = temp;
         //NS_LOG_DEBUG("itemtype = " << itemtype);
         break;
@@ -382,7 +387,7 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 
           // m_appLink->onReceiveData(*data);
           O_ptr->setTerminate(true);
-          SendInterest(returnServiceQuery, "MicroService return!!");
+          SendInterest(returnServiceQuery, "MicroService return!!", true);
         }
         else
         {
@@ -446,7 +451,7 @@ CustomerApp::SendRecord()
   temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(record_output).append("food");
   record_count++;
 
-  SendInterest(temp, "Sending Record for ");
+  SendInterest(temp, "Sending Record for ", true);
 }
 
 
@@ -486,7 +491,7 @@ CustomerApp::InitSendData(){
   temp.append(NodeName).append(newRecord).append("food");
   
 
-  SendInterest(temp, "");
+  SendInterest(temp, "", false);
 }
 
 void
@@ -530,7 +535,7 @@ CustomerApp::OrderTimeout(){
       ndn::Name prefixInterest;
       prefixInterest.append("prefix").append("data").append("download").append(targetNode).append(NodeName).append(targetOrder->getOrderName()).append("timeout");
 
-      SendInterest(prefixInterest, "Sending Service timeout for ");
+      SendInterest(prefixInterest, "Sending Service timeout for ", true);
     }
 }
 
@@ -560,27 +565,27 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
       ndn::Name prefixInterest;
       prefixInterest.append("prefix").append("data").append("download").append(dataString).append(NodeName).append(O_ptr->getOrderName()).append("serviceQuery");
 
-      SendInterest(prefixInterest, "Sending Service Query for ");
+      SendInterest(prefixInterest, "Sending Service Query for ", true);
     }
   }
 
   //當沒有任何資料可以query時，假設有自家菜單可以滿足，直接生成record
   if (dataSet.begin() == dataSet.end() && !isOrder_from_otherNode && (shopSet.begin() == shopSet.end()))
   {
-    std::string newRecord = O_ptr->getOrderName();
+    // std::string newRecord = O_ptr->getOrderName();
 
-    this->SetDataSet("food/" + newRecord);
+    // this->SetDataSet("food/" + newRecord);
 
-    std::size_t hashRecord = std::hash<std::string>{}(newRecord);
-    std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
-    NS_LOG_DEBUG("hash Record for " << binaryRecord << " " << newRecord);
+    // std::size_t hashRecord = std::hash<std::string>{}(newRecord);
+    // std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
+    // NS_LOG_DEBUG("hash Record for " << binaryRecord << " " << newRecord);
 
-    ndn::Name temp;
-    temp.append("prefix").append("data").append("store").append(NodeName);
-    temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(newRecord).append("food");
-    new_record_count++;
+    // ndn::Name temp;
+    // temp.append("prefix").append("data").append("store").append(NodeName);
+    // temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(newRecord).append("food");
+    // new_record_count++;
 
-    SendInterest(temp, "Sending Record for ");
+    // SendInterest(temp, "Sending Record for ");
 
     //將已滿足order terminate -> ture
     O_ptr->setTerminate(true);
@@ -592,7 +597,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
     ndn::Name returnServiceQuery;
     returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(NodeName).append("food").append(O_ptr->getOrderName());
 
-    SendInterest(returnServiceQuery, "Return service for ");
+    SendInterest(returnServiceQuery, "Return service for ", true);
     return;
   }
 
@@ -617,7 +622,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
       temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
       temp.append(query_output).append(itemType).append(query_output + std::to_string(time(NULL)));
       
-      SendInterest(temp, "Sending Query for ");
+      SendInterest(temp, "Sending Query for ", true);
     }
   }
 

@@ -65,7 +65,7 @@ public:
 
   //輸入前綴 送出興趣封包
   void
-  SendInterest(ndn::Name prefix, std::string logging);
+  SendInterest(ndn::Name prefix, std::string logging, bool freshness);
 
   //將初始設定轉換成Order 並排序 會在CustomerApp開始時執行
   void
@@ -143,8 +143,8 @@ public:
 
 
 private:
-  void
-  SendInterest();
+  //void
+  //SendInterest();
 
   ndn::Name m_prefix;
   ndn::Name m_postfix;
