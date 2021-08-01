@@ -81,6 +81,9 @@ public:
     setShopList(std::string input){shopList.insert(input);}
 
     void
+    setShopList(std::set<std::string> input){shopList = input;}
+
+    void
     setTerminate(bool input){terminate = input;}
 
     void
@@ -212,7 +215,7 @@ public:
         nextPtr = NULL;
     };
     ~Guest(){
-        
+
     };
 
     Guest*

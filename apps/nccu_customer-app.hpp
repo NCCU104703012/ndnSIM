@@ -141,6 +141,10 @@ public:
   void
   SetSerial_num(int input){serial_num = input;};
 
+  //確認ShopSet中有沒有更近的節點，進行DataSet更新
+  std::string
+  DataSet_update(std::string inputDataName);
+
 
 private:
   //void

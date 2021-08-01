@@ -243,12 +243,29 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
     }
 
+  //收到儲存確認訊息，進行DataSet Changing
   if (itemtype == "Store_complete")
   {
-    this->SetDataSet("food/" + DataName);
-    NS_LOG_DEBUG("DataSet-add " << DataName);
+    std::string updateNode = DataSet_update(DataName);
+
+    if (updateNode == NodeName)
+    {
+      this->SetDataSet("food/" + DataName);
+      NS_LOG_DEBUG("DataSet-add " << DataName);
+      return;
+    }
+    
+    ndn::Name interest;
+    interest.append("prefix").append("data").append("download").append(updateNode).append(NodeName).append(DataName).append("dataSet_update");
+    SendInterest(interest, "DataSet_update", true);
     return;
   }
+  else if (itemtype == "dataSet_update")
+  {
+    this->SetDataSet("food/" + DataName);
+    NS_LOG_DEBUG("Get DataSet update from " << SourceNode << " Data: " << DataName);
+  }
+  
   
 
   //若興去封包是其他節點的Order委託
@@ -572,22 +589,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
   //當沒有任何資料可以query時，假設有自家菜單可以滿足，直接生成record
   if (dataSet.begin() == dataSet.end() && !isOrder_from_otherNode && (shopSet.begin() == shopSet.end()))
   {
-    // std::string newRecord = O_ptr->getOrderName();
 
-    // this->SetDataSet("food/" + newRecord);
-
-    // std::size_t hashRecord = std::hash<std::string>{}(newRecord);
-    // std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
-    // NS_LOG_DEBUG("hash Record for " << binaryRecord << " " << newRecord);
-
-    // ndn::Name temp;
-    // temp.append("prefix").append("data").append("store").append(NodeName);
-    // temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(newRecord).append("food");
-    // new_record_count++;
-
-    // SendInterest(temp, "Sending Record for ");
-
-    //將已滿足order terminate -> ture
     O_ptr->setTerminate(true);
 
   }
@@ -625,12 +627,49 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
       SendInterest(temp, "Sending Query for ", true);
     }
   }
-
-  
-  
-  
-  
 }
+
+  std::string
+  CustomerApp::DataSet_update(std::string inputDataName){
+    int distance = 0;
+    std::string output = NodeName.toUri();
+    std::size_t biTemp = std::hash<std::string>{}(inputDataName);
+    std::string binaryDataName = std::bitset<8>(biTemp).to_string();
+    std::set<std::string> shopSet = GetO_ptr()->getShopList();
+    std::set<std::string>::iterator o;
+
+    for (int i = 1; i < 9; i++)
+      {
+          std::string str1 = binaryDataName.substr(i,1);
+          std::string str2 = NodeName.toUri().substr(i,1);
+          if (str1.compare(str2))
+          {
+              distance++;
+          }
+      }
+
+    for ( o = shopSet.begin(); o != shopSet.end(); ++o)
+    {
+      std::string shopName = *o;
+      int temp_distance = 0;
+      for (int i = 1; i < 9; i++)
+      {
+          std::string str1 = binaryDataName.substr(i,1);
+          std::string str2 = shopName.substr(i,1);
+          if (str1.compare(str2))
+          {
+              temp_distance++;
+          }
+      }
+      if (temp_distance > distance)
+      {
+        distance = temp_distance;
+        output = shopName;
+      }
+      
+    }
+    return output;
+  }
 
 
 } // namespace ns3

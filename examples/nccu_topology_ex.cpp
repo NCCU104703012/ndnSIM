@@ -116,7 +116,7 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
   ndnGlobalRoutingHelper.AddOrigins(prefix, TargetNode);
 }
 
-void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, int shopList)
+void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, std::set<int> shopList)
 {
   std::poisson_distribution<int> poisson(20);
   std::poisson_distribution<int> poisson_record(100);
@@ -126,10 +126,15 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   int tail = 0;
 
   //加入shopList
-  if (shopList != -1)
+  std::set<std::string> shopList_string;
+  std::set<int>::iterator i;
+  for (i = shopList.begin(); i != shopList.end(); ++i)
   {
-    Optr_head->setShopList(toBinary(shopList));
+    int node = *i;
+    shopList_string.insert(toBinary(node));
   }
+  
+  Optr_head->setShopList(shopList_string);
 
   //產生Guest list
   int record_count = 0;
@@ -137,7 +142,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   Guest* Gptr_head = new Guest("newRecord_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
   Guest* Gptr_temp = Gptr_head;
   // //產生20筆資料
-  for (int i = 0; i < 0; i++)
+  for (int i = 0; i < 20; i++)
   {
     record_count++;
     totalTime = totalTime + (double)poisson_record(generator)/100;
@@ -411,25 +416,25 @@ main(int argc, char* argv[])
 
   int targetNum = 0;
 
-  set_customerApp(10, "food/food/food/food/food/", P_0, 0, 1);
-  set_customerApp(0, "food/food/food/food/food/", P_1, 1, 2);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_2, 2, 3);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_3, 3, 4);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_4, 4, 5);
+  set_customerApp(10, "food/food/food/food/food/", P_0, 0, std::set<int> {1, 2, 3, 4, 5});
+  set_customerApp(0, "food/food/food/food/food/", P_1, 1, std::set<int> {2});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_2, 2, std::set<int> {3});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_3, 3, std::set<int> {4});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_4, 4, std::set<int> {5});
 
-  set_customerApp(targetNum, "food/food/food/food/food/", P_5, 5, 6);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_6, 6, 7);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_7, 7, 8);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_8, 8, 9);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_9, 9, 10);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_5, 5, std::set<int> {6});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_6, 6, std::set<int> {7});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_7, 7, std::set<int> {8});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_8, 8, std::set<int> {9});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_9, 9, std::set<int> {10});
 
-  set_customerApp(targetNum, "food/food/food/food/food/", P_10, 10, 11);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_11, 11, 12);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_12, 12, 13);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_13, 13, 14);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_14, 14, 15);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_15, 15, 16);
-  set_customerApp(targetNum, "food/food/food/food/food/", P_16, 16, 0);
+  set_customerApp(targetNum, "food/food/food/food/food/", P_10, 10, std::set<int> {11});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_11, 11, std::set<int> {12});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_12, 12, std::set<int> {13});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_13, 13, std::set<int> {14});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_14, 14, std::set<int> {15});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_15, 15, std::set<int> {16});
+  set_customerApp(targetNum, "food/food/food/food/food/", P_16, 16, std::set<int> {0});
     
 
 
