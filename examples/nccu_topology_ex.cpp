@@ -139,14 +139,14 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   //產生Guest list
   int record_count = 0;
   double totalTime = (double)poisson_record(generator)/100;
-  Guest* Gptr_head = new Guest("newRecord_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
+  Guest* Gptr_head = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
   Guest* Gptr_temp = Gptr_head;
   // //產生20筆資料
   for (int i = 0; i < 20; i++)
   {
     record_count++;
     totalTime = totalTime + (double)poisson_record(generator)/100;
-    Guest* newEntry = new Guest("newRecord_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
+    Guest* newEntry = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
     Gptr_temp->setNext(newEntry);
     Gptr_temp = Gptr_temp->getNext();
   }
@@ -208,6 +208,55 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + toBinary(nodeNum), kptr, queryString);
 }
 
+void generate_node(){
+
+  //將節點指標存成陣列
+  Kademlia *kptr_arr[17];
+  for (int i = 0; i < 17; i++)
+  {
+    std::string nodeName = "Node" + to_string(i);
+    kptr_arr[i] = new Kademlia(nodeName, nodeName, toBinary(i));
+    set_data_store(nodeName, "/prefix/data/store/" + toBinary(i), kptr_arr[i]);
+  }
+
+  //設定K桶，目前以名字相近的四個節點為K桶
+  for (int i = 0; i < 17; i++)
+  {
+    int targetNode = i-2;
+    for (int m = 0; m < 5; m++)
+    {
+      if (targetNode < 0 || targetNode == i || targetNode > 16)
+      {
+        targetNode++;
+      }
+      else
+      {
+        kptr_arr[i]->Set_KBucket(kptr_arr[targetNode]);
+        std::cout<<"set Kbucket: " << kptr_arr[targetNode]->GetNodeName() << " into " << kptr_arr[i]->GetNodeName()<<std::endl;
+        targetNode++;
+      }
+    }
+  }
+
+  //設定合作商家，暫時分為三群
+  std::set<int> set1 = {0, 1, 2, 3, 4, 5};
+  std::set<int> set2 = {6, 7, 8, 9, 10};
+  std::set<int> set3 = {11, 12, 13, 14, 15, 16};
+  
+  for (int i = 0; i < 17; i++)
+  {
+    std::set<int> tempSet;
+    if (set1.find(i) != set1.end()){tempSet = set1;}
+    else if(set2.find(i) != set2.end()){tempSet = set2;}
+    else{tempSet = set3;}
+
+    tempSet.erase(i);
+
+    set_customerApp(5, "food/food/food/food/food/", kptr_arr[i], i, tempSet);
+  }
+  
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -231,212 +280,9 @@ main(int argc, char* argv[])
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll();
 
-
-  Kademlia Knode0("Node0", "Node0", toBinary(0));
-  Kademlia *P_0 = &Knode0;
-  Kademlia Knode1("Node1", "Node1", toBinary(1));
-  Kademlia *P_1 = &Knode1;
-  Kademlia Knode2("Node2", "Node2", toBinary(2));
-  Kademlia *P_2 = &Knode2;
-  Kademlia Knode3("Node3", "Node3", toBinary(3));
-  Kademlia *P_3 = &Knode3;
-  Kademlia Knode4("Node4", "Node4", toBinary(4));
-  Kademlia *P_4 = &Knode4;
-  Kademlia Knode5("Node5", "Node5", toBinary(5));
-  Kademlia *P_5 = &Knode5;
-  Kademlia Knode6("Node6", "Node6", toBinary(6));
-  Kademlia *P_6 = &Knode6;
-  Kademlia Knode7("Node7", "Node7", toBinary(7));
-  Kademlia *P_7 = &Knode7;
-  Kademlia Knode8("Node8", "Node8", toBinary(8));
-  Kademlia *P_8 = &Knode8;
-  Kademlia Knode9("Node9", "Node9", toBinary(9));
-  Kademlia *P_9 = &Knode9;
-  Kademlia Knode10("Node10", "Node10", toBinary(10));
-  Kademlia *P_10 = &Knode10;
-  Kademlia Knode11("Node11", "Node11", toBinary(11));
-  Kademlia *P_11 = &Knode11;
-  Kademlia Knode12("Node12", "Node12", toBinary(12));
-  Kademlia *P_12 = &Knode12;
-  Kademlia Knode13("Node13", "Node13", toBinary(13));
-  Kademlia *P_13 = &Knode13;
-  Kademlia Knode14("Node14", "Node14", toBinary(14));
-  Kademlia *P_14 = &Knode14;
-  Kademlia Knode15("Node15", "Node15", toBinary(15));
-  Kademlia *P_15 = &Knode15;
-  Kademlia Knode16("Node16", "Node16", toBinary(16));
-  Kademlia *P_16 = &Knode16;
-
-
-  //node13.Node_info();
-  set_data_store("Node0", "/prefix/data/store/" + toBinary(0), P_0);
-  //set_data_management("Node0", "/prefix/data/query/" + toBinary(0), P_0);
-  P_0->Set_KBucket(P_1);
-  P_0->Set_KBucket(P_2);
-  P_0->Set_KBucket(P_3);
-  P_0->Set_KBucket(P_4);
-  P_0->Set_KBucket(P_5);
-  P_0->Set_KBucket(P_8);
-  P_0->Set_KBucket(P_11);
-  P_0->Set_KBucket(P_14);
-
-  set_data_store("Node1", "/prefix/data/store/" + toBinary(1), P_1);
-  //set_data_management("Node1", "/prefix/data/query/" + toBinary(1), P_1);
-  P_1->Set_KBucket(P_5);
-  P_1->Set_KBucket(P_2);
-  P_1->Set_KBucket(P_3);
-  P_1->Set_KBucket(P_0);
-  P_1->Set_KBucket(P_4);
-  P_1->Set_KBucket(P_6);
-  P_1->Set_KBucket(P_7);
-  P_1->Set_KBucket(P_8);
-  P_1->Set_KBucket(P_11);
-
-  set_data_store("Node2", "/prefix/data/store/" + toBinary(2), P_2);
-  //set_data_management("Node2", "/prefix/data/query/" + toBinary(2), P_2);
-  P_2->Set_KBucket(P_1);
-  P_2->Set_KBucket(P_0);
-  P_2->Set_KBucket(P_4);
-  P_2->Set_KBucket(P_8);
-  P_2->Set_KBucket(P_3);
-  P_2->Set_KBucket(P_5);
-  P_2->Set_KBucket(P_9);
-  P_2->Set_KBucket(P_10);
-  P_2->Set_KBucket(P_14);
-
-  set_data_store("Node3", "/prefix/data/store/" + toBinary(3), P_3);
-  //set_data_management("Node3", "/prefix/data/query/" + toBinary(3), P_3);
-  P_3->Set_KBucket(P_1);
-  P_3->Set_KBucket(P_0);
-  P_3->Set_KBucket(P_4);
-  P_3->Set_KBucket(P_11);
-  P_3->Set_KBucket(P_5);
-  P_3->Set_KBucket(P_2);
-  P_3->Set_KBucket(P_14);
-  P_3->Set_KBucket(P_12);
-  P_3->Set_KBucket(P_13);
-
-  set_data_store("Node4", "/prefix/data/store/" + toBinary(4), P_4);
-  //set_data_management("Node4", "/prefix/data/query/" + toBinary(4), P_4);
-  P_4->Set_KBucket(P_0);
-  P_4->Set_KBucket(P_2);
-  P_4->Set_KBucket(P_3);
-  P_4->Set_KBucket(P_14);
-  P_4->Set_KBucket(P_8);
-  P_4->Set_KBucket(P_1);
-  P_4->Set_KBucket(P_11);
-  P_4->Set_KBucket(P_15);
-  P_4->Set_KBucket(P_16);
-  
-
-  set_data_store("Node5", "/prefix/data/store/" + toBinary(5), P_5);
-  //set_data_management("Node5", "/prefix/data/query/" + toBinary(5), P_5);
-  P_5->Set_KBucket(P_0);
-  P_5->Set_KBucket(P_1);
-  P_5->Set_KBucket(P_2);
-  P_5->Set_KBucket(P_3);
-  P_5->Set_KBucket(P_6);
-  P_5->Set_KBucket(P_7);
-
-  set_data_store("Node6", "/prefix/data/store/" + toBinary(6), P_6);
-  //set_data_management("Node6", "/prefix/data/query/" + toBinary(6), P_6);
-  P_6->Set_KBucket(P_1);
-  P_6->Set_KBucket(P_5);
-  P_6->Set_KBucket(P_7);
-  
-  set_data_store("Node7", "/prefix/data/store/" + toBinary(7), P_7);
-  //set_data_management("Node7", "/prefix/data/query/" + toBinary(7), P_7);
-  P_7->Set_KBucket(P_1);
-  P_7->Set_KBucket(P_5);
-  P_7->Set_KBucket(P_6);
-
-  set_data_store("Node8", "/prefix/data/store/" + toBinary(8), P_8);
- // set_data_management("Node8", "/prefix/data/query/" + toBinary(8), P_8);
-  P_8->Set_KBucket(P_1);
-  P_8->Set_KBucket(P_0);
-  P_8->Set_KBucket(P_4);
-  P_8->Set_KBucket(P_2);
-  P_8->Set_KBucket(P_9);
-  P_8->Set_KBucket(P_10);
-
-  set_data_store("Node9", "/prefix/data/store/" + toBinary(9), P_9);
-  //set_data_management("Node9", "/prefix/data/query/" + toBinary(9), P_9);
-  P_9->Set_KBucket(P_2);
-  P_9->Set_KBucket(P_8);
-  P_9->Set_KBucket(P_10);
-  
-  set_data_store("Node10", "/prefix/data/store/" + toBinary(10), P_10);
-  //set_data_management("Node10", "/prefix/data/query/" + toBinary(10), P_10);
-  P_10->Set_KBucket(P_2);
-  P_10->Set_KBucket(P_8);
-  P_10->Set_KBucket(P_9);
-
-  set_data_store("Node11", "/prefix/data/store/" + toBinary(11), P_11);
-  //set_data_management("Node11", "/prefix/data/query/" + toBinary(11), P_11);
-  P_11->Set_KBucket(P_0);
-  P_11->Set_KBucket(P_1);
-  P_11->Set_KBucket(P_4);
-  P_11->Set_KBucket(P_3);
-  P_11->Set_KBucket(P_12);
-  P_11->Set_KBucket(P_13);
-  
-  set_data_store("Node12", "/prefix/data/store/" + toBinary(12), P_12);
-  //set_data_management("Node12", "/prefix/data/query/" + toBinary(12), P_12);
-  P_12->Set_KBucket(P_3);
-  P_12->Set_KBucket(P_11);
-  P_12->Set_KBucket(P_13);
-
-  set_data_store("Node13", "/prefix/data/store/" + toBinary(13), P_13);
-  //set_data_management("Node13", "/prefix/data/query/" + toBinary(13), P_13);
-  P_13->Set_KBucket(P_3);
-  P_13->Set_KBucket(P_11);
-  P_13->Set_KBucket(P_12);
-
-  set_data_store("Node14", "/prefix/data/store/" + toBinary(14), P_14);
-  //set_data_management("Node14", "/prefix/data/query/" + toBinary(14), P_14);
-  P_14->Set_KBucket(P_0);
-  P_14->Set_KBucket(P_2);
-  P_14->Set_KBucket(P_3);
-  P_14->Set_KBucket(P_4);
-  P_14->Set_KBucket(P_15);
-  P_14->Set_KBucket(P_16);
-
-  set_data_store("Node15", "/prefix/data/store/" + toBinary(15), P_15);
-  //set_data_management("Node15", "/prefix/data/query/" + toBinary(15), P_15);
-  P_15->Set_KBucket(P_4);
-  P_15->Set_KBucket(P_14);
-  P_15->Set_KBucket(P_16);
-
-
-  set_data_store("Node16", "/prefix/data/store/" + toBinary(16), P_16);
-  //set_data_management("Node16", "/prefix/data/query/" + toBinary(16), P_16);
-  P_16->Set_KBucket(P_4);
-  P_16->Set_KBucket(P_14);
-  P_16->Set_KBucket(P_15);
-
-  int targetNum = 0;
-
-  set_customerApp(10, "food/food/food/food/food/", P_0, 0, std::set<int> {1, 2, 3, 4, 5});
-  set_customerApp(0, "food/food/food/food/food/", P_1, 1, std::set<int> {2});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_2, 2, std::set<int> {3});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_3, 3, std::set<int> {4});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_4, 4, std::set<int> {5});
-
-  set_customerApp(targetNum, "food/food/food/food/food/", P_5, 5, std::set<int> {6});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_6, 6, std::set<int> {7});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_7, 7, std::set<int> {8});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_8, 8, std::set<int> {9});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_9, 9, std::set<int> {10});
-
-  set_customerApp(targetNum, "food/food/food/food/food/", P_10, 10, std::set<int> {11});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_11, 11, std::set<int> {12});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_12, 12, std::set<int> {13});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_13, 13, std::set<int> {14});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_14, 14, std::set<int> {15});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_15, 15, std::set<int> {16});
-  set_customerApp(targetNum, "food/food/food/food/food/", P_16, 16, std::set<int> {0});
+  //產生資料結構，初始化節點模組
+  generate_node();
     
-
 
   // Calculate and install FIBs
   ndn::GlobalRoutingHelper::CalculateRoutes();

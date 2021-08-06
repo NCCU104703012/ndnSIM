@@ -124,31 +124,8 @@ CustomerApp::StartApplication()
   ndn::FibHelper::AddRoute(GetNode(), m_prefix, m_face, 0);
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
-  // Schedule send of first interest
-  // Simulator::Schedule(Seconds(1.0), &CustomerApp::SendRecord, this);
-  // Simulator::Schedule(Seconds(1.5), &CustomerApp::SendRecord, this);
-  // Simulator::Schedule(Seconds(2.0), &CustomerApp::SendRecord, this);
-  // Simulator::Schedule(Seconds(2.5), &CustomerApp::SendRecord, this);
-  // Simulator::Schedule(Seconds(3.0), &CustomerApp::SendRecord, this);
-
-  // Simulator::Schedule(Seconds(4), &CustomerApp::SendQuery, this);
-  // Simulator::Schedule(Seconds(7), &CustomerApp::SendQuery, this);
-  // Simulator::Schedule(Seconds(10), &CustomerApp::SendQuery, this);
-  // Simulator::Schedule(Seconds(13), &CustomerApp::SendQuery, this);
-  
-  // Simulator::Schedule(Seconds(1), &CustomerApp::SendQuery_shop, this);
-
   Order* O_ptr = GetO_ptr()->getNext();
   Guest* G_ptr = GetG_ptr();
-  // for (int i = 0; i < GetO_ptr()->getTargetNum() ; i++)
-  // {
-  //   Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::SendQuery, this);
-  //   std::cout << O_ptr->getTimeStamp() << std::endl;
-  //   if (O_ptr->getNext() != NULL)
-  //   {
-  //     O_ptr = O_ptr->getNext();
-  //   }
-  // }
 
   while (O_ptr != NULL)
   {
@@ -268,11 +245,25 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   
   
 
-  //若興去封包是其他節點的Order委託
+  //若興趣封包是其他節點的Order委託
   if (itemtype == "serviceQuery")
   {
+    //確認是否有來自同一源節點的Micro Order正在處理，有則不須新增，返回並同時滿足即可
+    Order* O_ptr = GetO_ptr()->getNext();
+    while (O_ptr != NULL)
+    {
+      if (O_ptr->getSourceNode() == SourceNode && !O_ptr->getTerminate())
+      {
+        NS_LOG_DEBUG("There is a  Micro order processing for " << SourceNode);
+        return;
+      }
+      else
+      {
+        O_ptr = O_ptr->getNext();
+      }
+    }
+
     //新增order並處理 並註明是來自其他節點的order 後續完成後需回傳至原節點
-    //std::cout<< "input packet is service query!" << std::endl;
     Order* newOrder = GetO_ptr()->AddOrder_toTail("MicroOrder_" + DataName, SourceNode, 0, 0);
     newOrder->setHasSourceNode(true);
     newOrder->setSourceNode(SourceNode);
@@ -368,6 +359,7 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 
     Order* O_ptr = GetO_ptr()->getNext();
     
+    //遍歷所有order, 滿足所有需要此筆資料的order
     while (O_ptr != NULL)
     {
       if (!O_ptr->getTerminate())
@@ -382,6 +374,7 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 
     O_ptr = GetO_ptr()->getNext();
 
+    //搜尋所有order, 將已滿足order返回或完成
     while (O_ptr != NULL)
     {
       if (O_ptr->checkFulFill() && !O_ptr->getTerminate())
@@ -389,40 +382,15 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
         if (O_ptr->getHasSourceNode())
         {
           ndn::Name returnServiceQuery;
-          //returnServiceQuery.append("prefix").append("service").append("return").append(O_ptr->getSourceNode()).append(NodeName);
           returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(O_ptr->getOrderName()).append("food");
-
-          // auto data = std::make_shared<ndn::Data>(returnServiceQuery);
-          // data->setFreshnessPeriod(ndn::time::milliseconds(1000));
-          // data->setContent(std::make_shared< ::ndn::Buffer>(1024));
-          // ndn::StackHelper::getKeyChain().sign(*data);
-
-          // NS_LOG_DEBUG("Sending Data packet for return Service" << data->getName());
-
-          // // Call trace (for logging purposes)
-          // m_transmittedDatas(data, this, m_face);
-
-          // m_appLink->onReceiveData(*data);
           O_ptr->setTerminate(true);
           SendInterest(returnServiceQuery, "MicroService return!!", true);
         }
         else
         {
-          //生成一筆新的紀錄 並送出儲存
+          //輸出log, 表示Order已經完成
           std::string newRecord = O_ptr->getOrderName();
-
-          //this->SetDataSet("food/" + newRecord);
-
-          // std::size_t hashRecord = std::hash<std::string>{}(newRecord);
-          // std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
           NS_LOG_DEBUG("Order-Complete " << newRecord );
-
-          // ndn::Name temp;
-          // temp.append("prefix").append("data").append("store").append(NodeName);
-          // temp.append(NodeName).append(newRecord).append("food");
-          // new_record_count++;
-
-          // SendInterest(temp, "Sending Record for ");
         }
 
         //將已滿足order terminate -> ture
