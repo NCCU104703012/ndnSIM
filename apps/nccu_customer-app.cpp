@@ -130,7 +130,7 @@ CustomerApp::StartApplication()
   while (O_ptr != NULL)
   {
     Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::InitSendQuery, this);
-    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+0.01), &CustomerApp::OrderTimeout, this);
+    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+ 2), &CustomerApp::OrderTimeout, this);
     std::cout << O_ptr->getTimeStamp() << " ";
     O_ptr = O_ptr->getNext();
   }
@@ -294,7 +294,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     ndn::Name returnServiceQuery;
     returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(NodeName).append("food");
     O_ptr->setTerminate(true);
-    SendInterest(returnServiceQuery, "MicroService return for timeout!!", true);
+    SendInterest(returnServiceQuery, "MicroService_timeout " + O_ptr->getOrderName() + " ", true);
     
   }
   
@@ -384,14 +384,13 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
           ndn::Name returnServiceQuery;
           returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(O_ptr->getOrderName()).append("food");
           O_ptr->setTerminate(true);
-          SendInterest(returnServiceQuery, "MicroService return!!", true);
+
+          SendInterest(returnServiceQuery, "MicroService return: ", true);
         }
-        else
-        {
-          //輸出log, 表示Order已經完成
-          std::string newRecord = O_ptr->getOrderName();
-          NS_LOG_DEBUG("Order-Complete " << newRecord );
-        }
+
+        //輸出log, 表示Order已經完成
+        std::string newRecord = O_ptr->getOrderName();
+        NS_LOG_DEBUG("Order-Complete " << newRecord );
 
         //將已滿足order terminate -> ture
         O_ptr->setTerminate(true);
@@ -567,7 +566,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
     ndn::Name returnServiceQuery;
     returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(NodeName).append("food").append(O_ptr->getOrderName());
 
-    SendInterest(returnServiceQuery, "Return service for ", true);
+    SendInterest(returnServiceQuery, "Order-Complete ", true);
     return;
   }
 
@@ -577,6 +576,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
     {
       //將資料存入Order中
       O_ptr->setDataList(dataString);
+      NS_LOG_DEBUG("setDataList " << dataString << " in-order " << O_ptr->getOrderName());
 
       //Query送出
       std::string query_output, itemType;
