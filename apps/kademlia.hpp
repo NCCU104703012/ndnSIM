@@ -171,11 +171,17 @@ public:
     void
     SetData(std::string input, std::string type);
 
-    Kademlia*
+    std::string
     GetNext_Node(std::string TargetNode);
+
+    std::string*
+    GetK_bucket(){return k_bucket; };
 
     int
     XOR(std::string input);
+
+    int
+    XOR(std::string input, std::string input2);
 
     std::string
     GetKId(){
@@ -183,22 +189,20 @@ public:
     };
 
     void
-    Set_KBucket(Kademlia *KNode);
+    Set_KBucket(std::string KNode);
 
     void
     Node_info();
 
-    //query資料時呼叫 決定下一個節點
-    Kademlia* QueryKbucket(std::string DataName)
-    {
-        return k_bucket[0];
-    };
+    //以輸入的節點名稱比較其他K桶中資訊，並決定是否將其加入
+    void
+    KBucket_update(std::string sourceNode);
 
 private:
     std::string node_name;
     std::string KId;
     Data *dataList;
-    Kademlia *k_bucket[15] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+    std::string k_bucket[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
     int knum = 0;
 };
 

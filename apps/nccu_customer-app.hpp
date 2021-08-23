@@ -60,8 +60,8 @@ public:
   OnData(std::shared_ptr<const ndn::Data> contentObject);
 
   //送出一筆交易紀錄
-  void
-  SendRecord();
+  // void
+  // SendRecord();
 
   //輸入前綴 送出興趣封包
   void
@@ -85,6 +85,13 @@ public:
 
   void
   SetNode_Pointer(Ptr<Node> input){parent_node = input;};
+
+  //節點主動上下線，傳送更新K桶封包
+  void
+  Node_OnLine();
+
+  void
+  Node_OffLine();
 
   //將Guest 轉換成指標
   Guest*
@@ -185,6 +192,12 @@ private:
 
   //儲存poisson進入的顧客 用來生成record
   ndn::Name Guest_list;
+
+  //紀錄休息的日期（七分之一時間休息）
+  int dayOff = -1;
+
+  //紀錄目前節點上下線狀態
+  bool isNodeOnline = true;
 
   int serial_num = 1;
 

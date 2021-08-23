@@ -231,7 +231,7 @@ void generate_node(){
       }
       else
       {
-        kptr_arr[i]->Set_KBucket(kptr_arr[targetNode]);
+        kptr_arr[i]->Set_KBucket(kptr_arr[targetNode]->GetKId());
         std::cout<<"set Kbucket: " << kptr_arr[targetNode]->GetNodeName() << " into " << kptr_arr[i]->GetNodeName()<<std::endl;
         targetNode++;
       }
@@ -264,13 +264,14 @@ main(int argc, char* argv[])
   cmd.Parse(argc, argv);
 
   AnnotatedTopologyReader topologyReader("", 25);
-  topologyReader.SetFileName("src/ndnSIM/examples/topologies/nccu_topo.txt");
+  //topologyReader.SetFileName("src/ndnSIM/examples/topologies/nccu_topo.txt");
+  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/nccu_visualization/nccu_topo50.txt");
   topologyReader.Read();
 
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等
   ndn::StackHelper ndnHelper;
-  ndnHelper.setCsSize(50);
+  ndnHelper.setCsSize(1000);
   ndnHelper.InstallAll();
 
   // Set BestRoute strategy
@@ -296,6 +297,9 @@ main(int argc, char* argv[])
   //  Simulator::Schedule(Seconds(1.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
   //  Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::UpLink, Fail_node0, Fail_node2);
 
+  ndn::L3RateTracer::InstallAll("rate-trace.txt", Seconds(0.5));
+  L2RateTracer::InstallAll("drop-trace.txt", Seconds(0.5));
+  ndn::CsTracer::InstallAll("cs-trace.txt", Seconds(1));
 
   Simulator::Stop(Seconds(100.0));
 

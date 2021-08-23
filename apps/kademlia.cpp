@@ -27,20 +27,24 @@ Kademlia::GetData(std::string DataName){
     }
 }
 
-Kademlia *
+std::string
 Kademlia::GetNext_Node(std::string TargetNode){
-    int distance = this->XOR(TargetNode);
-    Kademlia *output = this;
 
-    for (int i = 0; i < knum; i++)
+    int distance = this->XOR(TargetNode);
+    std::string output = this->GetNodeName();
+
+    for (int i = 0; i < 15; i++)
     {
-        std::string temp = k_bucket[i]->KId;
-        if (k_bucket[i]->XOR(TargetNode) < distance)
+        if (k_bucket[i] != "NULL")
         {
-            output = k_bucket[i];
-        }
-        
+            std::string temp = k_bucket[i];
+            if (this->XOR(TargetNode, k_bucket[i]) < distance)
+            {
+                output = k_bucket[i];
+            }
+        } 
     }
+
     return output;
 }
 
@@ -61,6 +65,22 @@ Kademlia::XOR(std::string input)
     return distance;
 }
 
+int
+Kademlia::XOR(std::string input, std::string input2)
+{
+    int distance = 0;
+    for (int i = 1; i < 9; i++)
+    {
+        std::string str1 = input2.substr(i,1);
+        std::string str2 = input.substr(i,1);
+        if (str1.compare(str2))
+        {
+            distance++;
+        }
+        
+    }
+    return distance;
+}
 
 void
 Kademlia::Node_info(){
@@ -73,16 +93,29 @@ Kademlia::Node_info(){
 }
 
 void
-Kademlia::Set_KBucket(Kademlia *KNode)
+Kademlia::Set_KBucket(std::string KNode)
 {
-    k_bucket[knum] = KNode;
-    knum++;
+    for (int i = 0; i < 15; i++)
+    {
+        if (k_bucket[i] == "NULL")
+        {
+            k_bucket[i] = KNode;
+            return;
+        }
+    }
 }
 
 void
 Kademlia::SetData(std::string input, std::string type)
 {
     dataList->AddData(input, type);
+}
+
+//以輸入的節點名稱比較其他K桶中資訊，並決定是否將其加入
+void
+Kademlia::KBucket_update(std::string sourceNode)
+{
+    return;
 }
 
 //---------------------Class Data-------------------------
