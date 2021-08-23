@@ -241,15 +241,51 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     if (flag_connect_handshake == "1")
     {
       //針對來源節點對K桶進行更新
-      GetK_ptr()->KBucket_update(SourceNode);
+      bool update_flag = GetK_ptr()->KBucket_hasNode(SourceNode);
+      if (!update_flag)
+      {
+        //沒有節點存在，需要回送disconnect訊息
+        std::string k_buk_string = "NULL";
+        ndn::Name interest;
+        interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
+        SendInterest(interest, "Kbucket_disconnect", true);
+        return;
+      }
+      else
+      {
+        std::cout << "connect successful: " << NodeName << std::endl;
+      }
+      
+      
     }
     else if (flag_connect_handshake == "0")
     {
       //運行演算法，確定是否要加入此來源
-      //GetK_ptr()->KBucket_update(SourceNode);
+      std::string replaced_node = GetK_ptr()->KBucket_update(SourceNode);
       //若加入，則反送flag == 1
       //不加入，不動作or送其他封包
+      if (replaced_node != SourceNode)
+      {
+        flag_connect_handshake = "1";
+        ndn::Name interest;
+        interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
+        SendInterest(interest, "Kbucket_connect", true);
+      }
+      else
+      {
+        flag_connect_handshake = "-1";
+        ndn::Name interest;
+        interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
+        SendInterest(interest, "Kbucket_connect", true);
+      }
+    
     }
+    else if (flag_connect_handshake == "-1")
+    {
+      GetK_ptr()->KBucket_delete(SourceNode);
+    }
+    
+
     
     
 
@@ -737,7 +773,6 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
     {
       if (K_bucket[i] != "NULL")
       {
-        std::cout << K_bucket[i] << "  size:  " << sizeof(K_bucket) << std::endl;
         Kbuk_string = Kbuk_string + K_bucket[i] + "_";
       }
 

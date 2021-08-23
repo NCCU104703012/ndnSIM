@@ -195,8 +195,26 @@ public:
     Node_info();
 
     //以輸入的節點名稱比較其他K桶中資訊，並決定是否將其加入
-    void
+    std::string
     KBucket_update(std::string sourceNode);
+
+    //將輸入節點從k桶中去除
+    void
+    KBucket_delete(std::string sourceNode);
+
+    //K桶中有無節點
+    bool
+    KBucket_hasNode(std::string sourceNode){
+        for (int i = 0; i < 15; i++)
+        {
+            if (k_bucket[i] == sourceNode)
+            {
+                return true;
+            }
+            
+        }
+        return false;
+    }
 
 private:
     std::string node_name;

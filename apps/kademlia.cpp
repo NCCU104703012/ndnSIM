@@ -112,10 +112,42 @@ Kademlia::SetData(std::string input, std::string type)
 }
 
 //以輸入的節點名稱比較其他K桶中資訊，並決定是否將其加入
-void
+std::string
 Kademlia::KBucket_update(std::string sourceNode)
 {
-    return;
+    for (int i = 0; i < 15; i++)
+    {
+        if (k_bucket[i] == "NULL")
+        {
+            k_bucket[i] = sourceNode;
+            return "NULL";
+        }
+        else if (k_bucket[i] == sourceNode)
+        {
+            std::cout << "already have same node in K-buk\n";
+            return "NULL";
+        }
+        
+        
+    }
+    //演算法需要決策出一個替換的節點
+    return sourceNode;
+}
+
+//將輸入節點從k桶中去除
+void
+Kademlia::KBucket_delete(std::string sourceNode)
+{
+    for (int i = 0; i < 15; i++)
+    {
+        if (k_bucket[i] == sourceNode)
+        {
+            k_bucket[i] = "NULL";
+            return;
+        }
+        
+    }
+    
 }
 
 //---------------------Class Data-------------------------
