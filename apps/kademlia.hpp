@@ -177,6 +177,9 @@ public:
     std::string*
     GetK_bucket(){return k_bucket; };
 
+    Data*
+    GetDataList(){return dataList;};
+
     int
     XOR(std::string input);
 
@@ -215,6 +218,27 @@ public:
         }
         return false;
     }
+
+    //從datalist中刪除資料
+    void
+    Delete_data(std::string DataName);
+
+    //針對輸入節點，比較所有更接近的資料，回傳整理的字串
+    std::string
+    Transform_Data(std::string thisNode, std::string targetNode);
+
+    //print K桶內容
+    void
+    print_Kbucket(){
+        for (int i = 0; i < 15; i++)
+        {
+            if (k_bucket[i] != "NULL")
+            {
+                std::cout << k_bucket[i] + "|";
+            }
+        }
+         std::cout << "\n";
+    };
 
 private:
     std::string node_name;

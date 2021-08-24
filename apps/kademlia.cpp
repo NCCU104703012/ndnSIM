@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <string>
+#include <bitset>
 #include "kademlia.hpp"
 
 Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID)
@@ -115,23 +116,33 @@ Kademlia::SetData(std::string input, std::string type)
 std::string
 Kademlia::KBucket_update(std::string sourceNode)
 {
+    if (sourceNode == KId)
+    {
+        return "NULL";
+    }
+    
+
+    for (int i = 0; i < 15; i++)
+    {
+        if (k_bucket[i] == sourceNode)
+        {
+            //std::cout << "already have same node in K-buk\n";
+            return "NULL";
+        }    
+    }
+
     for (int i = 0; i < 15; i++)
     {
         if (k_bucket[i] == "NULL")
         {
             k_bucket[i] = sourceNode;
-            return "NULL";
+            return "add sourceNode to a NULL";
         }
-        else if (k_bucket[i] == sourceNode)
-        {
-            std::cout << "already have same node in K-buk\n";
-            return "NULL";
-        }
-        
-        
     }
+    
+
     //演算法需要決策出一個替換的節點
-    return sourceNode;
+    return "K-buk is full";
 }
 
 //將輸入節點從k桶中去除
@@ -148,6 +159,63 @@ Kademlia::KBucket_delete(std::string sourceNode)
         
     }
     
+}
+
+//從datalist中刪除資料
+void
+Kademlia::Delete_data(std::string DataName)
+{
+    Data* targetPtr = dataList->GetData(DataName);
+
+    if (targetPtr == NULL)
+    {
+        std::cout << "In delete_data(), GetData() is NULL\n";
+        return;
+    }
+    
+    Data* prePtr = dataList;
+
+    while (1)
+    {
+        if (prePtr->next == targetPtr)
+        {
+            prePtr->next = targetPtr->next;
+            delete targetPtr;
+            return;
+        }
+        prePtr = prePtr->next;
+
+        if (prePtr == NULL)
+        {
+           return;
+        }
+        
+    }
+    
+}
+
+//針對輸入節點，比較所有更接近的資料，回傳整理的字串
+std::string
+Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
+{
+
+    std::string output = "_";
+    Data* DataPtr = dataList->next;
+
+    while (DataPtr != NULL)
+    {
+        std::size_t hashData = std::hash<std::string>{}(DataPtr->Name);
+        std::string binaryData = std::bitset<8>(hashData).to_string();
+        int thisNode_distance = XOR(thisNode, binaryData);
+        int targetNode_distance = XOR(targetNode, binaryData);
+
+        if (targetNode_distance < thisNode_distance)
+        {
+            output = output + DataPtr->Name + "_" ;
+        }
+        DataPtr = DataPtr->next;
+    }
+    return output;
 }
 
 //---------------------Class Data-------------------------

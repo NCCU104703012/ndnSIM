@@ -253,7 +253,34 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
       else
       {
-        std::cout << "connect successful: " << NodeName << std::endl;
+        //connect成功，進行新節點加入後的資料轉移程序
+        std::string trans_list = GetK_ptr()->Transform_Data(TargetNode ,SourceNode);
+
+        std::cout << NodeName << ": ";
+        GetK_ptr()->print_Kbucket();
+
+        if (trans_list == "_")
+        {
+          return;
+        }
+
+        int head = 0, tail;
+        head = trans_list.find_first_of("_", head);
+        tail = trans_list.find_first_of("_", head+1);
+        std::string trans_targetNode = trans_list.substr(head+1, tail-head-1);
+
+        while (tail != -1)
+        {
+          trans_targetNode = trans_list.substr(head+1, tail-head-1);
+          ndn::Name interest;
+          interest.append("prefix").append("data").append("store").append(SourceNode).append(NodeName).append(trans_targetNode).append("Transform_Data");
+          SendInterest(interest, "Transform_Data: ", true);
+
+          head = tail;
+          tail = trans_list.find_first_of("_", head+1);
+          std::cout << "data transform: " << trans_targetNode << " to Node: " << SourceNode << std::endl;
+        }
+        
       }
       
       
@@ -284,11 +311,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     {
       GetK_ptr()->KBucket_delete(SourceNode);
     }
-    
-
-    
-    
-
+  
     return;
     //有其他節點想要連線，判斷後返回帶有Flag的connect封包
   }
@@ -297,14 +320,36 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   //封包格式 prefix/自己節點/來源節點/dataName(kbuk_string))/itemType
   if (itemtype == "Kbucket_disconnect")
   {
+    int head = 0, tail;
     std::string kbuk_string = DataName;
-    std::cout << kbuk_string << std::endl;
 
     //斷線，並判斷是否從K桶資訊中找出其他節點發送connect
-    //GetK_ptr()->KBucket_delete(SourceNode);
+    GetK_ptr()->KBucket_delete(SourceNode);
 
-    //for kbuk_string
-    //GetK_ptr()->KBucket_update(kbuk_string);
+    std::cout <<"Disconnect " << NodeName << ": ";
+    GetK_ptr()->print_Kbucket();
+
+    head = kbuk_string.find_first_of("_", head);
+    tail = kbuk_string.find_first_of("_", head+1);
+
+    while (tail != -1)
+    {
+      std::string newNode = kbuk_string.substr(head+1, tail-head-1);
+      std::string update_string = GetK_ptr()->KBucket_update(newNode);
+
+      if (update_string == "add sourceNode to a NULL" && newNode != TargetNode)
+      {
+        std::string flag_connect_handshake = "0";
+        ndn::Name interest;
+        interest.append("prefix").append("data").append("download").append(newNode).append(TargetNode).append(flag_connect_handshake).append("Kbucket_connect");
+        SendInterest(interest, "Kbucket_connect", true);
+      }
+
+      head = tail;
+      tail = kbuk_string.find_first_of("_", head+1);
+    }
+    
+    
 
     return;
   }
@@ -313,7 +358,8 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
   //收到儲存確認訊息，進行DataSet Changing
   if (itemtype == "Store_complete")
-  {
+  { 
+
     std::string updateNode = DataSet_update(DataName);
 
     if (updateNode == NodeName)

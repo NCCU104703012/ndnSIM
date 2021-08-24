@@ -178,6 +178,13 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         break;
       }
     }
+
+  if (itemType == "Store_complete")
+  {
+    GetK_ptr()->Delete_data(DataName);
+    std::cout<< GetK_ptr()->GetKId() << "  data Delete: " << DataName <<"\n";
+    return;
+  }
   
   std::size_t hashRecord = std::hash<std::string>{}(DataName);
   std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
@@ -187,8 +194,15 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     GetK_ptr()->SetData(DataName, itemType);
     //GetK_ptr()->Node_info();
 
+    std::string module_choose = "download";
+    if (itemType == "Transform_Data")
+    {
+      module_choose = "store";
+      GetK_ptr()->GetDataList()->printAllData();
+    }
+
     ndn::Name next ;
-    next.append("prefix").append("data").append("download").append(SourceNode).append("NULL").append(DataName).append("Store_complete");
+    next.append("prefix").append("data").append(module_choose).append(SourceNode).append("NULL").append(DataName).append("Store_complete");
     auto next_interest = std::make_shared<ndn::Interest>(next);
     Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
     next_interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
