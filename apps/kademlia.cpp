@@ -10,6 +10,9 @@ Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::str
     dataList = new Data();
     dataList->head = dataList;
     dataList->Name = data_input;
+    queryList = new Data();
+    queryList->head = queryList;
+    queryList->Name = "init";
     KId = kademliaID;
     
 }
@@ -29,10 +32,10 @@ Kademlia::GetData(std::string DataName){
 }
 
 std::string
-Kademlia::GetNext_Node(std::string TargetNode){
+Kademlia::GetNext_Node(std::string TargetNode, int output_num){
 
     int distance = this->XOR(TargetNode);
-    std::string output = this->GetNodeName();
+    std::string output = this->KId;
 
     for (int i = 0; i < 15; i++)
     {
@@ -45,7 +48,7 @@ Kademlia::GetNext_Node(std::string TargetNode){
             }
         } 
     }
-
+    //未完成，需要return output_num數量的Knode資訊
     return output;
 }
 
@@ -194,6 +197,39 @@ Kademlia::Delete_data(std::string DataName)
     
 }
 
+//從datalist中刪除資料
+void
+Kademlia::Delete_data_query(std::string DataName)
+{
+    Data* targetPtr = queryList->GetData(DataName);
+
+    if (targetPtr == NULL)
+    {
+        std::cout << "In delete_data(), GetData() is NULL\n";
+        return;
+    }
+    
+    Data* prePtr = dataList;
+
+    while (1)
+    {
+        if (prePtr->next == targetPtr)
+        {
+            prePtr->next = targetPtr->next;
+            delete targetPtr;
+            return;
+        }
+        prePtr = prePtr->next;
+
+        if (prePtr == NULL)
+        {
+           return;
+        }
+        
+    }
+    
+}
+
 //針對輸入節點，比較所有更接近的資料，回傳整理的字串
 std::string
 Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
@@ -217,6 +253,8 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
     }
     return output;
 }
+
+
 
 //---------------------Class Data-------------------------
 
@@ -273,6 +311,51 @@ Data::GetData(std::string DataName)
         }
     }
     return NULL;
+}
+
+void
+Data::update_nextHop(std::string inputNode)
+{
+    int distance;
+    std::size_t hashData = std::hash<std::string>{}(this->Name);
+    std::string binaryData = std::bitset<8>(hashData).to_string();
+    distance = XOR(binaryData,inputNode);
+
+    for (int i = 0; i < 3; i++)
+    {
+        if (distance < XOR(binaryData, closest_node))
+        {
+            if (this->nextHop_list[i] == "NULL")
+            {
+                this->nextHop_list[i] = inputNode;
+                return;
+            }
+
+            if (distance < XOR(binaryData, this->nextHop_list[i]))
+            {
+                this->nextHop_list[i] = inputNode;
+                return;
+            }
+        }        
+    }
+    
+}
+
+int
+Data::XOR(std::string input, std::string input2)
+{
+    int distance = 0;
+    for (int i = 1; i < 9; i++)
+    {
+        std::string str1 = input2.substr(i,1);
+        std::string str2 = input.substr(i,1);
+        if (str1.compare(str2))
+        {
+            distance++;
+        }
+        
+    }
+    return distance;
 }
 
 //---------------------Class Order-------------------------

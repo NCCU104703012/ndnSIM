@@ -240,7 +240,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       std::string binaryDataName = std::bitset<8>(biTemp).to_string();
       NS_LOG_DEBUG("hash Record for " << binaryDataName << " " << DataName);
 
-      if (GetK_ptr()->GetNext_Node(binaryDataName) == GetK_ptr()->GetNodeName())
+      if (GetK_ptr()->GetNext_Node(binaryDataName, 1) == GetK_ptr()->GetNodeName())
       {
         //std::cout << "******************" << std::endl;
         NS_LOG_DEBUG("NO-match-Data-&-next-Node");
@@ -248,7 +248,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
       else
       {
-        TargetNode = GetK_ptr()->GetNext_Node(binaryDataName);
+        TargetNode = GetK_ptr()->GetNext_Node(binaryDataName, 1);
         outInterest.append("prefix").append("data").append("query").append(TargetNode).append("0").append(SourceNode).append(DataName).append(itemType);
 
         // Create and configure ndn::Interest

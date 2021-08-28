@@ -34,6 +34,7 @@
 #include "ns3/ndnSIM/apps/shop_service.hpp"
 #include "ns3/ndnSIM/apps/data_management.hpp"
 #include "ns3/ndnSIM/apps/data_store.hpp"
+#include "ns3/ndnSIM/apps/data_management_origin.hpp"
 
 #include <random>
 #include <set>
@@ -108,7 +109,7 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
   std::string location = address.str();
 
   Ptr<Node> TargetNode = Names::Find<Node>(nodeName);
-  ndn::AppHelper app("DataManage");
+  ndn::AppHelper app("DataManageOrigin");
   app.SetPrefix(prefix);
   app.SetAttribute("Kademlia", StringValue(location));
   app.SetAttribute("Query", StringValue(o_ptr_string));

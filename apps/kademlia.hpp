@@ -143,6 +143,12 @@ public:
 
     Data* GetTail();
 
+    int
+    XOR(std::string input, std::string input2);
+
+    void
+    update_nextHop(std::string inputNode);
+
     Data *head;
     Data *next = NULL;
     std::string Name = "NULL";
@@ -150,6 +156,11 @@ public:
     std::string age;
     std::string item;
     std::string type;
+
+    std::string closest_node = "NULL";
+
+    int reply_count = 0;
+    std::string nextHop_list[3] = {"NULL", "NULL", "NULL"};
 };
 
 class Kademlia{
@@ -172,7 +183,7 @@ public:
     SetData(std::string input, std::string type);
 
     std::string
-    GetNext_Node(std::string TargetNode);
+    GetNext_Node(std::string TargetNode, int output_num);
 
     std::string*
     GetK_bucket(){return k_bucket; };
@@ -223,6 +234,10 @@ public:
     void
     Delete_data(std::string DataName);
 
+    //從datalist中刪除資料
+    void
+    Delete_data_query(std::string DataName);
+
     //針對輸入節點，比較所有更接近的資料，回傳整理的字串
     std::string
     Transform_Data(std::string thisNode, std::string targetNode);
@@ -239,6 +254,29 @@ public:
         }
          std::cout << "\n";
     };
+
+    //return queryList中相同名稱的Data*
+    Data*
+    GetQueryItem(std::string input){
+        Data* outputPtr = queryList;
+        while (outputPtr != NULL)
+        {
+            if (outputPtr->Name == input)
+            {
+                /* code */
+            }
+            outputPtr = outputPtr->next;
+        }
+        return outputPtr;
+    };
+
+    //輸入節點訊息，代替querylist中節點
+    void
+    update_nextHop(std::string inputNode);
+
+
+    //用在原版kad使用，紀律這筆資料未來應該query的節點list
+    Data *queryList;
 
 private:
     std::string node_name;
