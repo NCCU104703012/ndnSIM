@@ -113,7 +113,7 @@ public:
 
     //搜尋整個order資料結構 滿足所需資料的所有order
     bool
-    checkDataList(std::string DataName, std::string itemtype);
+    checkDataList(std::string DataName);
     
     //確認此筆order是否完成
     bool  
@@ -263,7 +263,7 @@ public:
         {
             if (outputPtr->Name == input)
             {
-                /* code */
+                return outputPtr;
             }
             outputPtr = outputPtr->next;
         }

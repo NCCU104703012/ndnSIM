@@ -34,22 +34,43 @@ Kademlia::GetData(std::string DataName){
 std::string
 Kademlia::GetNext_Node(std::string TargetNode, int output_num){
 
-    int distance = this->XOR(TargetNode);
-    std::string output = this->KId;
+    std::string output[3] = {this->KId, "NULL", "NULL"};
+    std::string outputString = "";
+    int arrIndex = 0;
 
     for (int i = 0; i < 15; i++)
     {
         if (k_bucket[i] != "NULL")
         {
-            std::string temp = k_bucket[i];
-            if (this->XOR(TargetNode, k_bucket[i]) < distance)
+            if (output[arrIndex%3] == "NULL")
             {
-                output = k_bucket[i];
+                output[arrIndex%3] = k_bucket[i];
+                arrIndex++;
+            }
+            else if (this->XOR(TargetNode, k_bucket[i]) < this->XOR(TargetNode, output[arrIndex%3]))
+            {
+                output[arrIndex%3] = k_bucket[i];
+                arrIndex++;
             }
         } 
     }
+
+    if (output_num == 1)
+    {
+        return output[(arrIndex-1)%3];
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        if (output[i] != "NULL")
+        {
+            outputString = outputString + "_" + output[i];
+        }
+        
+    }
+    
     //未完成，需要return output_num數量的Knode資訊
-    return output;
+    return outputString;
 }
 
 int
@@ -235,7 +256,7 @@ std::string
 Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
 {
 
-    std::string output = "_";
+    std::string output = "|";
     Data* DataPtr = dataList->next;
 
     while (DataPtr != NULL)
@@ -247,7 +268,7 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
 
         if (targetNode_distance < thisNode_distance)
         {
-            output = output + DataPtr->Name + "_" ;
+            output = output + DataPtr->Name + "|" ;
         }
         DataPtr = DataPtr->next;
     }
@@ -261,6 +282,7 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
 void
 Data::AddData(std::string inputName, std::string inputType)
 {
+    std::cout << "add data: " << inputName << "\n";
     Data *inputData = new Data();
     Data *tailPtr = this->GetTail();
     inputData->head = tailPtr->head;
@@ -323,6 +345,12 @@ Data::update_nextHop(std::string inputNode)
 
     for (int i = 0; i < 3; i++)
     {
+        if (this->nextHop_list[i] == inputNode)
+        {
+            // 預防nextHop list出現相同節點，重複Query
+            return;
+        }
+
         if (distance < XOR(binaryData, closest_node))
         {
             if (this->nextHop_list[i] == "NULL")
@@ -414,13 +442,13 @@ Order::AddOrder_toTail(std::string orderName, std::string dataString, double tim
 
 //搜尋此order有無資料，有則回傳true，並修改dataList，fulfillList
 bool
-Order::checkDataList(std::string DataName, std::string itemtype)
+Order::checkDataList(std::string DataName)
 {
     std::set<std::string> tempList = this->getDataList();
-    if (tempList.find(itemtype + "/" + DataName) != tempList.end())
+    if (tempList.find(DataName) != tempList.end())
     {
-        tempList.erase(itemtype + "/" + DataName);
-        this->setFulfill_List(itemtype + "/" + DataName);
+        tempList.erase(DataName);
+        this->setFulfill_List(DataName);
         this->replace_Datalist(tempList);
         return true;
     }

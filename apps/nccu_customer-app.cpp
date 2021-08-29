@@ -259,14 +259,14 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         std::cout << NodeName << ": ";
         GetK_ptr()->print_Kbucket();
 
-        if (trans_list == "_")
+        if (trans_list == "|")
         {
           return;
         }
 
         int head = 0, tail;
-        head = trans_list.find_first_of("_", head);
-        tail = trans_list.find_first_of("_", head+1);
+        head = trans_list.find_first_of("|", head);
+        tail = trans_list.find_first_of("|", head+1);
         std::string trans_targetNode = trans_list.substr(head+1, tail-head-1);
 
         while (tail != -1)
@@ -277,7 +277,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
           SendInterest(interest, "Transform_Data: ", true);
 
           head = tail;
-          tail = trans_list.find_first_of("_", head+1);
+          tail = trans_list.find_first_of("|", head+1);
           std::cout << "data transform: " << trans_targetNode << " to Node: " << SourceNode << std::endl;
         }
         
@@ -364,7 +364,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
     if (updateNode == NodeName)
     {
-      this->SetDataSet("food/" + DataName);
+      this->SetDataSet(DataName);
       NS_LOG_DEBUG("DataSet-add " << DataName);
       return;
     }
@@ -376,7 +376,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   }
   else if (itemtype == "dataSet_update")
   {
-    this->SetDataSet("food/" + DataName);
+    this->SetDataSet(DataName);
     NS_LOG_DEBUG("Get DataSet update from " << SourceNode << " Data: " << DataName);
     NS_LOG_DEBUG("DataSet-add " << DataName);
   }
@@ -502,7 +502,7 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
     {
       if (!O_ptr->getTerminate())
       {
-        if (O_ptr->checkDataList(DataString, itemtype))
+        if (O_ptr->checkDataList(DataString))
         {
           NS_LOG_DEBUG("fulfill-order " << O_ptr->getOrderName() <<" data-name " << DataString);
         }
@@ -681,7 +681,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
       std::string dataString = *i;
 
       //將資料存入Order中
-      O_ptr->setDataList("food/" + dataString);
+      O_ptr->setDataList(dataString);
       NS_LOG_DEBUG("setDataList " << dataString << " in-order " << O_ptr->getOrderName());
 
       ndn::Name prefixInterest;
@@ -704,21 +704,20 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
     ndn::Name returnServiceQuery;
     returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(NodeName).append("food").append(O_ptr->getOrderName());
 
-    SendInterest(returnServiceQuery, "Order-Complete ", true);
+    SendInterest(returnServiceQuery, "Order-Complete(No Query Data) ", true);
     return;
   }
 
   for (i = dataSet.begin(); i != dataSet.end(); ++i) {
     std::string dataString = *i;
-    if (dataString.find(serviceType) >= 0)
-    {
+
       //將資料存入Order中
       O_ptr->setDataList(dataString);
       NS_LOG_DEBUG("setDataList " << dataString << " in-order " << O_ptr->getOrderName());
 
       //Query送出
       std::string query_output, itemType;
-      query_output = dataString.substr(dataString.find_first_of("/"), dataString.size()-dataString.find_first_of("/"));
+      query_output = dataString;
       itemType = "init";
 
       if (isOrder_from_otherNode)
@@ -728,13 +727,14 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
 
       //新增data結構來紀錄next hop
       GetK_ptr()->queryList->AddData(query_output, itemType);
+      
 
       ndn::Name temp;
       temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
       temp.append(query_output).append("init").append(query_output + std::to_string(time(NULL)));
       
       SendInterest(temp, "Sending Query for ", true);
-    }
+    
   }
 }
 

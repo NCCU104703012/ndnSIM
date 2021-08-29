@@ -198,8 +198,21 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
             return;
         }
 
-        GetK_ptr()->queryList->AddData(DataName, "food");
+        //GetK_ptr()->queryList->AddData(DataName, "food");
         Data* queryDataPtr = GetK_ptr()->GetQueryItem(DataName);
+
+        //特別注意！！！！會有queryData不見的狀況，尚未看出原因
+        if (queryDataPtr == NULL || queryDataPtr == GetK_ptr()->queryList)
+        {
+            std::cout << "this queryData is deleted\n";
+            return;
+        }
+        else
+        {
+            std::cout << "8888888888888888888888888888888\n";
+        }
+        
+
         queryDataPtr->closest_node = SourceNode;
 
         for (int i = 0; i < 15; i++)
@@ -210,14 +223,20 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
             }
         
         }
-        
+
+        std::cout << "nextHop List: " ;
+        for (int i = 0; i < 3; i++)
+        {
+            std::cout << queryDataPtr->nextHop_list[i] << "  "  ;
+        }
+        std::cout<< "\n";
 
         for (int i = 0; i < 3; i++)
         {
             if (queryDataPtr->nextHop_list[i] != "NULL")
             {
                 ndn::Name Interest;
-                Interest.append("prefix").append("data").append("query").append(queryDataPtr->nextHop_list[i]).append("0").append(SourceNode).append(DataName).append(itemType).append("NULL");
+                Interest.append("prefix").append("data").append("query").append(queryDataPtr->nextHop_list[i]).append("0").append(SourceNode).append(DataName).append("next-round").append("NULL");
                 SendInterest(Interest, "next round Query: ", true);
             }   
         }
@@ -237,6 +256,9 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         while (tail != -1)
         {
             std::string newNode = nextHop.substr(head+1, tail-head-1);
+
+            std::cout <<"nextHop : " << nextHop <<std::endl;
+
             queryDataPtr->update_nextHop(nextHop);
 
 
