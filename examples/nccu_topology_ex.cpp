@@ -150,6 +150,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
     Guest* newEntry = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
     Gptr_temp->setNext(newEntry);
     Gptr_temp = Gptr_temp->getNext();
+
   }
   
 
@@ -166,6 +167,10 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
     tail = query.find_first_of("/", head);
     Optr_head->AddOrder(orderName, query.substr(head, tail-head), totalTime, targetNum+1);
     tail++;
+
+
+    //在每個Order間空出timeout時間，避免指令重疊
+    totalTime++;
   }
 
   //將排序好的order加入流水號 以便query function 參考
@@ -253,7 +258,7 @@ void generate_node(){
 
     tempSet.erase(i);
 
-    set_customerApp(5, "food/food/food/food/food/", kptr_arr[i], i, tempSet);
+    set_customerApp(10, "food/food/food/food/food/", kptr_arr[i], i, tempSet);
   }
   
 }
@@ -272,7 +277,7 @@ main(int argc, char* argv[])
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等
   ndn::StackHelper ndnHelper;
-  ndnHelper.setCsSize(1000);
+  ndnHelper.setCsSize(1);
   ndnHelper.InstallAll();
 
   // Set BestRoute strategy
@@ -298,9 +303,9 @@ main(int argc, char* argv[])
   //  Simulator::Schedule(Seconds(1.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
   //  Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::UpLink, Fail_node0, Fail_node2);
 
-  ndn::L3RateTracer::InstallAll("rate-trace.txt", Seconds(0.5));
-  L2RateTracer::InstallAll("drop-trace.txt", Seconds(0.5));
-  ndn::CsTracer::InstallAll("cs-trace.txt", Seconds(1));
+  // ndn::L3RateTracer::InstallAll("rate-trace.txt", Seconds(0.5));
+  // L2RateTracer::InstallAll("drop-trace.txt", Seconds(0.5));
+  // ndn::CsTracer::InstallAll("cs-trace.txt", Seconds(1));
 
   Simulator::Stop(Seconds(100.0));
 

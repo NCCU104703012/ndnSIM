@@ -130,7 +130,7 @@ CustomerApp::StartApplication()
   while (O_ptr != NULL)
   {
     Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::InitSendQuery, this);
-    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+ 2), &CustomerApp::OrderTimeout, this);
+    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+ 1), &CustomerApp::OrderTimeout, this);
     std::cout << O_ptr->getTimeStamp() << " ";
     O_ptr = O_ptr->getNext();
   }
@@ -165,31 +165,7 @@ CustomerApp::StopApplication()
   ndn::App::StopApplication();
 }
 
-// void
-// CustomerApp::SendInterest()
-// {
-//   /////////////////////////////////////
-//   // Sending one Interest packet out //
-//   /////////////////////////////////////
 
-
-//   // Create and configure ndn::Interest
-//   auto interest = std::make_shared<ndn::Interest>(m_prefix);
-//   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
-//   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
-//   interest->setInterestLifetime(ndn::time::seconds(3));
-//   //interest->setDefaultCanBePrefix(true);
-
-//   NS_LOG_DEBUG("Sending Interest packet for " << *interest);
-
-//   // Call trace (for logging purposes)
-//   m_transmittedInterests(interest, this, m_face);
-
-//   m_appLink->onReceiveInterest(*interest);
-// }
-
-// Callback that will be called when Interest arrives
 void
 CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 {
@@ -238,6 +214,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   {
     std::string flag_connect_handshake = DataName;
 
+    // flag = 1 表示先前送過同意訊息給對方 對方已更新K桶
     if (flag_connect_handshake == "1")
     {
       //針對來源節點對K桶進行更新
@@ -282,9 +259,8 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         }
         
       }
-      
-      
     }
+    // flag = 0 表示初次要求建立連接
     else if (flag_connect_handshake == "0")
     {
       //運行演算法，確定是否要加入此來源
@@ -307,23 +283,25 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
     
     }
+    // flag = -1 表示對方不同意連接
     else if (flag_connect_handshake == "-1")
     {
       GetK_ptr()->KBucket_delete(SourceNode);
     }
-  
+    else
+    {
+      std::cout << "error: Kbucket_connect\n";
+    }
     return;
-    //有其他節點想要連線，判斷後返回帶有Flag的connect封包
   }
 
-  //收到k桶斷線訊息
+  //收到k桶斷線訊息，並判斷是否從K桶資訊中找出其他節點發送connect
   //封包格式 prefix/自己節點/來源節點/dataName(kbuk_string))/itemType
   if (itemtype == "Kbucket_disconnect")
   {
     int head = 0, tail;
     std::string kbuk_string = DataName;
 
-    //斷線，並判斷是否從K桶資訊中找出其他節點發送connect
     GetK_ptr()->KBucket_delete(SourceNode);
 
     std::cout <<"Disconnect " << NodeName << ": ";
@@ -348,9 +326,6 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       head = tail;
       tail = kbuk_string.find_first_of("_", head+1);
     }
-    
-    
-
     return;
   }
   
@@ -454,7 +429,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
 }
 
-// Callback that will be called when Data arrives
+// 收到資料,完成Order
 void
 CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 {
@@ -542,39 +517,6 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
     }
     
 }
-
-
-//送出一筆交易紀錄
-// void
-// CustomerApp::SendRecord()
-// {
-//   //record分割
-
-//   int head = 0 , tail = Record.toUri().find_first_of("/");
-//   std::string record_output;
-//   for (int i = 0; i <= record_count; i++)
-//   {
-//     head = tail+1;
-//     tail = Record.toUri().find_first_of("/",head);
-//   }
-  
-//   record_output = Record.toUri().substr(head, tail-head);
-
-//   //將record加入dataSet中
-//   this->SetDataSet("food/" + record_output);
-
-//   //生成興趣封包
-//   std::size_t hashRecord = std::hash<std::string>{}(record_output);
-//   std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
-//   NS_LOG_DEBUG("hash Record for " << binaryRecord << " " << record_output);
-
-//   ndn::Name temp;
-//   temp.append("prefix").append("data").append("store").append(NodeName);
-//   temp.append(GetK_ptr()->GetNext_Node(binaryRecord)->GetKId()).append(record_output).append("food");
-//   record_count++;
-
-//   SendInterest(temp, "Sending Record for ", true);
-// }
 
 
 void
@@ -738,109 +680,109 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
   }
 }
 
-  std::string
-  CustomerApp::DataSet_update(std::string inputDataName){
-    int distance = 0;
-    std::string output = NodeName.toUri();
-    std::size_t biTemp = std::hash<std::string>{}(inputDataName);
-    std::string binaryDataName = std::bitset<8>(biTemp).to_string();
-    std::set<std::string> shopSet = GetO_ptr()->getShopList();
-    std::set<std::string>::iterator o;
+std::string
+CustomerApp::DataSet_update(std::string inputDataName){
+  int distance = 0;
+  std::string output = NodeName.toUri();
+  std::size_t biTemp = std::hash<std::string>{}(inputDataName);
+  std::string binaryDataName = std::bitset<8>(biTemp).to_string();
+  std::set<std::string> shopSet = GetO_ptr()->getShopList();
+  std::set<std::string>::iterator o;
 
+  for (int i = 1; i < 9; i++)
+    {
+        std::string str1 = binaryDataName.substr(i,1);
+        std::string str2 = NodeName.toUri().substr(i,1);
+        if (str1.compare(str2))
+        {
+            distance++;
+        }
+    }
+
+  for ( o = shopSet.begin(); o != shopSet.end(); ++o)
+  {
+    std::string shopName = *o;
+    int temp_distance = 0;
     for (int i = 1; i < 9; i++)
-      {
-          std::string str1 = binaryDataName.substr(i,1);
-          std::string str2 = NodeName.toUri().substr(i,1);
-          if (str1.compare(str2))
-          {
-              distance++;
-          }
-      }
-
-    for ( o = shopSet.begin(); o != shopSet.end(); ++o)
     {
-      std::string shopName = *o;
-      int temp_distance = 0;
-      for (int i = 1; i < 9; i++)
-      {
-          std::string str1 = binaryDataName.substr(i,1);
-          std::string str2 = shopName.substr(i,1);
-          if (str1.compare(str2))
-          {
-              temp_distance++;
-          }
-      }
-      if (temp_distance > distance)
-      {
-        distance = temp_distance;
-        output = shopName;
-      }
+         std::string str1 = binaryDataName.substr(i,1);
+         std::string str2 = shopName.substr(i,1);
+       if (str1.compare(str2))
+        {
+            temp_distance++;
+        }
+    }
+    if (temp_distance > distance)
+    {
+      distance = temp_distance;
+      output = shopName;
+    }
       
-    }
-    return output;
   }
+  return output;
+}
 
-  // /prefix/data/download/
-  void
-  CustomerApp::Node_OnLine(){
-    Kademlia* tempK_ptr = GetK_ptr();
-    std::string* K_bucket ;
-    K_bucket = tempK_ptr->GetK_bucket();
-    // for kbucket
-    //   Connect_Kbucket()
+// /prefix/data/download/
+void
+CustomerApp::Node_OnLine(){
+  Kademlia* tempK_ptr = GetK_ptr();
+  std::string* K_bucket ;
+  K_bucket = tempK_ptr->GetK_bucket();
+  // for kbucket
+  //   Connect_Kbucket()
 
-    std::string flag_connect_handshake = "0";
+ std::string flag_connect_handshake = "0";
 
-    for (int i = 0; i < 15; i++)
+  for (int i = 0; i < 15; i++)
+  {
+    if (K_bucket[i] != "NULL")
     {
-      if (K_bucket[i] != "NULL")
-      {
-        ndn::Name prefixInterest;
-        prefixInterest.append("prefix").append("data").append("download").append(K_bucket[i]).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
+      ndn::Name prefixInterest;
+      prefixInterest.append("prefix").append("data").append("download").append(K_bucket[i]).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
 
-        SendInterest(prefixInterest, "Kbucket_connect: ", true);
-      }
-
+      SendInterest(prefixInterest, "Kbucket_connect: ", true);
     }
 
-
-    isNodeOnline = true;
   }
 
-  void
-  CustomerApp::Node_OffLine(){
+
+  isNodeOnline = true;
+}
+
+void
+CustomerApp::Node_OffLine(){
   
-    Kademlia* tempK_ptr = GetK_ptr();
-    std::string* K_bucket ;
-    std::string Kbuk_string = "_";
-    K_bucket = tempK_ptr->GetK_bucket();
+  Kademlia* tempK_ptr = GetK_ptr();
+  std::string* K_bucket ;
+  std::string Kbuk_string = "_";
+  K_bucket = tempK_ptr->GetK_bucket();
 
-    // for kbucket
-    //   Disconnect_Kbucket()
+  // for kbucket
+  //   Disconnect_Kbucket()
 
-    for (int i = 0; i < 15; i++)
+  for (int i = 0; i < 15; i++)
+  {
+    if (K_bucket[i] != "NULL")
     {
-      if (K_bucket[i] != "NULL")
-      {
-        Kbuk_string = Kbuk_string + K_bucket[i] + "_";
-      }
-
+      Kbuk_string = Kbuk_string + K_bucket[i] + "_";
     }
 
-    for (int i = 0; i < 15; i++)
+  }
+
+  for (int i = 0; i < 15; i++)
+  {
+    if (K_bucket[i] != "NULL")
     {
-      if (K_bucket[i] != "NULL")
-      {
-        ndn::Name prefixInterest;
-        prefixInterest.append("prefix").append("data").append("download").append(K_bucket[i]).append(NodeName).append(Kbuk_string).append("Kbucket_disconnect");
+      ndn::Name prefixInterest;
+      prefixInterest.append("prefix").append("data").append("download").append(K_bucket[i]).append(NodeName).append(Kbuk_string).append("Kbucket_disconnect");
 
-        SendInterest(prefixInterest, "Kbucket_disconnect: ", true);
-      }
-
+      SendInterest(prefixInterest, "Kbucket_disconnect: ", true);
     }
+
+  }
     
 
-    isNodeOnline = false;
-  }
+  isNodeOnline = false;
+}
 
 } // namespace ns3

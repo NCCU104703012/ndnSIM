@@ -201,17 +201,12 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         //GetK_ptr()->queryList->AddData(DataName, "food");
         Data* queryDataPtr = GetK_ptr()->GetQueryItem(DataName);
 
-        //特別注意！！！！會有queryData不見的狀況，尚未看出原因
+        //特別注意！！！！會有queryData不見的狀況，目前出現率不高
         if (queryDataPtr == NULL || queryDataPtr == GetK_ptr()->queryList)
         {
-            std::cout << "this queryData is deleted\n";
+            std::cout << "error: this queryData is deleted\n";
             return;
         }
-        else
-        {
-            std::cout << "8888888888888888888888888888888\n";
-        }
-        
 
         queryDataPtr->closest_node = SourceNode;
 

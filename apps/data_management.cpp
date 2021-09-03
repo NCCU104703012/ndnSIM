@@ -266,25 +266,6 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         m_appLink->onReceiveInterest(*interest);
       }
     }
-
-
-    
-    
-
-
-  // Note that Interests send out by the app will not be sent back to the app !
-
-  // auto data = std::make_shared<ndn::Data>(interest->getName());
-  // data->setFreshnessPeriod(ndn::time::milliseconds(1000));
-  // data->setContent(std::make_shared< ::ndn::Buffer>(1024));
-  // ndn::StackHelper::getKeyChain().sign(*data);
-
-  // NS_LOG_DEBUG("Sending Data packet for " << data->getName());
-
-  // // Call trace (for logging purposes)
-  // m_transmittedDatas(data, this, m_face);
-
-  // m_appLink->onReceiveData(*data);
 }
 
 // Callback that will be called when Data arrives
