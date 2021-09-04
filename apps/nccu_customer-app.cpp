@@ -658,25 +658,23 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
       NS_LOG_DEBUG("setDataList " << dataString << " in-order " << O_ptr->getOrderName());
 
       //Query送出
-      std::string query_output, itemType;
-      query_output = dataString;
+      std::string itemType;
       itemType = "init";
 
       if (isOrder_from_otherNode)
       {
-        NS_LOG_DEBUG("store-data " << query_output << " in-order " << O_ptr->getOrderName());
+        NS_LOG_DEBUG("store-data " << dataString << " in-order " << O_ptr->getOrderName());
       }
 
-      //新增data結構來紀錄next hop
-      GetK_ptr()->queryList->AddData(query_output, itemType);
-      
-
-      ndn::Name temp;
-      temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
-      temp.append(query_output).append("init").append(query_output + std::to_string(time(NULL)));
-      
-      SendInterest(temp, "Sending Query for ", true);
-    
+      //確認queryData list中沒有這筆資料正在Query，新增data結構來紀錄next hop
+      if (GetK_ptr()->GetQueryItem(dataString) != NULL)
+      {
+        GetK_ptr()->queryList->AddData(dataString, itemType);
+        ndn::Name temp;
+        temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
+        temp.append(dataString).append("init").append(dataString + std::to_string(time(NULL)));
+        SendInterest(temp, "Sending Query for ", true);
+      }
   }
 }
 

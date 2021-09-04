@@ -98,6 +98,12 @@ DataManageOrigin::StartApplication()
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
   // Schedule send of first interest
+  for (int i = 0; i < 100; i++)
+  {
+    //設定開始進行上下線的時間, 以及一週的週期
+    double startTime = 0.2;
+    Simulator::Schedule(Seconds(startTime + 0.2*i), &DataManageOrigin::timeOut, this);
+  }
 }
 
 // Processing when application is stopped
@@ -195,6 +201,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         {
             outInterest.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
             SendInterest(outInterest, "getData return to customer: ", true);
+            GetK_ptr()->Delete_data_query(queryDataPtr->Name);
             return;
         }
 
@@ -226,15 +233,28 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         }
         std::cout<< "\n";
 
+        bool hasNextHop = false;
         for (int i = 0; i < 3; i++)
         {
             if (queryDataPtr->nextHop_list[i] != "NULL")
             {
+                hasNextHop = true;
+                //將此round的Query目標紀錄，timeout時若一樣，則直接作為Data Lost
+                queryDataPtr->timeout_check[i] = queryDataPtr->nextHop_list[i];
+
                 ndn::Name Interest;
                 Interest.append("prefix").append("data").append("query").append(queryDataPtr->nextHop_list[i]).append("0").append(SourceNode).append(DataName).append("next-round").append("NULL");
                 SendInterest(Interest, "next round Query: ", true);
             }   
         }
+
+        if (!hasNextHop)
+        {
+            std::cout << "NO-match-Data-&-next-Node: " << queryDataPtr->Name <<"\n";
+            GetK_ptr()->Delete_data_query(queryDataPtr->Name);
+        }
+
+        return;
     }
     
     
@@ -247,6 +267,13 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         queryDataPtr->reply_count++;
         head = nextHop.find_first_of("_", head);
         tail = nextHop.find_first_of("_", head+1);
+
+        //error check
+        if (queryDataPtr == NULL)
+        {
+            std::cout << "error: queryDataPtr is NULL\n";
+            return;
+        }
 
         while (tail != -1)
         {
@@ -283,7 +310,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
                 }
                 
             }
-            
+            queryDataPtr->reply_count = 0;
         }
         
 
@@ -330,46 +357,21 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       m_appLink->onReceiveData(*data);
     }
 
-    //確認是否有此資料 若無則從k桶找尋下一目標
+    //此節點擁有資料，送回給sourceNode
     else if(GetK_ptr()->GetData(DataName))
     {
       outInterest.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
       SendInterest(outInterest, "getData return to customer: ", true);
 
-    //   // Create and configure ndn::Interest
-    //   auto interest = std::make_shared<ndn::Interest>(outInterest);
-    //   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
-    //   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
-    //   interest->setInterestLifetime(ndn::time::seconds(1));
-
-    //   NS_LOG_DEBUG("Sending Interest packet for " << *interest);
-
-    //   // Call trace (for logging purposes)
-    //   m_transmittedInterests(interest, this, m_face);
-
-    //   m_appLink->onReceiveInterest(*interest);
-
       ndn::Name outInterest_dataQuery;
       outInterest_dataQuery.append("prefix").append("data").append("query").append(SourceNode).append("-1").append(SourceNode).append(DataName).append(itemType).append("NULL");
 
       SendInterest(outInterest_dataQuery, "getData return to dataManage: ", true);
-    //   // Create and configure ndn::Interest
-    //   auto interest2 = std::make_shared<ndn::Interest>(outInterest_dataQuery);\
-    //   interest2->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
-    //   interest2->setInterestLifetime(ndn::time::seconds(1));
-
-    //   NS_LOG_DEBUG("Sending Interest packet for " << *interest2);
-
-    //   // Call trace (for logging purposes)
-    //   m_transmittedInterests(interest2, this, m_face);
-
-    //   m_appLink->onReceiveInterest(*interest2);
+    
     }
     else
     {
-      //從K桶找下一目標 目前用預設第一個節點
+      //此節點沒有資料，確認是否有K桶節點可返回
       std::size_t biTemp = std::hash<std::string>{}(DataName);
       std::string binaryDataName = std::bitset<8>(biTemp).to_string();
       NS_LOG_DEBUG("hash Record for " << binaryDataName << " " << DataName);
@@ -384,19 +386,6 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         outInterest.append("prefix").append("data").append("query").append(SourceNode).append("0").append(SourceNode).append(DataName).append(itemType).append(TargetNode);
       }
         SendInterest(outInterest, "sendBack to SourceNode: ", true);
-        // // Create and configure ndn::Interest
-        // auto interest = std::make_shared<ndn::Interest>(outInterest);
-        // Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
-        // interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
-        // interest->setInterestLifetime(ndn::time::seconds(1));
-
-        // NS_LOG_DEBUG("Sending Interest packet for " << *interest);
-
-        // // Call trace (for logging purposes)
-        // m_transmittedInterests(interest, this, m_face);
-
-        // m_appLink->onReceiveInterest(*interest);
     }
 
 }
@@ -435,5 +424,54 @@ DataManageOrigin::SendInterest(ndn::Name prefix, std::string logging, bool fresh
 
   m_appLink->onReceiveInterest(*interest);
 }
+
+//定期執行 增加每個QueryData的time clock，過期時執行next round Query
+void
+DataManageOrigin::timeOut()
+{
+    Data* queryDataPtr = GetK_ptr()->queryList->next;
+
+    while (queryDataPtr != NULL)
+    {
+        //設定執行間隔
+        queryDataPtr->lifeTime = queryDataPtr->lifeTime + 0.2;
+
+        //超過timeout者，確認是否有next hop，沒有即lost，有則送出
+        if (queryDataPtr->lifeTime >= 0.4)
+        {
+            
+            bool hasNextHop = false;
+            
+            for (int i = 0; i < 3; i++)
+            {
+                if (queryDataPtr->nextHop_list[i] != "NULL")
+                {
+                    hasNextHop = true;
+                    ndn::Name outInterest;
+                    std::string targetNode = queryDataPtr->nextHop_list[i];
+                    queryDataPtr->nextHop_list[i] = "NULL";
+                    outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(GetK_ptr()->GetKId()).append(queryDataPtr->Name).append("timeOut").append("NULL");
+                    SendInterest(outInterest, " TimeOut next round Query: ", true);
+                }
+            }
+
+            if (hasNextHop)
+            {
+                queryDataPtr->reply_count = 0;
+                queryDataPtr->lifeTime = 0;
+                std::cout << "Timeout! Go to Next round: " << queryDataPtr->Name << "\n";
+            }
+            else
+            {
+                std::cout << "NO-match-Data-&-next-Node: " << queryDataPtr->Name <<"\n";
+                GetK_ptr()->Delete_data_query(queryDataPtr->Name);
+            }
+            
+        }
+        queryDataPtr = queryDataPtr->next;
+    }
+    
+}
+
 
 } // namespace ns3

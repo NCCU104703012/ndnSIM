@@ -68,6 +68,9 @@ public:
   void
   SetNode_Pointer(Ptr<Node> input);
 
+  void
+  timeOut();
+
   //將kademlia struct位址從字串轉成指標
   Kademlia*
   GetK_ptr()

@@ -158,9 +158,11 @@ public:
     std::string type;
 
     std::string closest_node = "NULL";
+    double lifeTime = 0;
 
     int reply_count = 0;
     std::string nextHop_list[3] = {"NULL", "NULL", "NULL"};
+    std::string timeout_check[3] = {"NULL", "NULL", "NULL"};
 };
 
 class Kademlia{
@@ -267,7 +269,15 @@ public:
             }
             outputPtr = outputPtr->next;
         }
-        return outputPtr;
+
+        if (outputPtr == queryList)
+        {
+            return NULL;
+        }
+        else
+        {
+            return outputPtr;
+        }
     };
 
     //輸入節點訊息，代替querylist中節點
