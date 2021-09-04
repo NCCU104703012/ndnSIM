@@ -343,6 +343,20 @@ Data::update_nextHop(std::string inputNode)
     std::string binaryData = std::bitset<8>(hashData).to_string();
     distance = XOR(binaryData,inputNode);
 
+    if (distance >= XOR(binaryData, closest_node))
+    {
+        return;
+    }
+
+    for (int  i = 0; i < 3; i++)
+    {
+        if (this->nextHop_list[i] == "NULL")
+        {
+            this->nextHop_list[i] = inputNode;
+            return;
+        }
+    }
+    
     for (int i = 0; i < 3; i++)
     {
         if (this->nextHop_list[i] == inputNode)
@@ -350,21 +364,11 @@ Data::update_nextHop(std::string inputNode)
             // 預防nextHop list出現相同節點，重複Query
             return;
         }
-
-        if (distance < XOR(binaryData, closest_node))
+        if (distance < XOR(binaryData, this->nextHop_list[i]))
         {
-            if (this->nextHop_list[i] == "NULL")
-            {
-                this->nextHop_list[i] = inputNode;
-                return;
-            }
-
-            if (distance < XOR(binaryData, this->nextHop_list[i]))
-            {
-                this->nextHop_list[i] = inputNode;
-                return;
-            }
-        }        
+            this->nextHop_list[i] = inputNode;
+            return;
+        }     
     }
     
 }

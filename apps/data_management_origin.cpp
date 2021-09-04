@@ -151,7 +151,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     int head = 0, tail;
     std::string DataName, TargetNode, SourceNode, flag, itemType, nextHop;
     
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 9; i++)
     {
       head = inputString.find("/", head);
       tail = inputString.find("/", head+1);
@@ -164,24 +164,27 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       {
       case 3:
         TargetNode = temp;
-        //NS_LOG_DEBUG("targetnode = " << TargetNode);
+        NS_LOG_DEBUG("targetnode = " << TargetNode);
+        break;
       case 4:
         flag = temp;
+        NS_LOG_DEBUG("flag = " << flag);
         break;
       case 5:
         SourceNode = temp;
-        //NS_LOG_DEBUG("sourcenode = " << SourceNode);
+        NS_LOG_DEBUG("sourcenode = " << SourceNode);
         break;
       case 6:
         DataName = temp;
-        //NS_LOG_DEBUG("dataname = " << DataName);
+        NS_LOG_DEBUG("dataname = " << DataName);
         break;
       case 7:
         itemType = temp;
-        //NS_LOG_DEBUG("dataname = " << DataName);
+        NS_LOG_DEBUG("itemType = " << itemType);
         break;
       case 8:
         nextHop = temp;
+        NS_LOG_DEBUG("nextHop = " << nextHop);
       }
     }
 
@@ -197,6 +200,9 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
     if (itemType == "init")
     {
+        //GetK_ptr()->queryList->AddData(DataName, "food");
+        Data* queryDataPtr = GetK_ptr()->GetQueryItem(DataName);
+
         if (GetK_ptr()->GetData(DataName))
         {
             outInterest.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
@@ -204,9 +210,6 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
             GetK_ptr()->Delete_data_query(queryDataPtr->Name);
             return;
         }
-
-        //GetK_ptr()->queryList->AddData(DataName, "food");
-        Data* queryDataPtr = GetK_ptr()->GetQueryItem(DataName);
 
         //特別注意！！！！會有queryData不見的狀況，目前出現率不高
         if (queryDataPtr == NULL || queryDataPtr == GetK_ptr()->queryList)
@@ -239,18 +242,21 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
             if (queryDataPtr->nextHop_list[i] != "NULL")
             {
                 hasNextHop = true;
+                queryDataPtr->target_reply_count++;
                 //將此round的Query目標紀錄，timeout時若一樣，則直接作為Data Lost
-                queryDataPtr->timeout_check[i] = queryDataPtr->nextHop_list[i];
+                //queryDataPtr->timeout_check[i] = queryDataPtr->nextHop_list[i];
+                std::string targetNode = queryDataPtr->nextHop_list[i];
+                queryDataPtr->nextHop_list[i] = "NULL";
 
                 ndn::Name Interest;
-                Interest.append("prefix").append("data").append("query").append(queryDataPtr->nextHop_list[i]).append("0").append(SourceNode).append(DataName).append("next-round").append("NULL");
+                Interest.append("prefix").append("data").append("query").append(targetNode).append("0").append(SourceNode).append(DataName).append("next-round").append("NULL");
                 SendInterest(Interest, "next round Query: ", true);
             }   
         }
 
         if (!hasNextHop)
         {
-            std::cout << "NO-match-Data-&-next-Node: " << queryDataPtr->Name <<"\n";
+            std::cout << "NO-match-Data-&-next-Node(init): " << queryDataPtr->Name <<"\n";
             GetK_ptr()->Delete_data_query(queryDataPtr->Name);
         }
 
@@ -281,36 +287,69 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
             std::cout <<"nextHop : " << nextHop <<std::endl;
 
-            queryDataPtr->update_nextHop(nextHop);
+            queryDataPtr->update_nextHop(newNode);
+
+            std::cout << newNode << "\n";
 
 
             head = tail;
             tail = nextHop.find_first_of("_", head+1);
         }
         
-        queryDataPtr->closest_node = queryDataPtr->nextHop_list[0];
+        queryDataPtr->SetClosest_Node();
 
-        if (queryDataPtr->reply_count == 3)
+        if (queryDataPtr->reply_count == queryDataPtr->target_reply_count)
         {
-            if (queryDataPtr->nextHop_list[0] == "NULL")
-            {
-                NS_LOG_DEBUG("NO-match-Data-&-next-Node");
-                GetK_ptr()->Delete_data_query(DataName);
-                return;
-            }
+            bool hasNextHop = false;
+            queryDataPtr->target_reply_count = 0;
+            
             for (int i = 0; i < 3; i++)
             {
                 if (queryDataPtr->nextHop_list[i] != "NULL")
                 {
-                   ndn::Name outInterest;
-                   std::string targetNode = queryDataPtr->nextHop_list[i];
-                   queryDataPtr->nextHop_list[i] = "NULL";
-                   outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(SourceNode).append(DataName).append(itemType).append("NULL");
-                   SendInterest(outInterest, "next round Query: ", true);
+                    hasNextHop = true;
+                    queryDataPtr->target_reply_count++;
+                    ndn::Name outInterest;
+                    std::string targetNode = queryDataPtr->nextHop_list[i];
+
+                    queryDataPtr->nextHop_list[i] = "NULL";
+                    //queryDataPtr->timeout_check[i] = queryDataPtr->nextHop_list[i];
+
+                    outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(GetK_ptr()->GetKId()).append(queryDataPtr->Name).append("timeOut").append("NULL");
+                    SendInterest(outInterest, "Get all query back! next round Query: ", true);
                 }
-                
             }
-            queryDataPtr->reply_count = 0;
+
+            if (hasNextHop)
+            {                
+                queryDataPtr->reply_count = 0;
+                queryDataPtr->lifeTime = 0;
+            }
+            else
+            {
+                std::cout << "NO-match-Data-&-next-Node(reply_count == 3): " << queryDataPtr->Name <<"\n";
+                GetK_ptr()->Delete_data_query(queryDataPtr->Name);
+            }
+
+            // if (queryDataPtr->nextHop_list[0] == "NULL")
+            // {
+            //     NS_LOG_DEBUG("NO-match-Data-&-next-Node");
+            //     GetK_ptr()->Delete_data_query(DataName);
+            //     return;
+            // }
+            // for (int i = 0; i < 3; i++)
+            // {
+            //     if (queryDataPtr->nextHop_list[i] != "NULL")
+            //     {
+            //        ndn::Name outInterest;
+            //        std::string targetNode = queryDataPtr->nextHop_list[i];
+            //        queryDataPtr->nextHop_list[i] = "NULL";
+            //        outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(SourceNode).append(DataName).append(itemType).append("NULL");
+            //        SendInterest(outInterest, "next round Query: ", true);
+            //     }
+                
+            // }
+            // queryDataPtr->reply_count = 0;
         }
         
 
@@ -378,12 +417,12 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
       if (GetK_ptr()->GetNext_Node(binaryDataName, 1) == GetK_ptr()->GetNodeName())
       {
-        outInterest.append("prefix").append("data").append("query").append(SourceNode).append("0").append(SourceNode).append(DataName).append(itemType).append("NULL");
+        outInterest.append("prefix").append("data").append("query").append(SourceNode).append("0").append(SourceNode).append(DataName).append("Return").append("NULL");
       }
       else
       {
         TargetNode = GetK_ptr()->GetNext_Node(binaryDataName, 3);
-        outInterest.append("prefix").append("data").append("query").append(SourceNode).append("0").append(SourceNode).append(DataName).append(itemType).append(TargetNode);
+        outInterest.append("prefix").append("data").append("query").append(SourceNode).append("0").append(SourceNode).append(DataName).append("Return").append(TargetNode);
       }
         SendInterest(outInterest, "sendBack to SourceNode: ", true);
     }
@@ -437,19 +476,24 @@ DataManageOrigin::timeOut()
         queryDataPtr->lifeTime = queryDataPtr->lifeTime + 0.2;
 
         //超過timeout者，確認是否有next hop，沒有即lost，有則送出
-        if (queryDataPtr->lifeTime >= 0.4)
+        if (queryDataPtr->lifeTime >= 10)
         {
             
             bool hasNextHop = false;
+            queryDataPtr->target_reply_count = 0;
             
             for (int i = 0; i < 3; i++)
             {
                 if (queryDataPtr->nextHop_list[i] != "NULL")
                 {
                     hasNextHop = true;
+                    queryDataPtr->target_reply_count++;
                     ndn::Name outInterest;
                     std::string targetNode = queryDataPtr->nextHop_list[i];
+
                     queryDataPtr->nextHop_list[i] = "NULL";
+                    //queryDataPtr->timeout_check[i] = queryDataPtr->nextHop_list[i];
+
                     outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(GetK_ptr()->GetKId()).append(queryDataPtr->Name).append("timeOut").append("NULL");
                     SendInterest(outInterest, " TimeOut next round Query: ", true);
                 }
@@ -457,13 +501,14 @@ DataManageOrigin::timeOut()
 
             if (hasNextHop)
             {
+                queryDataPtr->SetClosest_Node();
                 queryDataPtr->reply_count = 0;
                 queryDataPtr->lifeTime = 0;
                 std::cout << "Timeout! Go to Next round: " << queryDataPtr->Name << "\n";
             }
             else
             {
-                std::cout << "NO-match-Data-&-next-Node: " << queryDataPtr->Name <<"\n";
+                std::cout << "NO-match-Data-&-next-Node(Timeout): " << queryDataPtr->Name <<"\n";
                 GetK_ptr()->Delete_data_query(queryDataPtr->Name);
             }
             

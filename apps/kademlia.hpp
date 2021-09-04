@@ -149,6 +149,21 @@ public:
     void
     update_nextHop(std::string inputNode);
 
+    void
+    SetClosest_Node(){
+        for (int i = 0; i < 3; i++)
+        {
+            if (nextHop_list[i] != "NULL")
+            {
+                if (XOR(nextHop_list[i], this->Name) < XOR(closest_node, this->Name))
+                {
+                    closest_node = nextHop_list[i];
+                }
+            }
+        }
+        
+    };
+
     Data *head;
     Data *next = NULL;
     std::string Name = "NULL";
@@ -161,6 +176,7 @@ public:
     double lifeTime = 0;
 
     int reply_count = 0;
+    int target_reply_count = 0;
     std::string nextHop_list[3] = {"NULL", "NULL", "NULL"};
     std::string timeout_check[3] = {"NULL", "NULL", "NULL"};
 };

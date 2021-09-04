@@ -145,14 +145,14 @@ CustomerApp::StartApplication()
   dayOff = tempHash%7;
   std::cout << " dayOff: " <<  dayOff << std::endl;
 
-  for (int i = 0; i < 10; i++)
-  {
-    //設定開始進行上下線的時間, 以及一週的週期
-    int startTime = 3;
-    int week = 7;
-    Simulator::Schedule(Seconds(startTime + week*i + week/7*dayOff), &CustomerApp::Node_OffLine, this);
-    Simulator::Schedule(Seconds(startTime + week*i + week/7*(dayOff+1)), &CustomerApp::Node_OnLine, this);
-  }
+  // for (int i = 0; i < 10; i++)
+  // {
+  //   //設定開始進行上下線的時間, 以及一週的週期
+  //   int startTime = 3;
+  //   int week = 7;
+  //   Simulator::Schedule(Seconds(startTime + week*i + week/7*dayOff), &CustomerApp::Node_OffLine, this);
+  //   Simulator::Schedule(Seconds(startTime + week*i + week/7*(dayOff+1)), &CustomerApp::Node_OnLine, this);
+  // }
   
 
 }
@@ -414,14 +414,14 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   else if(DataName == SourceNode)
   {
     ndn::Name InsName;
-    InsName.append("prefix").append("data").append("query").append(SourceNode).append("1").append(DataName).append(itemtype);
+    InsName.append("prefix").append("data").append("query").append(SourceNode).append("1").append(DataName).append("MicroService_query").append("NULL").append("NULL");
 
     SendInterest(InsName, "Micro service done, send interest packet to download it ", true);
   }
   else
   {
     ndn::Name InsName;
-    InsName.append("prefix").append("data").append("query").append(SourceNode).append("1").append(DataName).append(itemtype);
+    InsName.append("prefix").append("data").append("query").append(SourceNode).append("1").append(DataName).append("Data_query").append("NULL").append("NULL");
 
     SendInterest(InsName, "Found data, send interest packet to download it ", false);
   }
@@ -667,7 +667,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
       }
 
       //確認queryData list中沒有這筆資料正在Query，新增data結構來紀錄next hop
-      if (GetK_ptr()->GetQueryItem(dataString) != NULL)
+      if (GetK_ptr()->GetQueryItem(dataString) == NULL)
       {
         GetK_ptr()->queryList->AddData(dataString, itemType);
         ndn::Name temp;
