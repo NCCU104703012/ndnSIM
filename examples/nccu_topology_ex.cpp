@@ -109,7 +109,7 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
   std::string location = address.str();
 
   Ptr<Node> TargetNode = Names::Find<Node>(nodeName);
-  ndn::AppHelper app("DataManageOrigin");
+  ndn::AppHelper app("DataManage");
   app.SetPrefix(prefix);
   app.SetAttribute("Kademlia", StringValue(location));
   app.SetAttribute("Query", StringValue(o_ptr_string));

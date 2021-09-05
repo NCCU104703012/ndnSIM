@@ -189,7 +189,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   std::size_t hashRecord = std::hash<std::string>{}(DataName);
   std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
 
-  if (GetK_ptr()->GetKId() == GetK_ptr()->GetNext_Node(binaryRecord, 1))
+  if (GetK_ptr()->GetKId() == GetK_ptr()->GetNext_Node(binaryRecord, 1, SourceNode))
   {
     GetK_ptr()->SetData(DataName, itemType);
     //GetK_ptr()->Node_info();
@@ -220,7 +220,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   else
   {
     ndn::Name next ;
-    std::string nextTarget = GetK_ptr()->GetNext_Node(binaryRecord, 1);
+    std::string nextTarget = GetK_ptr()->GetNext_Node(binaryRecord, 1, SourceNode);
 
     next.append("prefix").append("data").append("store").append(nextTarget).append(SourceNode).append(DataName).append(itemType);
     auto next_interest = std::make_shared<ndn::Interest>(next);

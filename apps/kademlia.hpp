@@ -201,7 +201,7 @@ public:
     SetData(std::string input, std::string type);
 
     std::string
-    GetNext_Node(std::string TargetNode, int output_num);
+    GetNext_Node(std::string TargetNode, int output_num, std::string SourceNode);
 
     std::string*
     GetK_bucket(){return k_bucket; };
@@ -276,7 +276,7 @@ public:
     //return queryList中相同名稱的Data*
     Data*
     GetQueryItem(std::string input){
-        Data* outputPtr = queryList;
+        Data* outputPtr = queryList->next;
         while (outputPtr != NULL)
         {
             if (outputPtr->Name == input)
@@ -286,7 +286,7 @@ public:
             outputPtr = outputPtr->next;
         }
 
-        if (outputPtr == queryList)
+        if (outputPtr == NULL)
         {
             return NULL;
         }

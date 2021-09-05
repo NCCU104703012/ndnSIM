@@ -32,7 +32,7 @@ Kademlia::GetData(std::string DataName){
 }
 
 std::string
-Kademlia::GetNext_Node(std::string TargetNode, int output_num){
+Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string SourceNode){
 
     std::string output[3] = {this->KId, "NULL", "NULL"};
     std::string outputString = "";
@@ -40,6 +40,11 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num){
 
     for (int i = 0; i < 15; i++)
     {
+        if (SourceNode == k_bucket[i])
+        {
+            continue;
+        }
+        
         if (k_bucket[i] != "NULL")
         {
             if (output[arrIndex%3] == "NULL")
@@ -66,8 +71,10 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num){
         {
             outputString = outputString + "_" + output[i];
         }
-        
+
     }
+
+    outputString = outputString + "_";
     
     //未完成，需要return output_num數量的Knode資訊
     return outputString;
@@ -79,8 +86,8 @@ Kademlia::XOR(std::string input)
     int distance = 0;
     for (int i = 1; i < 9; i++)
     {
-        std::string str1 = this->KId.substr(i,1);
-        std::string str2 = input.substr(i,1);
+        std::string str1 = std::to_string(this->KId[i]);
+        std::string str2 = std::to_string(input[i]);
         if (str1.compare(str2))
         {
             distance++;
@@ -94,10 +101,10 @@ int
 Kademlia::XOR(std::string input, std::string input2)
 {
     int distance = 0;
-    for (int i = 1; i < 9; i++)
+    for (int i = 0; i < 8; i++)
     {
-        std::string str1 = input2.substr(i,1);
-        std::string str2 = input.substr(i,1);
+        std::string str1 = std::to_string(input2[i]);
+        std::string str2 = std::to_string(input[i]);
         if (str1.compare(str2))
         {
             distance++;
@@ -230,12 +237,13 @@ Kademlia::Delete_data_query(std::string DataName)
         return;
     }
     
-    Data* prePtr = dataList;
+    Data* prePtr = queryList;
 
     while (1)
     {
         if (prePtr->next == targetPtr)
         {
+            std::cout << "Delete Data sucess: " << targetPtr->Name << "\n";
             prePtr->next = targetPtr->next;
             delete targetPtr;
             return;
@@ -377,10 +385,10 @@ int
 Data::XOR(std::string input, std::string input2)
 {
     int distance = 0;
-    for (int i = 1; i < 9; i++)
+    for (int i = 0; i < 8; i++)
     {
-        std::string str1 = input2.substr(i,1);
-        std::string str2 = input.substr(i,1);
+        std::string str1 = std::to_string(input2[i]);
+        std::string str2 = std::to_string(input[i]);
         if (str1.compare(str2))
         {
             distance++;
