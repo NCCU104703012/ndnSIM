@@ -40,8 +40,10 @@
 #include <set>
 #include <time.h>
 
+std::string Query_Algorithm = "DataManageOrigin";
 
 namespace ns3 {
+
 
 /**
  * This scenario simulates a grid topology (using topology reader module)
@@ -109,7 +111,7 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
   std::string location = address.str();
 
   Ptr<Node> TargetNode = Names::Find<Node>(nodeName);
-  ndn::AppHelper app("DataManage");
+  ndn::AppHelper app(Query_Algorithm);
   app.SetPrefix(prefix);
   app.SetAttribute("Kademlia", StringValue(location));
   app.SetAttribute("Query", StringValue(o_ptr_string));
@@ -207,6 +209,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   app1.SetAttribute("Kademlia", StringValue(location));
   app1.SetAttribute("Query", StringValue(queryString));
   app1.SetAttribute("Guest", StringValue(gptrString));
+  app1.SetAttribute("Query_Algorithm", StringValue(Query_Algorithm));
   app1.Install(Node0);
   ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(nodeNum), Node0);
   

@@ -82,6 +82,8 @@ CustomerApp::GetTypeId()
           MakeNameAccessor(&CustomerApp::Guest_list), ndn::MakeNameChecker())
       .AddAttribute("Record", "assign Record", StringValue(""),
           MakeNameAccessor(&CustomerApp::Record), ndn::MakeNameChecker())
+      .AddAttribute("Query_Algorithm", "DataManage or DataManageOrigin", StringValue(""),
+          MakeNameAccessor(&CustomerApp::query_algorithm), ndn::MakeNameChecker())
       .AddAttribute(
         "Kademlia",
         "Kademlia struct",
@@ -667,14 +669,24 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
       }
 
       //確認queryData list中沒有這筆資料正在Query，新增data結構來紀錄next hop
-      // if (GetK_ptr()->GetQueryItem(dataString) == NULL)
-      // {
-      //   GetK_ptr()->queryList->AddData(dataString, itemType);
+      if (query_algorithm.toUri() == "/DataManage")
+      {
         ndn::Name temp;
         temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
-        temp.append(dataString).append("init").append(dataString + std::to_string(time(NULL)));
+        temp.append(dataString).append("init").append(dataString).append(std::to_string(time(NULL)));
         SendInterest(temp, "Sending Query for ", true);
-      // }
+
+        return;
+      }
+
+      if (GetK_ptr()->GetQueryItem(dataString) == NULL && query_algorithm.toUri() == "/DataManageOrigin")
+      {
+        GetK_ptr()->queryList->AddData(dataString, itemType);
+        ndn::Name temp;
+        temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
+        temp.append(dataString).append("init").append(dataString).append(std::to_string(time(NULL)));
+        SendInterest(temp, "Sending Query for ", true);
+      }
   }
 }
 

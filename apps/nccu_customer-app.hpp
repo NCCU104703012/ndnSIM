@@ -193,6 +193,9 @@ private:
   //儲存poisson進入的顧客 用來生成record
   ndn::Name Guest_list;
 
+  //使用何種演算法進行 Data query
+  ndn::Name query_algorithm;
+
   //紀錄休息的日期（七分之一時間休息）
   int dayOff = -1;
 

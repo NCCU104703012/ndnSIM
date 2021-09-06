@@ -249,7 +249,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
                 queryDataPtr->nextHop_list[i] = "NULL";
 
                 ndn::Name Interest;
-                Interest.append("prefix").append("data").append("query").append(targetNode).append("0").append(SourceNode).append(DataName).append("next-round").append("NULL" + std::to_string(time(NULL)));
+                Interest.append("prefix").append("data").append("query").append(targetNode).append("0").append(SourceNode).append(DataName).append("next-round").append("NULL").append(std::to_string(time(NULL)));
                 SendInterest(Interest, "next round Query: ", true);
             }   
         }
@@ -413,7 +413,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       SendInterest(outInterest, "getData return to customer: ", true);
 
       ndn::Name outInterest_dataQuery;
-      outInterest_dataQuery.append("prefix").append("data").append("query").append(SourceNode).append("-1").append(TargetNode).append(DataName).append(itemType).append("NULL" + std::to_string(time(NULL)));
+      outInterest_dataQuery.append("prefix").append("data").append("query").append(SourceNode).append("-1").append(TargetNode).append(DataName).append(itemType).append("NULL").append(std::to_string(time(NULL)));
 
       SendInterest(outInterest_dataQuery, "getData return to dataManage: ", true);
     
@@ -427,7 +427,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
       if (GetK_ptr()->GetNext_Node(binaryDataName, 1, SourceNode) == GetK_ptr()->GetNodeName())
       {
-        outInterest.append("prefix").append("data").append("query").append(SourceNode).append("0").append(TargetNode).append(DataName).append("Return").append("NULL"+ std::to_string(time(NULL)));
+        outInterest.append("prefix").append("data").append("query").append(SourceNode).append("0").append(TargetNode).append(DataName).append("Return").append("NULL").append(std::to_string(time(NULL)));
       }
       else
       {
@@ -504,7 +504,7 @@ DataManageOrigin::timeOut()
                     queryDataPtr->nextHop_list[i] = "NULL";
                     //queryDataPtr->timeout_check[i] = queryDataPtr->nextHop_list[i];
 
-                    outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(GetK_ptr()->GetKId()).append(queryDataPtr->Name).append("timeOut").append("NULL" + std::to_string(time(NULL)));
+                    outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(GetK_ptr()->GetKId()).append(queryDataPtr->Name).append("timeOut").append("NULL").append(std::to_string(time(NULL)));
                     SendInterest(outInterest, " TimeOut next round Query: ", true);
                 }
             }
@@ -521,8 +521,9 @@ DataManageOrigin::timeOut()
             else
             {
                 std::string deleteData = queryDataPtr->Name;
-                queryDataPtr = queryDataPtr->next;
                 std::cout << "NO-match-Data-&-next-Node(Timeout): " << queryDataPtr->Name <<"\n";
+
+                queryDataPtr = queryDataPtr->next;
                 GetK_ptr()->Delete_data_query(deleteData);
             }
             
