@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <set>
+#include <bitset>
 
 class Order
 {
@@ -151,11 +152,14 @@ public:
 
     void
     SetClosest_Node(){
+        std::size_t hashData = std::hash<std::string>{}(this->Name);
+        std::string binaryData = std::bitset<8>(hashData).to_string();
+
         for (int i = 0; i < 3; i++)
         {
             if (nextHop_list[i] != "NULL")
             {
-                if (XOR(nextHop_list[i], this->Name) < XOR(closest_node, this->Name))
+                if (XOR(nextHop_list[i], binaryData) < XOR(closest_node, binaryData))
                 {
                     closest_node = nextHop_list[i];
                 }
