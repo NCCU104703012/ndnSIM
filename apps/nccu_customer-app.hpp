@@ -172,7 +172,7 @@ private:
   int record_count = 0;
 
   //用來生成新record string的編號 本身意義不大
-  int new_record_count = 0;
+  int micro_order_count = 0;
 
   //用來製作興趣封包
   ndn::Name NodeName;

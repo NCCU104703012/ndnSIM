@@ -41,7 +41,7 @@
 #include <time.h>
 
 //kad演算法 DataManageOrigin ＆ DataManage
-std::string Query_Algorithm = "DataManageOrigin";
+std::string Query_Algorithm = "DataManage";
 
 //節點數量
 int NodeNumber = 17;
@@ -49,17 +49,17 @@ int NodeNumber = 17;
 //一個節點產生的order數量
 int OrderNumber = 10;
 
-//平均幾秒下一個顧客抵達
-int Record_Poisson = 100;
-//平均顧客抵達的分母
-int Record_Poisson_div = 100;
+//平均幾秒產生一筆資料
+int Record_Poisson = 3;
+//分母 化小數點用
+int Record_Poisson_div = 1;
 
 //一個節點顧客產生數量
 int GuestNumber = 20;
 
-//平均幾秒顧客抵達
-int Guest_Poisson = 20;
-int Guest_Poisson_div = 10;
+//平均幾秒處理下一個order
+int Guest_Poisson = 8;
+int Guest_Poisson_div = 1;
 
 //初始K桶大小
 int Kbuk_Number = 4;
@@ -161,7 +161,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   
   Optr_head->setShopList(shopList_string);
 
-  //產生Guest list
+  //產生Guest list，用來產生實際record
   int record_count = 0;
   double totalTime = (double)poisson_record(generator)/Record_Poisson_div;
   Guest* Gptr_head = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);

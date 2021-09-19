@@ -45,6 +45,8 @@
 // 一週期的時間長度
 int Week = 7;
 
+// Micro service Timeout
+int MicroService_Timeout = 10;
 
 NS_LOG_COMPONENT_DEFINE("CustomerApp");
 
@@ -140,7 +142,7 @@ CustomerApp::StartApplication()
   while (O_ptr != NULL)
   {
     Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::InitSendQuery, this);
-    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+ 1), &CustomerApp::OrderTimeout, this);
+    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+ MicroService_Timeout), &CustomerApp::OrderTimeout, this);
     std::cout << O_ptr->getTimeStamp() << " ";
     O_ptr = O_ptr->getNext();
   }
@@ -386,7 +388,9 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     }
 
     //新增order並處理 並註明是來自其他節點的order 後續完成後需回傳至原節點
-    Order* newOrder = GetO_ptr()->AddOrder_toTail("MicroOrder_" + DataName, SourceNode, 0, 0);
+    Order* newOrder = GetO_ptr()->AddOrder_toTail("MicroOrder_" + DataName + "_" + std::to_string(micro_order_count) , SourceNode, 0, 0);
+    micro_order_count++;
+
     newOrder->setHasSourceNode(true);
     newOrder->setSourceNode(SourceNode);
     SendQuery(newOrder, "food", true);
@@ -594,7 +598,7 @@ CustomerApp::OrderTimeout(){
 
     std::set<std::string>::iterator i;
     std::set<std::string> dataList = targetOrder->getDataList();
-    for (i = dataList.begin(); i != dataList.end(); ++i)
+    for (auto i = dataList.begin(); i != dataList.end(); ++i)
     {
       std::string dataString = *i;
       std::string targetNode;
@@ -620,7 +624,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
   O_ptr->setTerminate(false);
 
   std::set<std::string> dataSet = this->GetDataSet();
-  std::set<std::string>::iterator i;
+  std::set<std::string>::iterator i,j;
 
   std::set<std::string> shopSet = GetO_ptr()->getShopList();
 
@@ -659,8 +663,10 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
     return;
   }
 
-  for (i = dataSet.begin(); i != dataSet.end(); ++i) {
-    std::string dataString = *i;
+  for (j = dataSet.begin(); j != dataSet.end(); ++j) {
+    std::string dataString = *j;
+
+    std::cout << "in dataSet: " << dataString << std::endl;
 
       //將資料存入Order中
       O_ptr->setDataList(dataString);
@@ -682,11 +688,8 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
         temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
         temp.append(dataString).append("init").append(dataString).append(std::to_string(time(NULL)));
         SendInterest(temp, "Sending Query for ", true);
-
-        return;
       }
-
-      if (GetK_ptr()->GetQueryItem(dataString) == NULL && query_algorithm.toUri() == "/DataManageOrigin")
+      else if (GetK_ptr()->GetQueryItem(dataString) == NULL && query_algorithm.toUri() == "/DataManageOrigin")
       {
         GetK_ptr()->queryList->AddData(dataString, itemType);
         ndn::Name temp;
@@ -716,7 +719,7 @@ CustomerApp::DataSet_update(std::string inputDataName){
         }
     }
 
-  for ( o = shopSet.begin(); o != shopSet.end(); ++o)
+  for (auto o = shopSet.begin(); o != shopSet.end(); ++o)
   {
     std::string shopName = *o;
     int temp_distance = 0;
