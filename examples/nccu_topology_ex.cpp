@@ -40,7 +40,29 @@
 #include <set>
 #include <time.h>
 
+//kad演算法 DataManageOrigin ＆ DataManage
 std::string Query_Algorithm = "DataManageOrigin";
+
+//節點數量
+int NodeNumber = 17;
+
+//一個節點產生的order數量
+int OrderNumber = 10;
+
+//平均幾秒下一個顧客抵達
+int Record_Poisson = 100;
+//平均顧客抵達的分母
+int Record_Poisson_div = 100;
+
+//一個節點顧客產生數量
+int GuestNumber = 20;
+
+//平均幾秒顧客抵達
+int Guest_Poisson = 20;
+int Guest_Poisson_div = 10;
+
+//初始K桶大小
+int Kbuk_Number = 4;
 
 namespace ns3 {
 
@@ -121,8 +143,8 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
 
 void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, std::set<int> shopList)
 {
-  std::poisson_distribution<int> poisson(20);
-  std::poisson_distribution<int> poisson_record(100);
+  std::poisson_distribution<int> poisson(Guest_Poisson);
+  std::poisson_distribution<int> poisson_record(Record_Poisson);
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   Order* Optr_head = new Order("init", "init", 0, targetNum);
   int head = 0;
@@ -141,14 +163,15 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
 
   //產生Guest list
   int record_count = 0;
-  double totalTime = (double)poisson_record(generator)/100;
+  double totalTime = (double)poisson_record(generator)/Record_Poisson_div;
   Guest* Gptr_head = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
   Guest* Gptr_temp = Gptr_head;
-  // //產生20筆資料
-  for (int i = 0; i < 20; i++)
+
+  //產生資料
+  for (int i = 0; i < GuestNumber; i++)
   {
     record_count++;
-    totalTime = totalTime + (double)poisson_record(generator)/100;
+    totalTime = totalTime + (double)poisson_record(generator)/Record_Poisson_div;
     Guest* newEntry = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
     Gptr_temp->setNext(newEntry);
     Gptr_temp = Gptr_temp->getNext();
@@ -163,7 +186,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   {
     std::string orderName = "newRecord_Node" + to_string(nodeNum) + "_" + to_string(i);
 
-    totalTime = totalTime + (double)poisson(generator)/10;
+    totalTime = totalTime + (double)poisson(generator)/Guest_Poisson_div;
     std::cout << totalTime << " ";
     head = tail;
     tail = query.find_first_of("/", head);
@@ -220,8 +243,8 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
 void generate_node(){
 
   //將節點指標存成陣列
-  Kademlia *kptr_arr[17];
-  for (int i = 0; i < 17; i++)
+  Kademlia *kptr_arr[NodeNumber];
+  for (int i = 0; i < NodeNumber; i++)
   {
     std::string nodeName = "Node" + to_string(i);
     kptr_arr[i] = new Kademlia(nodeName, nodeName, toBinary(i));
@@ -229,12 +252,12 @@ void generate_node(){
   }
 
   //設定K桶，目前以名字相近的四個節點為K桶
-  for (int i = 0; i < 17; i++)
+  for (int i = 0; i < NodeNumber; i++)
   {
     int targetNode = i-2;
-    for (int m = 0; m < 5; m++)
+    for (int m = 0; m < Kbuk_Number+1 ; m++)
     {
-      if (targetNode < 0 || targetNode == i || targetNode > 16)
+      if (targetNode < 0 || targetNode == i || targetNode >= NodeNumber)
       {
         targetNode++;
       }
@@ -252,7 +275,7 @@ void generate_node(){
   std::set<int> set2 = {6, 7, 8, 9, 10};
   std::set<int> set3 = {11, 12, 13, 14, 15, 16};
   
-  for (int i = 0; i < 17; i++)
+  for (int i = 0; i < NodeNumber; i++)
   {
     std::set<int> tempSet;
     if (set1.find(i) != set1.end()){tempSet = set1;}
@@ -261,7 +284,7 @@ void generate_node(){
 
     tempSet.erase(i);
 
-    set_customerApp(10, "food/food/food/food/food/", kptr_arr[i], i, tempSet);
+    set_customerApp(OrderNumber, "food/food/food/food/food/", kptr_arr[i], i, tempSet);
   }
   
 }
@@ -271,6 +294,7 @@ main(int argc, char* argv[])
 {
   CommandLine cmd;
   cmd.Parse(argc, argv);
+
 
   AnnotatedTopologyReader topologyReader("", 25);
   //topologyReader.SetFileName("src/ndnSIM/examples/topologies/nccu_topo.txt");
@@ -306,9 +330,9 @@ main(int argc, char* argv[])
   //  Simulator::Schedule(Seconds(1.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
   //  Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::UpLink, Fail_node0, Fail_node2);
 
-  // ndn::L3RateTracer::InstallAll("rate-trace.txt", Seconds(0.5));
-  // L2RateTracer::InstallAll("drop-trace.txt", Seconds(0.5));
-  // ndn::CsTracer::InstallAll("cs-trace.txt", Seconds(1));
+  ndn::L3RateTracer::InstallAll("rate-trace.txt", Seconds(0.5));
+  L2RateTracer::InstallAll("drop-trace.txt", Seconds(0.5));
+  ndn::CsTracer::InstallAll("cs-trace.txt", Seconds(1));
 
   Simulator::Stop(Seconds(100.0));
 

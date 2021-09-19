@@ -4,6 +4,8 @@
 #include <bitset>
 #include "kademlia.hpp"
 
+
+
 Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID)
 {
     node_name = node_name_input;
@@ -38,7 +40,7 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
     std::string outputString = "";
     int arrIndex = 0;
 
-    for (int i = 0; i < 15; i++)
+    for (int i = 0; i < GetK_bucket_size(); i++)
     {
         if (SourceNode == k_bucket[i])
         {
@@ -131,7 +133,7 @@ Kademlia::Node_info(){
 void
 Kademlia::Set_KBucket(std::string KNode)
 {
-    for (int i = 0; i < 15; i++)
+    for (int i = 0; i < GetK_bucket_size(); i++)
     {
         if (k_bucket[i] == "NULL")
         {
@@ -157,7 +159,7 @@ Kademlia::KBucket_update(std::string sourceNode)
     }
     
 
-    for (int i = 0; i < 15; i++)
+    for (int i = 0; i < GetK_bucket_size(); i++)
     {
         if (k_bucket[i] == sourceNode)
         {
@@ -166,7 +168,7 @@ Kademlia::KBucket_update(std::string sourceNode)
         }    
     }
 
-    for (int i = 0; i < 15; i++)
+    for (int i = 0; i < GetK_bucket_size(); i++)
     {
         if (k_bucket[i] == "NULL")
         {
@@ -184,7 +186,7 @@ Kademlia::KBucket_update(std::string sourceNode)
 void
 Kademlia::KBucket_delete(std::string sourceNode)
 {
-    for (int i = 0; i < 15; i++)
+    for (int i = 0; i < GetK_bucket_size(); i++)
     {
         if (k_bucket[i] == sourceNode)
         {

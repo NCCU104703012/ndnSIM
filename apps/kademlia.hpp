@@ -6,6 +6,7 @@
 #include <set>
 #include <bitset>
 
+
 class Order
 {
 private:
@@ -241,7 +242,7 @@ public:
     //K桶中有無節點
     bool
     KBucket_hasNode(std::string sourceNode){
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < GetK_bucket_size(); i++)
         {
             if (k_bucket[i] == sourceNode)
             {
@@ -267,7 +268,7 @@ public:
     //print K桶內容
     void
     print_Kbucket(){
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < GetK_bucket_size(); i++)
         {
             if (k_bucket[i] != "NULL")
             {
@@ -303,6 +304,9 @@ public:
     //輸入節點訊息，代替querylist中節點
     void
     update_nextHop(std::string inputNode);
+
+    int
+    GetK_bucket_size(){return 15;};
 
 
     //用在原版kad使用，紀律這筆資料未來應該query的節點list

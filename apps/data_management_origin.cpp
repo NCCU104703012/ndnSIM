@@ -37,6 +37,10 @@
 #include <string> 
 #include <memory>
 
+//變動參數
+// startTime ： timeOut週期，會檢查超過時間的Data Query，進行next round或是data lost
+
+
 NS_LOG_COMPONENT_DEFINE("DataManageOrigin");
 
 namespace ns3 {
@@ -100,7 +104,7 @@ DataManageOrigin::StartApplication()
   // Schedule send of first interest
   for (int i = 0; i < 100; i++)
   {
-    //設定開始進行上下線的時間, 以及一週的週期
+    //設定timeOut週期，會檢查超過時間的Data Query，進行next round或是data lost
     double startTime = 0.2;
     Simulator::Schedule(Seconds(startTime + 0.2*i), &DataManageOrigin::timeOut, this);
   }
@@ -220,7 +224,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
         queryDataPtr->closest_node = SourceNode;
 
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < GetK_ptr()->GetK_bucket_size(); i++)
         {
             if (GetK_ptr()->GetK_bucket()[i] != "NULL")
             {

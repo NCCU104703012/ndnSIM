@@ -39,6 +39,13 @@
 #include <memory>
 #include <unordered_map>
 
+//K桶大小
+ int Kbuk_Size = 15;
+
+// 一週期的時間長度
+int Week = 7;
+
+
 NS_LOG_COMPONENT_DEFINE("CustomerApp");
 
 namespace ns3 {
@@ -104,6 +111,7 @@ CustomerApp::SendInterest(ndn::Name prefix, std::string logging, bool freshness)
   interest->setMustBeFresh(freshness);
 
   interest->setInterestLifetime(ndn::time::seconds(3));
+
   if (logging.length() != 0)
   {
     NS_LOG_DEBUG(logging << interest->getName());
@@ -151,7 +159,6 @@ CustomerApp::StartApplication()
   // {
   //   //設定開始進行上下線的時間, 以及一週的週期
   //   int startTime = 3;
-  //   int week = 7;
   //   Simulator::Schedule(Seconds(startTime + week*i + week/7*dayOff), &CustomerApp::Node_OffLine, this);
   //   Simulator::Schedule(Seconds(startTime + week*i + week/7*(dayOff+1)), &CustomerApp::Node_OnLine, this);
   // }
@@ -743,7 +750,7 @@ CustomerApp::Node_OnLine(){
 
  std::string flag_connect_handshake = "0";
 
-  for (int i = 0; i < 15; i++)
+  for (int i = 0; i < Kbuk_Size; i++)
   {
     if (K_bucket[i] != "NULL")
     {
@@ -770,7 +777,7 @@ CustomerApp::Node_OffLine(){
   // for kbucket
   //   Disconnect_Kbucket()
 
-  for (int i = 0; i < 15; i++)
+  for (int i = 0; i < Kbuk_Size; i++)
   {
     if (K_bucket[i] != "NULL")
     {
@@ -779,7 +786,7 @@ CustomerApp::Node_OffLine(){
 
   }
 
-  for (int i = 0; i < 15; i++)
+  for (int i = 0; i < Kbuk_Size; i++)
   {
     if (K_bucket[i] != "NULL")
     {
