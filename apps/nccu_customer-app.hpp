@@ -202,6 +202,9 @@ private:
   //紀錄目前節點上下線狀態
   bool isNodeOnline = true;
 
+  //紀錄目前Query資料的位置
+  int OrderQuery_location = 0;
+
   int serial_num = 1;
 
 };

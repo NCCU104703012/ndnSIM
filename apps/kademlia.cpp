@@ -104,7 +104,7 @@ Kademlia::XOR(std::string input)
 int
 Kademlia::XOR(std::string input, std::string input2)
 {
-    std::cout << "Xor2: " << input2 << " and " << input << "\n";
+    //std::cout << "Xor2: " << input2 << " and " << input << "\n";
 
     int distance = 0;
     for (int i = 0; i < 8; i++)
@@ -296,7 +296,7 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
 void
 Data::AddData(std::string inputName, std::string inputType)
 {
-    std::cout << "add data: " << inputName << "\n";
+    //std::cout << "add data: " << inputName << "\n";
     Data *inputData = new Data();
     Data *tailPtr = this->GetTail();
     inputData->head = tailPtr->head;

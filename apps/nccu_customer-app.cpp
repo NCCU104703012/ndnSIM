@@ -43,7 +43,10 @@
  int Kbuk_Size = 15;
 
 // 一週期的時間長度
-int Week = 7;
+int week = 86400;
+
+//一個Order & MicroOrder Query資料量
+int OrderQuery_num = 10;
 
 // Micro service Timeout
 int MicroService_Timeout = 10;
@@ -154,16 +157,19 @@ CustomerApp::StartApplication()
   }
   
   std::size_t tempHash = std::hash<std::string>{}(NodeName.toUri());
-  dayOff = tempHash%7;
+  dayOff = (tempHash%3);
   std::cout << " dayOff: " <<  dayOff << std::endl;
 
-  // for (int i = 0; i < 10; i++)
-  // {
-  //   //設定開始進行上下線的時間, 以及一週的週期
-  //   int startTime = 3;
-  //   Simulator::Schedule(Seconds(startTime + week*i + week/7*dayOff), &CustomerApp::Node_OffLine, this);
-  //   Simulator::Schedule(Seconds(startTime + week*i + week/7*(dayOff+1)), &CustomerApp::Node_OnLine, this);
-  // }
+  //shiftTime: 隨機打散上下線時間
+  int shiftTime = tempHash%100;
+
+  for (int i = 0; i < 10; i++)
+  {
+    //設定開始進行上下線的時間, 以及一週的週期
+    int startTime = 3;
+    Simulator::Schedule(Seconds(startTime + week*i + week/3*dayOff + shiftTime), &CustomerApp::Node_OffLine, this);
+    Simulator::Schedule(Seconds(startTime + week*i + week/3*(dayOff+1) + shiftTime), &CustomerApp::Node_OnLine, this);
+  }
   
 
 }
@@ -651,7 +657,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
   {
 
     O_ptr->setTerminate(true);
-
+    return;
   }
   
   if (dataSet.begin() == dataSet.end() && isOrder_from_otherNode )
@@ -663,10 +669,29 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
     return;
   }
 
-  for (j = dataSet.begin(); j != dataSet.end(); ++j) {
+  //將iterator j 調整到上次Query的位置
+  j = dataSet.begin();
+  OrderQuery_location = OrderQuery_location % (dataSet.size());
+
+  for (int l = 0; l < OrderQuery_location ;l++)
+  {
+    j++;
+    if (j == dataSet.end())
+    {
+      j = dataSet.begin();
+    }
+  }
+  
+  for (int l = 0; l < OrderQuery_num; l++) {
+
+    if (j == dataSet.end())
+    {
+      j = dataSet.begin();
+    }
     std::string dataString = *j;
 
     std::cout << "in dataSet: " << dataString << std::endl;
+
 
       //將資料存入Order中
       O_ptr->setDataList(dataString);
@@ -697,6 +722,10 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
         temp.append(dataString).append("init").append(dataString).append(std::to_string(time(NULL)));
         SendInterest(temp, "Sending Query for ", true);
       }
+    
+    //Query下一個目標
+    j++;
+    OrderQuery_location++;
   }
 }
 
