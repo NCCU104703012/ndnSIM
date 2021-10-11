@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <bitset>
+#include <math.h>
 #include "kademlia.hpp"
 
 
@@ -94,7 +95,7 @@ Kademlia::XOR(std::string input)
         std::string str2 = std::to_string(input[i]);
         if (str1.compare(str2))
         {
-            distance++;
+            distance = distance + pow(2, 8-i);
         }
         
     }
@@ -113,7 +114,7 @@ Kademlia::XOR(std::string input, std::string input2)
         std::string str2 = std::to_string(input[i]);
         if (str1.compare(str2))
         {
-            distance++;
+            distance = distance + pow(2, 8-i);
         }
         
     }
@@ -398,7 +399,7 @@ Data::XOR(std::string input, std::string input2)
         std::string str2 = std::to_string(input[i]);
         if (str1.compare(str2))
         {
-            distance++;
+            distance = distance + pow(2, 8-i);
         }
         
     }
