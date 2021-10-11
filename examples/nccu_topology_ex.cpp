@@ -299,7 +299,7 @@ main(int argc, char* argv[])
 
   AnnotatedTopologyReader topologyReader("", 25);
   //topologyReader.SetFileName("src/ndnSIM/examples/topologies/nccu_topo.txt");
-  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/nccu_visualization/nccu_topo50.txt");
+  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo50.txt");
   topologyReader.Read();
 
   // Install NDN stack on all nodes
