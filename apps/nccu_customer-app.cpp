@@ -371,6 +371,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     this->SetDataSet(DataName);
     NS_LOG_DEBUG("Get DataSet update from " << SourceNode << " Data: " << DataName);
     NS_LOG_DEBUG("DataSet-add " << DataName);
+    return;
   }
   
   
@@ -668,10 +669,11 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
     SendInterest(returnServiceQuery, "Order-Complete(No Query Data) ", true);
     return;
   }
+  
 
   //將iterator j 調整到上次Query的位置
   j = dataSet.begin();
-  OrderQuery_location = OrderQuery_location % (dataSet.size());
+  //OrderQuery_location = OrderQuery_location % (dataSet.size());
 
   for (int l = 0; l < OrderQuery_location ;l++)
   {
@@ -684,9 +686,16 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
   
   for (int l = 0; l < OrderQuery_num; l++) {
 
+    if (dataSet.size() == 0)
+    {
+      std::cout << "Dataset is empty\n";
+      return;
+    }
+
     if (j == dataSet.end())
     {
       j = dataSet.begin();
+      OrderQuery_location = 0;
     }
     std::string dataString = *j;
 

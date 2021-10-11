@@ -48,18 +48,18 @@ std::string Query_Algorithm = "DataManage";
 int NodeNumber = 45;
 
 //一個節點產生的order數量
-int OrderNumber = 50;
+int OrderNumber = 1;
 
 //平均幾秒產生一筆資料
-int Record_Poisson = 3600;
+int Record_Poisson = 360;
 //分母 化小數點用
 int Record_Poisson_div = 1;
 
 //一個節點顧客產生數量
-int GuestNumber = 50;
+int GuestNumber = 100;
 
 //平均幾秒處理下一個order
-int Guest_Poisson = 3600;
+int Guest_Poisson = 36;
 int Guest_Poisson_div = 1;
 
 //初始K桶大小
@@ -331,8 +331,8 @@ main(int argc, char* argv[])
   //  Simulator::Schedule(Seconds(1.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
   //  Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::UpLink, Fail_node0, Fail_node2);
 
-  ndn::L3RateTracer::InstallAll("rate-trace.txt", Seconds(0.5));
-  L2RateTracer::InstallAll("drop-trace.txt", Seconds(5));
+  // ndn::L3RateTracer::InstallAll("rate-trace.txt", Seconds(0.5));
+  // L2RateTracer::InstallAll("drop-trace.txt", Seconds(5));
   // ndn::CsTracer::InstallAll("cs-trace.txt", Seconds(1));
 
   Simulator::Stop(Seconds(10000000.0));
