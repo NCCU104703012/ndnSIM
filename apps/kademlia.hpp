@@ -326,6 +326,7 @@ private:
     Guest* nextPtr = NULL;
     double timestamp = 0;
     std::string recordName = "NULL";
+    int serial_num = 0;
 public:
     Guest(std::string recordInput, double timeInput){
         recordName = recordInput;
@@ -342,11 +343,17 @@ public:
     double
     getTimeStamp(){return timestamp;};
 
+    int
+    getSerialNum(){return serial_num;};
+
     std::string
     getRecordName(){return recordName;};
 
     void
     setNext(Guest* inputPtr){nextPtr = inputPtr;};
+
+    void
+    setSerialNum(int input){serial_num = input;};
 };
 
 

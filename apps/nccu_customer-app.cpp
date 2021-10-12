@@ -35,6 +35,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <random>
 #include <string> 
 #include <memory>
 #include <unordered_map>
@@ -140,21 +141,36 @@ CustomerApp::StartApplication()
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
   Order* O_ptr = GetO_ptr()->getNext();
-  Guest* G_ptr = GetG_ptr();
+  //Guest* G_ptr = GetG_ptr();
 
   while (O_ptr != NULL)
   {
     Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::InitSendQuery, this);
     Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+ MicroService_Timeout), &CustomerApp::OrderTimeout, this);
-    std::cout << O_ptr->getTimeStamp() << " ";
+    //std::cout << O_ptr->getTimeStamp() << " ";
     O_ptr = O_ptr->getNext();
   }
 
-  while (G_ptr != NULL)
+  //設定資料產生時間
+  std::poisson_distribution<int> poisson_record(100);
+  std::default_random_engine generator(GetG_ptr()->getTimeStamp());
+  double totalTime = (double)poisson_record(generator);
+
+  std::cout << "Guest Time: " ;
+  for (int i = 0; i < 10; i++)
   {
-    Simulator::Schedule(Seconds(G_ptr->getTimeStamp()), &CustomerApp::InitSendData, this);
-    G_ptr = G_ptr->getNext();
+    Simulator::Schedule(Seconds(totalTime), &CustomerApp::InitSendData, this);
+    totalTime = totalTime + (double)poisson_record(generator);
+
+    std::cout << totalTime << " / " ;
   }
+  std::cout << "\n" ;
+
+  // while (G_ptr != NULL)
+  // {
+  //   Simulator::Schedule(Seconds(G_ptr->getTimeStamp()), &CustomerApp::InitSendData, this);
+  //   G_ptr = G_ptr->getNext();
+  // }
   
   std::size_t tempHash = std::hash<std::string>{}(NodeName.toUri());
   dayOff = (tempHash%3);
@@ -171,7 +187,7 @@ CustomerApp::StartApplication()
     Simulator::Schedule(Seconds(startTime + week*i + week/3*(dayOff+1) + shiftTime), &CustomerApp::Node_OnLine, this);
   }
   
-
+    
 }
 
 // Processing when application is stopped
@@ -555,16 +571,21 @@ CustomerApp::InitSendQuery(){
 
 void
 CustomerApp::InitSendData(){
-  Guest* G_ptr = GetG_ptr();
-  Guest* newG_ptr = G_ptr->getNext();
-  std::string newRecord = G_ptr->getRecordName();
+  // Guest* Gptr_head = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
+  // Guest* G_ptr = GetG_ptr();
+  // Guest* newG_ptr = G_ptr->getNext();
+  // std::string newRecord = G_ptr->getRecordName();
 
-  std::ostringstream address;
-  address << newG_ptr;
-  ndn::Name newGuest_ptr; 
-  newGuest_ptr.append(address.str());
-  Guest_list = newGuest_ptr;
-  delete(G_ptr);
+  // std::ostringstream address;
+  // address << newG_ptr;
+  // ndn::Name newGuest_ptr; 
+  // newGuest_ptr.append(address.str());
+  // Guest_list = newGuest_ptr;
+  // delete(G_ptr);
+  int guest_serialNum = GetG_ptr()->getSerialNum();
+  std::string newRecord = GetG_ptr()->getRecordName() + "_" + std::to_string(guest_serialNum);
+  guest_serialNum++;
+  GetG_ptr()->setSerialNum(guest_serialNum);
 
   std::size_t hashRecord = std::hash<std::string>{}(newRecord);
   std::string binaryRecord = std::bitset<8>(hashRecord).to_string();

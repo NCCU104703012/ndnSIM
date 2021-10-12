@@ -165,19 +165,19 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   //產生Guest list，用來產生實際record
   int record_count = 0;
   double totalTime = (double)poisson_record(generator)/Record_Poisson_div;
-  Guest* Gptr_head = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
-  Guest* Gptr_temp = Gptr_head;
+  Guest* Gptr_head = new Guest("Guest_Record_Node" + to_string(nodeNum), totalTime);
+  //Guest* Gptr_temp = Gptr_head;
 
   //產生資料
-  for (int i = 0; i < GuestNumber; i++)
-  {
-    record_count++;
-    totalTime = totalTime + (double)poisson_record(generator)/Record_Poisson_div;
-    Guest* newEntry = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
-    Gptr_temp->setNext(newEntry);
-    Gptr_temp = Gptr_temp->getNext();
+  // for (int i = 0; i < GuestNumber; i++)
+  // {
+  //   record_count++;
+  //   totalTime = totalTime + (double)poisson_record(generator)/Record_Poisson_div;
+  //   Guest* newEntry = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
+  //   Gptr_temp->setNext(newEntry);
+  //   Gptr_temp = Gptr_temp->getNext();
 
-  }
+  // }
   
 
   
