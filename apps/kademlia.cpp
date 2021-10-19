@@ -5,6 +5,8 @@
 #include <math.h>
 #include "kademlia.hpp"
 
+#include <stdio.h>
+#include <sqlite3.h>
 
 
 Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID)
@@ -23,7 +25,7 @@ Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::str
 bool
 Kademlia::GetData(std::string DataName){
     Data *output = NULL;
-    output = dataList->GetData(DataName);
+    output = dataList->GetData(DataName, GetKId());
     if (output == NULL)
     {
         return false;
@@ -178,6 +180,15 @@ Kademlia::KBucket_update(std::string sourceNode)
         }
     }
     
+    for (int i = 0; i < GetK_bucket_size(); i++)
+    {
+        int distance = XOR(sourceNode, this->GetKId());
+        if (XOR(k_bucket[i], this->GetKId()) < distance)
+        {
+            return k_bucket[i];
+        }
+        
+    }
 
     //演算法需要決策出一個替換的節點
     return "K-buk is full";
@@ -200,35 +211,61 @@ Kademlia::KBucket_delete(std::string sourceNode)
 }
 
 //從datalist中刪除資料
+//需要修改
 void
 Kademlia::Delete_data(std::string DataName)
 {
-    Data* targetPtr = dataList->GetData(DataName);
+    Data* targetPtr = dataList->GetData(DataName, GetKId());
 
     if (targetPtr == NULL)
     {
         std::cout << "In delete_data(), GetData() is NULL\n";
         return;
     }
-    
-    Data* prePtr = dataList;
 
-    while (1)
-    {
-        if (prePtr->next == targetPtr)
-        {
-            prePtr->next = targetPtr->next;
-            delete targetPtr;
-            return;
-        }
-        prePtr = prePtr->next;
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    std::string sqlCommand; 
 
-        if (prePtr == NULL)
-        {
-           return;
-        }
-        
+    rc = sqlite3_open("test.db", &db);
+
+    if( rc ){
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        exit(0);
     }
+    
+    sqlCommand = std::string("DELETE * from RECORD WHERE NODE=") + "'" + GetKId() + "'" + " AND DATA='" + DataName + "';";  
+                 
+    
+    /* Execute SQL statement */
+   rc = sqlite3_exec(db, &sqlCommand[0], dataList->DB_DeleteData, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }
+   sqlite3_close(db);
+
+
+    
+    // Data* prePtr = dataList;
+
+    // while (1)
+    // {
+    //     if (prePtr->next == targetPtr)
+    //     {
+    //         prePtr->next = targetPtr->next;
+    //         delete targetPtr;
+    //         return;
+    //     }
+    //     prePtr = prePtr->next;
+
+    //     if (prePtr == NULL)
+    //     {
+    //        return;
+    //     }
+        
+    // }
     
 }
 
@@ -267,9 +304,13 @@ Kademlia::Delete_data_query(std::string DataName)
 }
 
 //針對輸入節點，比較所有更接近的資料，回傳整理的字串
+//需要修改
 std::string
 Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
 {
+
+
+
 
     std::string output = "|";
     Data* DataPtr = dataList->next;
@@ -293,17 +334,40 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
 
 
 //---------------------Class Data-------------------------
-
+//需要修改
 void
-Data::AddData(std::string inputName, std::string inputType)
+Data::AddData(std::string inputName, std::string k_ID)
 {
-    //std::cout << "add data: " << inputName << "\n";
-    Data *inputData = new Data();
-    Data *tailPtr = this->GetTail();
-    inputData->head = tailPtr->head;
-    tailPtr->next = inputData;
-    inputData->Name = inputName;
-    inputData->type = inputType;
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    std::string sqlCommand; 
+
+    rc = sqlite3_open("test.db", &db);
+
+    if( rc ){
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        exit(0);
+    }
+    
+    sqlCommand = std::string("INSERT INTO RECORD (NODE,DATA)") +
+                 "VALUES('"+ k_ID + "', '" + inputName + "');";
+    
+    /* Execute SQL statement */
+   rc = sqlite3_exec(db, &sqlCommand[0], this->DB_addDATA, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }
+   sqlite3_close(db);
+
+    // Data *inputData = new Data();
+    // Data *nextPtr = this->next;
+    // inputData->next = nextPtr;
+    // this->next = inputData;
+    // inputData->head = this;
+    // inputData->Name = inputName;
+    // inputData->type = inputType;
 }
 
 void
@@ -348,6 +412,47 @@ Data::GetData(std::string DataName)
         }
     }
     return NULL;
+}
+
+//從資料庫裡存取資料
+Data*
+Data::GetData(std::string DataName, std::string k_ID)
+{
+    //需要修改
+
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    std::string sqlCommand, sqlOutput; 
+    char* command_output = (char*)"false";
+
+    rc = sqlite3_open("test.db", &db);
+
+    if( rc ){
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        exit(0);
+    }
+    
+    sqlCommand = std::string("SELECT * from RECORD WHERE NODE=") + "'" + k_ID + "'" + " AND DATA='" + DataName + "';";  
+    
+    /* Execute SQL statement */
+   rc = sqlite3_exec(db, &sqlCommand[0], this->DB_getDATA, (void*)command_output, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }
+   sqlite3_close(db);
+
+   if (std::string(command_output) == "true")
+   {
+       return this;
+   }
+   else
+   {
+       return NULL;
+   }
+   
+   
 }
 
 void

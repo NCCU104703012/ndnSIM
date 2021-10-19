@@ -40,11 +40,16 @@
 #include <memory>
 #include <unordered_map>
 
+#include <stdio.h>
+#include <sqlite3.h>
+
 //K桶大小
- int Kbuk_Size = 15;
+ int Kbuk_Size = 4;
 
 // 一週期的時間長度
 int week = 86400;
+// 開始上下線時間
+int startTime = 50000;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -52,11 +57,20 @@ int OrderQuery_num = 10;
 // Micro service Timeout
 int MicroService_Timeout = 10;
 
+//一個節點顧客產生數量
+int GuestNumber = 200;
+
+//平均幾秒產生一筆資料
+int Record_Poisson = 360;
+//分母 化小數點用
+int Record_Poisson_div = 1;
+
 NS_LOG_COMPONENT_DEFINE("CustomerApp");
 
 namespace ns3 {
 
 NS_OBJECT_ENSURE_REGISTERED(CustomerApp);
+
 
 // register NS-3 type
 TypeId
@@ -152,25 +166,15 @@ CustomerApp::StartApplication()
   }
 
   //設定資料產生時間
-  std::poisson_distribution<int> poisson_record(100);
+  std::poisson_distribution<int> poisson_record(Record_Poisson);
   std::default_random_engine generator(GetG_ptr()->getTimeStamp());
-  double totalTime = (double)poisson_record(generator);
+  double totalTime = (double)poisson_record(generator)/Record_Poisson_div;
 
-  std::cout << "Guest Time: " ;
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < GuestNumber; i++)
   {
     Simulator::Schedule(Seconds(totalTime), &CustomerApp::InitSendData, this);
-    totalTime = totalTime + (double)poisson_record(generator);
-
-    std::cout << totalTime << " / " ;
+    totalTime = totalTime + (double)poisson_record(generator)/Record_Poisson_div;
   }
-  std::cout << "\n" ;
-
-  // while (G_ptr != NULL)
-  // {
-  //   Simulator::Schedule(Seconds(G_ptr->getTimeStamp()), &CustomerApp::InitSendData, this);
-  //   G_ptr = G_ptr->getNext();
-  // }
   
   std::size_t tempHash = std::hash<std::string>{}(NodeName.toUri());
   dayOff = (tempHash%3);
@@ -182,12 +186,11 @@ CustomerApp::StartApplication()
   for (int i = 0; i < 10; i++)
   {
     //設定開始進行上下線的時間, 以及一週的週期
-    int startTime = 3;
+    
     Simulator::Schedule(Seconds(startTime + week*i + week/3*dayOff + shiftTime), &CustomerApp::Node_OffLine, this);
     Simulator::Schedule(Seconds(startTime + week*i + week/3*(dayOff+1) + shiftTime), &CustomerApp::Node_OnLine, this);
   }
   
-    
 }
 
 // Processing when application is stopped
@@ -348,13 +351,23 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       std::string newNode = kbuk_string.substr(head+1, tail-head-1);
       std::string update_string = GetK_ptr()->KBucket_update(newNode);
 
+      std::cout << "update sstring: " << update_string << "\n";
+
       if (update_string == "add sourceNode to a NULL" && newNode != TargetNode)
       {
         std::string flag_connect_handshake = "0";
         ndn::Name interest;
         interest.append("prefix").append("data").append("download").append(newNode).append(TargetNode).append(flag_connect_handshake).append("Kbucket_connect");
-        SendInterest(interest, "Kbucket_connect", true);
+        SendInterest(interest, "Kbucket_connect(NULL)", true);
       }
+      else if (update_string.size() == 8)
+      {
+        std::string flag_connect_handshake = "0";
+        ndn::Name interest;
+        interest.append("prefix").append("data").append("download").append(newNode).append(TargetNode).append(flag_connect_handshake).append("Kbucket_connect");
+        SendInterest(interest, "Kbucket_connect(Node Replaced)", true);
+      }
+      
 
       head = tail;
       tail = kbuk_string.find_first_of("_", head+1);

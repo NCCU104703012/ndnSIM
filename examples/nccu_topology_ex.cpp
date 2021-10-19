@@ -40,30 +40,36 @@
 #include <set>
 #include <time.h>
 
+#include <stdio.h>
+#include <sqlite3.h>
+
 //kad演算法 DataManageOrigin ＆ DataManage
 std::string Query_Algorithm = "DataManage";
 
 //節點數量
 // int NodeNumber = 17;
-int NodeNumber = 45;
+int NodeNumber = 48;
 
 //一個節點產生的order數量
-int OrderNumber = 1;
-
-//平均幾秒產生一筆資料
-int Record_Poisson = 360;
-//分母 化小數點用
-int Record_Poisson_div = 1;
-
-//一個節點顧客產生數量
-int GuestNumber = 100;
+int OrderNumber = 10;
 
 //平均幾秒處理下一個order
-int Guest_Poisson = 36;
+int Guest_Poisson = 1000;
 int Guest_Poisson_div = 1;
 
 //初始K桶大小
 int Kbuk_Number = 4;
+
+static int callback(void *NotUsed, int argc, char **argv, char **azColName){
+   int i;
+   std::cout << "get one data ";
+   for(i=0; i<argc; i++){
+      //printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+      std::cout << argv[i] << "  ";
+   }
+   printf("\n");
+   return 0;
+}
 
 namespace ns3 {
 
@@ -145,7 +151,7 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
 void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, std::set<int> shopList)
 {
   std::poisson_distribution<int> poisson(Guest_Poisson);
-  std::poisson_distribution<int> poisson_record(Record_Poisson);
+  //std::poisson_distribution<int> poisson_record(Record_Poisson);
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   Order* Optr_head = new Order("init", "init", 0, targetNum);
   int head = 0;
@@ -163,24 +169,10 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   Optr_head->setShopList(shopList_string);
 
   //產生Guest list，用來產生實際record
-  int record_count = 0;
-  double totalTime = (double)poisson_record(generator)/Record_Poisson_div;
+  double totalTime = (double)poisson(generator);
   Guest* Gptr_head = new Guest("Guest_Record_Node" + to_string(nodeNum), totalTime);
-  //Guest* Gptr_temp = Gptr_head;
-
-  //產生資料
-  // for (int i = 0; i < GuestNumber; i++)
-  // {
-  //   record_count++;
-  //   totalTime = totalTime + (double)poisson_record(generator)/Record_Poisson_div;
-  //   Guest* newEntry = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
-  //   Gptr_temp->setNext(newEntry);
-  //   Gptr_temp = Gptr_temp->getNext();
-
-  // }
   
 
-  
   //加入order
   totalTime = 0;
   for (int i = 0; i < targetNum; i++)
@@ -302,6 +294,58 @@ main(int argc, char* argv[])
   topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo50.txt");
   topologyReader.Read();
 
+  //資料庫測試
+  sqlite3 *db;
+  char *zErrMsg = 0;
+  int rc;
+  std::string sqlCommand;
+
+  rc = sqlite3_open("test.db", &db);
+
+  if( rc ){
+     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+     exit(0);
+  }else{
+     fprintf(stderr, "Opened database successfully\n");
+  }
+
+  /* Create SQL statement */
+  //所在Node, 資料名稱, 
+   sqlCommand = std::string(" ") + "CREATE TABLE RECORD(" +
+         "NODE           TEXT     NOT NULL," +
+         "DATA           TEXT     NOT NULL);" +
+         "SELECT * from RECORD ";
+  
+  /* Create SQL statement */
+  //  sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) " 
+  //        "VALUES (1, 'Paul1', 32, 'California', 20000.00 ); "
+  //        "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) " 
+  //        "VALUES (2, 'Allen1', 25, 'Texas', 15000.00 ); " 
+  //        "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)"
+  //        "VALUES (3, 'Teddy1', 23, 'Norway', 20000.00 );"
+  //        "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)"
+  //        "VALUES (5, 'Mark1', 25, 'Rich-Mond ', 65000.00 );"
+  //        "SELECT * from COMPANY";
+
+      // sqlCommand = std::string("INSERT INTO RECORD (NODE,DATA)") +
+      //       "VALUES('NODE1', 'DATA1');" +
+      //       "INSERT INTO RECORD (NODE,DATA)" +
+      //       "VALUES('NODE5', 'DATA4');" +
+      //       "SELECT * from RECORD";
+    
+  // /* Create SQL statement */
+  // sqlCommand = "SELECT * from RECORD ";
+
+   /* Execute SQL statement */
+   rc = sqlite3_exec(db, &sqlCommand[0], callback, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }else{
+      fprintf(stdout, "Table select successfully\n");
+   }
+   sqlite3_close(db);
+
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等
   ndn::StackHelper ndnHelper;
@@ -322,16 +366,16 @@ main(int argc, char* argv[])
   // Calculate and install FIBs
   ndn::GlobalRoutingHelper::CalculateRoutes();
 
-  Ptr<Node> Fail_node3 = Names::Find<Node>("Node3");
-  Ptr<Node> Fail_node4 = Names::Find<Node>("Node4");
-  Ptr<Node> Fail_node0 = Names::Find<Node>("Node0");
-  Ptr<Node> Fail_node2 = Names::Find<Node>("Node2");
+  // Ptr<Node> Fail_node3 = Names::Find<Node>("Node3");
+  // Ptr<Node> Fail_node4 = Names::Find<Node>("Node4");
+  // Ptr<Node> Fail_node0 = Names::Find<Node>("Node0");
+  // Ptr<Node> Fail_node2 = Names::Find<Node>("Node2");
    //Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::FailLink, Fail_node3, Fail_node4);
    //Simulator::Schedule(Seconds(3.0), ndn::LinkControlHelper::FailLink, Fail_node4, Fail_node0);
   //  Simulator::Schedule(Seconds(1.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
   //  Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::UpLink, Fail_node0, Fail_node2);
 
-  // ndn::L3RateTracer::InstallAll("rate-trace.txt", Seconds(0.5));
+  //ndn::L3RateTracer::InstallAll("rate-trace.txt", Seconds(30));
   // L2RateTracer::InstallAll("drop-trace.txt", Seconds(5));
   // ndn::CsTracer::InstallAll("cs-trace.txt", Seconds(1));
 

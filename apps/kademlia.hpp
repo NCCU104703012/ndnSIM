@@ -137,9 +137,11 @@ public:
         head = this;
     }
 
-    void AddData(std::string inputName, std::string inputType);
+    void AddData(std::string inputName, std::string k_ID);
 
     Data* GetData(std::string DataName);
+
+    Data* GetData(std::string DataName, std::string k_ID);
 
     void printAllData();
 
@@ -184,6 +186,35 @@ public:
     int target_reply_count = 0;
     std::string nextHop_list[3] = {"NULL", "NULL", "NULL"};
     std::string timeout_check[3] = {"NULL", "NULL", "NULL"};
+
+
+    //資料庫的輸出儲存變數
+    bool hasData = false;
+
+    //將資料加入資料庫中
+    static int DB_addDATA(void *NotUsed, int argc, char **argv, char **azColName){
+        // int i;
+        // for(i=0; i<argc; i++){
+        //     //printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+        //     std::cout << argv[i] << "  ";
+        // }
+        // printf("\n");
+        std::cout << "success add data : " << argv[0] << " " << argv[1] << "\n";
+        return 0;
+    }
+
+    static int DB_getDATA(void *NotUsed, int argc, char **argv, char **azColName){
+        char* output = (char*)"true";
+        NotUsed = (void*)output;
+        std::cout << "success get data : " << argv[0] << " " << argv[1] << "\n";
+        return 0;
+    }
+
+    static int DB_DeleteData(void *NotUsed, int argc, char **argv, char **azColName){
+        std::cout << "success delete data : " << argv[0] << " " << argv[1] << "\n";
+        return 0;
+    }
+
 };
 
 class Kademlia{
@@ -306,7 +337,7 @@ public:
     update_nextHop(std::string inputNode);
 
     int
-    GetK_bucket_size(){return 15;};
+    GetK_bucket_size(){return sizeof(k_bucket)/sizeof(k_bucket[0]);};
 
 
     //用在原版kad使用，紀律這筆資料未來應該query的節點list
@@ -316,7 +347,8 @@ private:
     std::string node_name;
     std::string KId;
     Data *dataList;
-    std::string k_bucket[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
+    // std::string k_bucket[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
+    std::string k_bucket[4] = {"NULL", "NULL", "NULL", "NULL"};
     int knum = 0;
 };
 

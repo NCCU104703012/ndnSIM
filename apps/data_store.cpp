@@ -188,10 +188,11 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   
   std::size_t hashRecord = std::hash<std::string>{}(DataName);
   std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
+  std::string nextTarget = GetK_ptr()->GetNext_Node(binaryRecord, 1, SourceNode);
 
-  if (GetK_ptr()->GetKId() == GetK_ptr()->GetNext_Node(binaryRecord, 1, SourceNode))
+  if (GetK_ptr()->GetKId() == nextTarget)
   {
-    GetK_ptr()->SetData(DataName, itemType);
+    GetK_ptr()->SetData(DataName, GetK_ptr()->GetKId());
     //GetK_ptr()->Node_info();
 
     std::string module_choose = "download";
@@ -220,8 +221,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   else
   {
     ndn::Name next ;
-    std::string nextTarget = GetK_ptr()->GetNext_Node(binaryRecord, 1, SourceNode);
-
+    
     next.append("prefix").append("data").append("store").append(nextTarget).append(SourceNode).append(DataName).append(itemType);
     auto next_interest = std::make_shared<ndn::Interest>(next);
     Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
