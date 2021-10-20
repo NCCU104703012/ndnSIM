@@ -114,6 +114,13 @@ std::string toBinary(int n)
     return bs1.to_string();
 }
 
+std::string hashNodeName(std::string NodeName)
+{
+  std::size_t biTemp = std::hash<std::string>{}(NodeName);
+  std::string binaryNodeName = std::bitset<8>(biTemp).to_string();
+  return binaryNodeName;
+}
+
 
 void set_data_store(std::string nodeName, std::string prefix, Kademlia* k_ptr )
 {
@@ -163,7 +170,8 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   for (i = shopList.begin(); i != shopList.end(); ++i)
   {
     int node = *i;
-    shopList_string.insert(toBinary(node));
+    std::string nodeName = "Node" + to_string(node);
+    shopList_string.insert(hashNodeName(nodeName));
   }
   
   Optr_head->setShopList(shopList_string);
@@ -220,28 +228,38 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
 
   Ptr<Node> Node0 = Names::Find<Node>("Node" + to_string(nodeNum) );
   ndn::AppHelper app1("CustomerApp");
-  app1.SetPrefix("/prefix/data/download/" + toBinary(nodeNum));
-  app1.SetAttribute("NodeName", StringValue(toBinary(nodeNum)));
+  app1.SetPrefix("/prefix/data/download/" + kptr->GetKId());
+  app1.SetAttribute("NodeName", StringValue(kptr->GetKId()));
   app1.SetAttribute("Kademlia", StringValue(location));
   app1.SetAttribute("Query", StringValue(queryString));
   app1.SetAttribute("Guest", StringValue(gptrString));
   app1.SetAttribute("Query_Algorithm", StringValue(Query_Algorithm));
   app1.Install(Node0);
-  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + toBinary(nodeNum), Node0);
+  ndnGlobalRoutingHelper.AddOrigins("/prefix/data/download/" + kptr->GetKId(), Node0);
   
   //設定data management模組
-  set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + toBinary(nodeNum), kptr, queryString);
+  set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + kptr->GetKId(), kptr, queryString);
+
+  //設定data management模組，為了NDN fault tolerant
+  if(Query_Algorithm == "DataManage"){
+    std::string prefix1 = kptr->GetKId().substr(4) + "xxxx";
+    std::string prefix2 = kptr->GetKId().substr(6) + "xx";
+    std::string prefix3 = kptr->GetKId().substr(7) + "x";
+    set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix1, kptr, queryString);
+    set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix2, kptr, queryString);
+    set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix3, kptr, queryString);
+  }
 }
 
-void generate_node(){
+void generate_node(sqlite3* db){
 
   //將節點指標存成陣列
   Kademlia *kptr_arr[NodeNumber];
   for (int i = 0; i < NodeNumber; i++)
   {
     std::string nodeName = "Node" + to_string(i);
-    kptr_arr[i] = new Kademlia(nodeName, nodeName, toBinary(i));
-    set_data_store(nodeName, "/prefix/data/store/" + toBinary(i), kptr_arr[i]);
+    kptr_arr[i] = new Kademlia(nodeName, nodeName, hashNodeName(nodeName), db);
+    set_data_store(nodeName, "/prefix/data/store/" + hashNodeName(nodeName), kptr_arr[i]);
   }
 
   //設定K桶，目前以名字相近的四個節點為K桶
@@ -344,7 +362,6 @@ main(int argc, char* argv[])
    }else{
       fprintf(stdout, "Table select successfully\n");
    }
-   sqlite3_close(db);
 
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等
@@ -353,14 +370,14 @@ main(int argc, char* argv[])
   ndnHelper.InstallAll();
 
   // Set BestRoute strategy
-  ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/ncc");
+  ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route");
 
   // Installing global routing interface on all nodes
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll();
 
   //產生資料結構，初始化節點模組
-  generate_node();
+  generate_node(db);
     
 
   // Calculate and install FIBs

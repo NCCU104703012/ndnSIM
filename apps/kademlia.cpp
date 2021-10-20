@@ -9,7 +9,7 @@
 #include <sqlite3.h>
 
 
-Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID)
+Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID, sqlite3* inputDB)
 {
     node_name = node_name_input;
     dataList = new Data();
@@ -19,6 +19,9 @@ Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::str
     queryList->head = queryList;
     queryList->Name = "init";
     KId = kademliaID;
+    db = inputDB;
+    dataList->db = inputDB;
+    queryList->db = inputDB;
     
 }
 
@@ -95,7 +98,7 @@ Kademlia::XOR(std::string input)
     {
         std::string str1 = std::to_string(this->KId[i]);
         std::string str2 = std::to_string(input[i]);
-        if (str1.compare(str2))
+        if (str1.compare(str2) == 0)
         {
             distance = distance + pow(2, 8-i);
         }
@@ -114,7 +117,7 @@ Kademlia::XOR(std::string input, std::string input2)
     {
         std::string str1 = std::to_string(input2[i]);
         std::string str2 = std::to_string(input[i]);
-        if (str1.compare(str2))
+        if (str1.compare(str2) == 0)
         {
             distance = distance + pow(2, 8-i);
         }
@@ -223,17 +226,17 @@ Kademlia::Delete_data(std::string DataName)
         return;
     }
 
-    sqlite3 *db;
+    // sqlite3 *db;
     char *zErrMsg = 0;
     int rc;
     std::string sqlCommand; 
 
-    rc = sqlite3_open("test.db", &db);
+    // rc = sqlite3_open("test.db", &db);
 
-    if( rc ){
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        exit(0);
-    }
+    // if( rc ){
+    //     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    //     exit(0);
+    // }
     
     sqlCommand = std::string("DELETE * from RECORD WHERE NODE=") + "'" + GetKId() + "'" + " AND DATA='" + DataName + "';";  
                  
@@ -244,7 +247,7 @@ Kademlia::Delete_data(std::string DataName)
    fprintf(stderr, "SQL error: %s\n", zErrMsg);
       sqlite3_free(zErrMsg);
    }
-   sqlite3_close(db);
+//    sqlite3_close(db);
 
 
     
@@ -338,17 +341,17 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
 void
 Data::AddData(std::string inputName, std::string k_ID)
 {
-    sqlite3 *db;
+    // sqlite3 *db;
     char *zErrMsg = 0;
     int rc;
     std::string sqlCommand; 
 
-    rc = sqlite3_open("test.db", &db);
+    // rc = sqlite3_open("test.db", &db);
 
-    if( rc ){
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        exit(0);
-    }
+    // if( rc ){
+    //     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    //     exit(0);
+    // }
     
     sqlCommand = std::string("INSERT INTO RECORD (NODE,DATA)") +
                  "VALUES('"+ k_ID + "', '" + inputName + "');";
@@ -359,7 +362,7 @@ Data::AddData(std::string inputName, std::string k_ID)
    fprintf(stderr, "SQL error: %s\n", zErrMsg);
       sqlite3_free(zErrMsg);
    }
-   sqlite3_close(db);
+//    sqlite3_close(db);
 
     // Data *inputData = new Data();
     // Data *nextPtr = this->next;
@@ -368,6 +371,19 @@ Data::AddData(std::string inputName, std::string k_ID)
     // inputData->head = this;
     // inputData->Name = inputName;
     // inputData->type = inputType;
+}
+
+void
+Data::AddData(std::string inputName, std::string inputType, int Empty)
+{
+
+    Data *inputData = new Data();
+    Data *nextPtr = this->next;
+    inputData->next = nextPtr;
+    this->next = inputData;
+    inputData->head = this;
+    inputData->Name = inputName;
+    inputData->type = inputType;
 }
 
 void
@@ -420,30 +436,30 @@ Data::GetData(std::string DataName, std::string k_ID)
 {
     //需要修改
 
-    sqlite3 *db;
+    // sqlite3 *db;
     char *zErrMsg = 0;
     int rc;
     std::string sqlCommand, sqlOutput; 
-    char* command_output = (char*)"false";
+    int command_output = 0;
 
-    rc = sqlite3_open("test.db", &db);
+    // rc = sqlite3_open("test.db", &db);
 
-    if( rc ){
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        exit(0);
-    }
+    // if( rc ){
+    //     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+    //     exit(0);
+    // }
     
     sqlCommand = std::string("SELECT * from RECORD WHERE NODE=") + "'" + k_ID + "'" + " AND DATA='" + DataName + "';";  
     
     /* Execute SQL statement */
-   rc = sqlite3_exec(db, &sqlCommand[0], this->DB_getDATA, (void*)command_output, &zErrMsg);
+   rc = sqlite3_exec(db, &sqlCommand[0], this->DB_getDATA, &command_output, &zErrMsg);
    if( rc != SQLITE_OK ){
    fprintf(stderr, "SQL error: %s\n", zErrMsg);
       sqlite3_free(zErrMsg);
    }
-   sqlite3_close(db);
-
-   if (std::string(command_output) == "true")
+//    sqlite3_close(db);
+    // std::cout << "command output = " <<command_output << "\n";
+   if (command_output)
    {
        return this;
    }
@@ -502,7 +518,7 @@ Data::XOR(std::string input, std::string input2)
     {
         std::string str1 = std::to_string(input2[i]);
         std::string str2 = std::to_string(input[i]);
-        if (str1.compare(str2))
+        if (str1.compare(str2) == 0)
         {
             distance = distance + pow(2, 8-i);
         }

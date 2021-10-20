@@ -59,6 +59,10 @@ public:
   virtual void
   OnData(std::shared_ptr<const ndn::Data> contentObject);
 
+  //NDN錯誤容忍，輸出下一個目標前綴
+  std::string
+  ndnFault_tolerant(std::string DataName);
+
   // void
   // SetPrefix(std::string prefix);
 

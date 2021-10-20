@@ -12,7 +12,7 @@
 import json
 
 def main():
-    f = open("nccu0801_origin.txt")
+    f = open("nccu1013_origin.txt")
     data = dict()
     for line in f.readlines():
         

@@ -207,6 +207,13 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         //GetK_ptr()->queryList->AddData(DataName, "food");
         Data* queryDataPtr = GetK_ptr()->GetQueryItem(DataName);
 
+        //特別注意！！！！會有queryData不見的狀況，目前出現率不高
+        if (queryDataPtr == NULL || queryDataPtr == GetK_ptr()->queryList)
+        {
+            std::cout << "error: this queryData is deleted\n";
+            return;
+        }
+
         if (GetK_ptr()->GetData(DataName))
         {
             outInterest.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
@@ -214,13 +221,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
             GetK_ptr()->Delete_data_query(queryDataPtr->Name);
             return;
         }
-
-        //特別注意！！！！會有queryData不見的狀況，目前出現率不高
-        if (queryDataPtr == NULL || queryDataPtr == GetK_ptr()->queryList)
-        {
-            std::cout << "error: this queryData is deleted\n";
-            return;
-        }
+        
 
         queryDataPtr->closest_node = SourceNode;
 
@@ -427,9 +428,9 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       //此節點沒有資料，確認是否有K桶節點可返回
       std::size_t biTemp = std::hash<std::string>{}(DataName);
       std::string binaryDataName = std::bitset<8>(biTemp).to_string();
-      NS_LOG_DEBUG("hash Record for " << binaryDataName << " " << DataName);
+      //NS_LOG_DEBUG("hash Record for " << binaryDataName << " " << DataName);
 
-      if (GetK_ptr()->GetNext_Node(binaryDataName, 1, SourceNode) == GetK_ptr()->GetNodeName())
+      if (GetK_ptr()->GetNext_Node(binaryDataName, 1, SourceNode) == GetK_ptr()->GetKId())
       {
         outInterest.append("prefix").append("data").append("query").append(SourceNode).append("0").append(TargetNode).append(DataName).append("Return").append("NULL").append(std::to_string(time(NULL)));
       }

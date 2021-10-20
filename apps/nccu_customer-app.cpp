@@ -733,9 +733,17 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
     }
     std::string dataString = *j;
 
+    
+
+    if (O_ptr->getDataList().find(dataString) == O_ptr->getDataList().end())
+    {
+      j++;
+      OrderQuery_location++;
+      continue;
+    }
+    
     std::cout << "in dataSet: " << dataString << std::endl;
-
-
+    
       //將資料存入Order中
       O_ptr->setDataList(dataString);
       NS_LOG_DEBUG("setDataList " << dataString << " in-order " << O_ptr->getOrderName());
@@ -759,7 +767,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
       }
       else if (GetK_ptr()->GetQueryItem(dataString) == NULL && query_algorithm.toUri() == "/DataManageOrigin")
       {
-        GetK_ptr()->queryList->AddData(dataString, itemType);
+        GetK_ptr()->queryList->AddData(dataString, itemType, 0);
         ndn::Name temp;
         temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);
         temp.append(dataString).append("init").append(dataString).append(std::to_string(time(NULL)));
@@ -785,9 +793,9 @@ CustomerApp::DataSet_update(std::string inputDataName){
     {
         std::string str1 = binaryDataName.substr(i,1);
         std::string str2 = NodeName.toUri().substr(i,1);
-        if (str1.compare(str2))
+        if (str1.compare(str2) == 0)
         {
-            distance++;
+            distance = distance + pow(2, 8-i);
         }
     }
 
@@ -799,9 +807,9 @@ CustomerApp::DataSet_update(std::string inputDataName){
     {
          std::string str1 = binaryDataName.substr(i,1);
          std::string str2 = shopName.substr(i,1);
-       if (str1.compare(str2))
+       if (str1.compare(str2) == 0)
         {
-            temp_distance++;
+            temp_distance = temp_distance + pow(2, 8-i);
         }
     }
     if (temp_distance > distance)

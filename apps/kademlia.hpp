@@ -6,6 +6,9 @@
 #include <set>
 #include <bitset>
 
+#include <stdio.h>
+#include <sqlite3.h>
+
 
 class Order
 {
@@ -139,6 +142,9 @@ public:
 
     void AddData(std::string inputName, std::string k_ID);
 
+    void AddData(std::string inputName, std::string inputType, int Empty);
+
+
     Data* GetData(std::string DataName);
 
     Data* GetData(std::string DataName, std::string k_ID);
@@ -189,7 +195,7 @@ public:
 
 
     //資料庫的輸出儲存變數
-    bool hasData = false;
+    sqlite3* db;
 
     //將資料加入資料庫中
     static int DB_addDATA(void *NotUsed, int argc, char **argv, char **azColName){
@@ -204,8 +210,8 @@ public:
     }
 
     static int DB_getDATA(void *NotUsed, int argc, char **argv, char **azColName){
-        char* output = (char*)"true";
-        NotUsed = (void*)output;
+        int *flag = (int*)NotUsed;
+        *flag = 1;
         std::cout << "success get data : " << argv[0] << " " << argv[1] << "\n";
         return 0;
     }
@@ -222,7 +228,7 @@ class Kademlia{
 public:
     Kademlia();
 
-    Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID);
+    Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID, sqlite3* inputDB);
 
     bool
     GetData(std::string DataName);
@@ -350,6 +356,10 @@ private:
     // std::string k_bucket[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
     std::string k_bucket[4] = {"NULL", "NULL", "NULL", "NULL"};
     int knum = 0;
+
+    //資料庫的輸出儲存變數
+    sqlite3* db;
+
 };
 
 class Guest
