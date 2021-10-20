@@ -48,7 +48,7 @@ std::string Query_Algorithm = "DataManage";
 
 //節點數量
 // int NodeNumber = 17;
-int NodeNumber = 48;
+int NodeNumber = 49;
 
 //一個節點產生的order數量
 int OrderNumber = 10;
@@ -282,16 +282,35 @@ void generate_node(sqlite3* db){
   }
 
   //設定合作商家，暫時分為三群
-  std::set<int> set1 = {0, 1, 2, 3, 4, 5};
-  std::set<int> set2 = {6, 7, 8, 9, 10};
-  std::set<int> set3 = {11, 12, 13, 14, 15, 16};
+  std::set<int> set1 = {0, 1, 2, 3, 4, };
+  std::set<int> set2 = {5, 6, 7, 8, 9};
+  std::set<int> set3 = {10 ,11, 12, 13, 14, 15};
+  std::set<int> set4 = {16,17,18,19,20};
+  std::set<int> set5 = {21,22,23,24,25};
+  std::set<int> set6 = {26,27,28,29,30};
+  std::set<int> set7 = {31,32,33,34,35};
+  std::set<int> set8 = {36,37,38,39,40};
+  std::set<int> set9 = {41,42,43,44,45};
+  std::set<int> set10 = {46,47,48,49};
   
   for (int i = 0; i < NodeNumber; i++)
   {
     std::set<int> tempSet;
     if (set1.find(i) != set1.end()){tempSet = set1;}
     else if(set2.find(i) != set2.end()){tempSet = set2;}
-    else{tempSet = set3;}
+    else if(set3.find(i) != set3.end()){tempSet = set3;}
+    else if(set4.find(i) != set4.end()){tempSet = set4;}
+    else if(set5.find(i) != set5.end()){tempSet = set5;}
+    else if(set6.find(i) != set6.end()){tempSet = set6;}
+    else if(set7.find(i) != set7.end()){tempSet = set7;}
+    else if(set8.find(i) != set8.end()){tempSet = set8;}
+    else if(set9.find(i) != set9.end()){tempSet = set9;}
+    else if(set10.find(i) != set10.end()){tempSet = set10;}
+    else
+    {
+      std::cout << "error this node has no shopset: " << std::to_string(NodeNumber) << "\n"; 
+    }
+    
 
     tempSet.erase(i);
 

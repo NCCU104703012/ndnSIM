@@ -42,8 +42,9 @@ Kademlia::GetData(std::string DataName){
 std::string
 Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string SourceNode){
 
-    std::string output[3] = {this->KId, "NULL", "NULL"};
+    std::string output[3] = {this->KId, this->KId, this->KId};
     std::string outputString = "";
+    std::string mostClose_Node = this->KId;
     int arrIndex = 0;
 
     for (int i = 0; i < GetK_bucket_size(); i++)
@@ -55,12 +56,11 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
         
         if (k_bucket[i] != "NULL")
         {
-            if (output[arrIndex%3] == "NULL")
+            if (this->XOR(TargetNode, k_bucket[i]) < this->XOR(TargetNode, mostClose_Node))
             {
-                output[arrIndex%3] = k_bucket[i];
-                arrIndex++;
+                mostClose_Node = k_bucket[i];
             }
-            else if (this->XOR(TargetNode, k_bucket[i]) < this->XOR(TargetNode, output[arrIndex%3]))
+            if (this->XOR(TargetNode, k_bucket[i]) < this->XOR(TargetNode, output[arrIndex%3]))
             {
                 output[arrIndex%3] = k_bucket[i];
                 arrIndex++;
@@ -70,16 +70,12 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
 
     if (output_num == 1)
     {
-        return output[(arrIndex-1)%3];
+        return mostClose_Node;
     }
 
     for (int i = 0; i < 3; i++)
     {
-        if (output[i] != "NULL")
-        {
             outputString = outputString + "_" + output[i];
-        }
-
     }
 
     outputString = outputString + "_";
@@ -100,7 +96,7 @@ Kademlia::XOR(std::string input)
         std::string str2 = std::to_string(input[i]);
         if (str1.compare(str2) == 0)
         {
-            distance = distance + pow(2, 8-i);
+            distance = distance - pow(2, 8-i);
         }
         
     }
@@ -119,7 +115,7 @@ Kademlia::XOR(std::string input, std::string input2)
         std::string str2 = std::to_string(input[i]);
         if (str1.compare(str2) == 0)
         {
-            distance = distance + pow(2, 8-i);
+            distance = distance - pow(2, 8-i);
         }
         
     }
@@ -520,7 +516,7 @@ Data::XOR(std::string input, std::string input2)
         std::string str2 = std::to_string(input[i]);
         if (str1.compare(str2) == 0)
         {
-            distance = distance + pow(2, 8-i);
+            distance = distance - pow(2, 8-i);
         }
         
     }

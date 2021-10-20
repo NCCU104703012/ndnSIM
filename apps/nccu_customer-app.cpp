@@ -734,8 +734,8 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
     std::string dataString = *j;
 
     
-
-    if (O_ptr->getDataList().find(dataString) == O_ptr->getDataList().end())
+    std::set<std::string> tempDataList = O_ptr->getDataList();
+    if (tempDataList.find(dataString) != tempDataList.end())
     {
       j++;
       OrderQuery_location++;
@@ -743,7 +743,7 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
     }
     
     std::cout << "in dataSet: " << dataString << std::endl;
-    
+
       //將資料存入Order中
       O_ptr->setDataList(dataString);
       NS_LOG_DEBUG("setDataList " << dataString << " in-order " << O_ptr->getOrderName());

@@ -342,7 +342,7 @@ DataManage::ndnFault_tolerant(std::string DataName)
 
   careBits = 8 / 2;
   
-  while (8 - careBits <= sameBits)
+  while (8 - careBits < sameBits)
   {
     careBits = careBits / 2;
   }
