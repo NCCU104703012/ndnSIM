@@ -49,7 +49,7 @@
 // 一週期的時間長度
 int week = 86400;
 // 開始上下線時間
-int startTime = 50000;
+int startTime = 100000;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -58,10 +58,10 @@ int OrderQuery_num = 10;
 int MicroService_Timeout = 10;
 
 //一個節點顧客產生數量
-int GuestNumber = 200;
+int GuestNumber = 100;
 
 //平均幾秒產生一筆資料
-int Record_Poisson = 360;
+int Record_Poisson = 500;
 //分母 化小數點用
 int Record_Poisson_div = 1;
 
@@ -584,17 +584,6 @@ CustomerApp::InitSendQuery(){
 
 void
 CustomerApp::InitSendData(){
-  // Guest* Gptr_head = new Guest("Guest_Record_Node" + to_string(nodeNum) + "_" + to_string(record_count), totalTime);
-  // Guest* G_ptr = GetG_ptr();
-  // Guest* newG_ptr = G_ptr->getNext();
-  // std::string newRecord = G_ptr->getRecordName();
-
-  // std::ostringstream address;
-  // address << newG_ptr;
-  // ndn::Name newGuest_ptr; 
-  // newGuest_ptr.append(address.str());
-  // Guest_list = newGuest_ptr;
-  // delete(G_ptr);
   int guest_serialNum = GetG_ptr()->getSerialNum();
   std::string newRecord = GetG_ptr()->getRecordName() + "_" + std::to_string(guest_serialNum);
   guest_serialNum++;
@@ -664,7 +653,10 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
   //將terminate設為false
   O_ptr->setTerminate(false);
 
-  std::set<std::string> dataSet = this->GetDataSet();
+  //返回資料庫中符合的dataKeySet內容
+  std::string dataSet = this->GetDataSet(OrderQuery_num);
+  std::cout << "dataset's length: " << dataSet.length() << "\n";
+
   std::set<std::string>::iterator i,j;
 
   std::set<std::string> shopSet = GetO_ptr()->getShopList();
@@ -688,14 +680,14 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
   }
 
   //當沒有任何資料可以query時，假設有自家菜單可以滿足，直接生成record
-  if (dataSet.begin() == dataSet.end() && !isOrder_from_otherNode && (shopSet.begin() == shopSet.end()))
+  if (dataSet.length() == 1 && !isOrder_from_otherNode && (shopSet.begin() == shopSet.end()))
   {
 
     O_ptr->setTerminate(true);
     return;
   }
   
-  if (dataSet.begin() == dataSet.end() && isOrder_from_otherNode )
+  if (dataSet.length() == 1 && isOrder_from_otherNode )
   {
     ndn::Name returnServiceQuery;
     returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(NodeName).append("food").append(O_ptr->getOrderName());
@@ -705,44 +697,15 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
   }
   
 
-  //將iterator j 調整到上次Query的位置
-  j = dataSet.begin();
-  //OrderQuery_location = OrderQuery_location % (dataSet.size());
+  int head = 0 , tail = 0;
+      head = dataSet.find_first_of("|", head);
+      tail = dataSet.find_first_of("|", head+1);
+      
 
-  for (int l = 0; l < OrderQuery_location ;l++)
+  while (tail != -1)
   {
-    j++;
-    if (j == dataSet.end())
-    {
-      j = dataSet.begin();
-    }
-  }
-  
-  for (int l = 0; l < OrderQuery_num; l++) {
 
-    if (dataSet.size() == 0)
-    {
-      std::cout << "Dataset is empty\n";
-      return;
-    }
-
-    if (j == dataSet.end())
-    {
-      j = dataSet.begin();
-      OrderQuery_location = 0;
-    }
-    std::string dataString = *j;
-
-    
-    std::set<std::string> tempDataList = O_ptr->getDataList();
-    if (tempDataList.find(dataString) != tempDataList.end())
-    {
-      j++;
-      OrderQuery_location++;
-      continue;
-    }
-    
-    std::cout << "in dataSet: " << dataString << std::endl;
+      std::string dataString = dataSet.substr(head+1, tail-head-1);
 
       //將資料存入Order中
       O_ptr->setDataList(dataString);
@@ -774,9 +737,8 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
         SendInterest(temp, "Sending Query for ", true);
       }
     
-    //Query下一個目標
-    j++;
-    OrderQuery_location++;
+      head = tail;
+      tail = dataSet.find_first_of("|", head+1);
   }
 }
 

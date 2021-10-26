@@ -120,7 +120,7 @@ DataManage::SendInterest()
   auto interest = std::make_shared<ndn::Interest>(m_prefix);
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
+  interest->setMustBeFresh(1);
   interest->setInterestLifetime(ndn::time::seconds(3));
 
 
@@ -225,7 +225,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       auto interest = std::make_shared<ndn::Interest>(outInterest);
       Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
       interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
+      interest->setMustBeFresh(1);
       interest->setInterestLifetime(ndn::time::seconds(1));
 
       NS_LOG_DEBUG("Sending Interest packet for " << *interest);
@@ -260,7 +260,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         auto interest = std::make_shared<ndn::Interest>(outInterest);
         Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
         interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
+        interest->setMustBeFresh(1);
         interest->setInterestLifetime(ndn::time::seconds(1));
         interest->setHopLimit(20);
 
@@ -282,7 +282,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         auto interest = std::make_shared<ndn::Interest>(outInterest);
         Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
         interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
+        interest->setMustBeFresh(1);
         interest->setInterestLifetime(ndn::time::seconds(1));
 
         NS_LOG_DEBUG("Query another Node for data " << *interest);
@@ -342,7 +342,7 @@ DataManage::ndnFault_tolerant(std::string DataName)
 
   careBits = 8 / 2;
   
-  while (8 - careBits < sameBits)
+  while (8 - careBits <= sameBits)
   {
     careBits = careBits / 2;
   }

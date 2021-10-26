@@ -345,6 +345,9 @@ public:
     int
     GetK_bucket_size(){return sizeof(k_bucket)/sizeof(k_bucket[0]);};
 
+    sqlite3*
+    getDBptr(){return db;};
+
 
     //用在原版kad使用，紀律這筆資料未來應該query的節點list
     Data *queryList;

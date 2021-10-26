@@ -207,7 +207,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     auto next_interest = std::make_shared<ndn::Interest>(next);
     Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
     next_interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
+    next_interest->setMustBeFresh(1);
     next_interest->setInterestLifetime(ndn::time::seconds(3));
 
 
@@ -226,7 +226,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     auto next_interest = std::make_shared<ndn::Interest>(next);
     Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
     next_interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
+    next_interest->setMustBeFresh(1);
     next_interest->setInterestLifetime(ndn::time::seconds(3));
 
 

@@ -130,7 +130,7 @@ DataManageOrigin::SendInterest()
   auto interest = std::make_shared<ndn::Interest>(m_prefix);
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-
+  interest->setMustBeFresh(1);
   interest->setInterestLifetime(ndn::time::seconds(3));
 
 
@@ -398,7 +398,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       ndn::Name outData;
       outData.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
 
-      auto data = std::make_shared<ndn::Data>(interest->getName());
+      auto data = std::make_shared<ndn::Data>(outData);
       data->setFreshnessPeriod(ndn::time::milliseconds(1000));
       data->setContent(std::make_shared< ::ndn::Buffer>(1024));
       ndn::StackHelper::getKeyChain().sign(*data);
@@ -463,7 +463,7 @@ DataManageOrigin::SetNode_Pointer(Ptr<Node> input)
 void
 DataManageOrigin::SendInterest(ndn::Name prefix, std::string logging, bool freshness){
   auto interest = std::make_shared<ndn::Interest>(prefix);
-      
+  
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
   interest->setMustBeFresh(freshness);

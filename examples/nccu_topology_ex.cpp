@@ -51,7 +51,7 @@ std::string Query_Algorithm = "DataManage";
 int NodeNumber = 49;
 
 //一個節點產生的order數量
-int OrderNumber = 10;
+int OrderNumber = 30;
 
 //平均幾秒處理下一個order
 int Guest_Poisson = 1000;
@@ -350,8 +350,8 @@ main(int argc, char* argv[])
   //所在Node, 資料名稱, 
    sqlCommand = std::string(" ") + "CREATE TABLE RECORD(" +
          "NODE           TEXT     NOT NULL," +
-         "DATA           TEXT     NOT NULL);" +
-         "SELECT * from RECORD ";
+         "DATA           TEXT     NOT NULL);";
+
   
   /* Create SQL statement */
   //  sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) " 
@@ -382,13 +382,26 @@ main(int argc, char* argv[])
       fprintf(stdout, "Table select successfully\n");
    }
 
+   sqlCommand = std::string(" ") + "CREATE TABLE DATAKEYSET(" +
+         "NODE           TEXT     NOT NULL," +
+         "DATA           TEXT     NOT NULL);" +
+         "SELECT * from DATAKEYSET ";
+
+  rc = sqlite3_exec(db, &sqlCommand[0], callback, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }else{
+      fprintf(stdout, "Table select successfully\n");
+   }
+
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等
   ndn::StackHelper ndnHelper;
   ndnHelper.setCsSize(1);
   ndnHelper.InstallAll();
 
-  // Set BestRoute strategy
+  // Set BestRoute strategy : best-route
   ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route");
 
   // Installing global routing interface on all nodes

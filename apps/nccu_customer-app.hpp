@@ -25,6 +25,9 @@
 #include "ns3/ndnSIM/apps/ndn-app.hpp"
 #include "apps/kademlia.hpp"
 
+#include <stdio.h>
+#include <sqlite3.h>
+
 namespace ns3 {
 
 /**
@@ -132,14 +135,55 @@ public:
     return output;
   };
 
-  std::set<std::string>
-  GetDataSet(){
-    return dataSet;
+
+  //從資料庫中找出此節點負責Query的資料
+  std::string
+  GetDataSet(int queryNum){
+
+    sqlite3 *db = GetK_ptr()->getDBptr();
+    char *zErrMsg = 0;
+    int rc;
+    std::string sqlCommand, sqlOutput; 
+    char* command_output = (char *)calloc(500,sizeof(char)) ;
+    std::string s = "|";
+    strcpy(command_output, &s[0]);
+
+    sqlCommand = std::string("SELECT * from DATAKEYSET WHERE NODE=") + "'" + GetK_ptr()->GetKId() + "'" + " ORDER BY Random() LIMIT " + std::to_string(queryNum)  +  " ;";  
+    
+    /* Execute SQL statement */
+   rc = sqlite3_exec(db, &sqlCommand[0], this->DB_getDATA, &command_output, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }
+
+    // std::cout << "string len = "<< command_output << "\n";
+    std::string outputString(command_output);
+    free(command_output);
+
+    return outputString;
   };
 
+  //將資料加入此節點負責Query行列
   void
   SetDataSet(std::string inputData){
     dataSet.insert(inputData);
+
+    sqlite3 *db = GetK_ptr()->getDBptr();
+    char *zErrMsg = 0;
+    int rc;
+    std::string sqlCommand, sqlOutput; 
+
+    sqlCommand = std::string("INSERT INTO DATAKEYSET (NODE,DATA)") +
+                 "VALUES('"+ GetK_ptr()->GetKId() + "', '" + inputData + "');";
+    
+    /* Execute SQL statement */
+   rc = sqlite3_exec(db, &sqlCommand[0], this->DB_setDATA, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }
+    
   }
 
   int
@@ -156,6 +200,23 @@ public:
 private:
   //void
   //SendInterest();
+
+  static int DB_getDATA(void *NotUsed, int argc, char **argv, char **azColName){
+      
+      
+      char **result_str = (char **)NotUsed;
+      std::string s = "|";
+      strcat(*result_str,argv[1]);
+      strcat(*result_str, &s[0]);
+
+      // std::cout << "success get data : " << argv[0] << " " << argv[1] << "\n";
+      return 0;
+  }
+
+  static int DB_setDATA(void *NotUsed, int argc, char **argv, char **azColName){
+      // std::cout << "success get data : " << argv[0] << " " << argv[1] << "\n";
+      return 0;
+  }
 
   ndn::Name m_prefix;
   ndn::Name m_postfix;
