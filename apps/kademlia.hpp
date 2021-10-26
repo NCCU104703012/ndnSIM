@@ -348,6 +348,12 @@ public:
     sqlite3*
     getDBptr(){return db;};
 
+    bool
+    GetisOnline(){return isOnline;};
+
+    void
+    SetisOnline(bool input){isOnline = input;};
+
 
     //用在原版kad使用，紀律這筆資料未來應該query的節點list
     Data *queryList;
@@ -362,6 +368,9 @@ private:
 
     //資料庫的輸出儲存變數
     sqlite3* db;
+
+    //節點是否上下線
+    bool isOnline = true;
 
 };
 

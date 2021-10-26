@@ -144,6 +144,9 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
     int head = 0, tail;
     std::string DataName, TargetNode, SourceNode, flag, itemType;
+    ndn::Name outInterest;
+
+
     
     for (int i = 0; i < 8; i++)
     {
@@ -177,9 +180,50 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
     }
 
+    std::size_t biTemp = std::hash<std::string>{}(DataName);
+    std::string binaryDataName = std::bitset<8>(biTemp).to_string();
+
+    //上下線狀態判定
+    if (!GetK_ptr()->getisOnline())
+    {
+      if (TargetNode == GetK_ptr()->GetKId())
+      {
+        NS_LOG_DEBUG("error! this node is offline : " << interest->getName());
+        return;
+      }
+
+      std::string TargetNode = ndnFault_tolerant(binaryDataName);
+
+      if (TargetNode == "NULL")
+      {
+        //std::cout << "******************" << std::endl;
+        NS_LOG_DEBUG("NO-match-Data-&-next-Node");
+        //std::cout << "******************" << std::endl;
+        return;
+      }
+
+      outInterest.append("prefix").append("data").append("query").append(TargetNode).append("0").append(SourceNode).append(DataName).append(itemType);
+
+      // Create and configure ndn::Interest
+      auto interest = std::make_shared<ndn::Interest>(outInterest);
+      Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+      interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+      interest->setMustBeFresh(1);
+      interest->setInterestLifetime(ndn::time::seconds(1));
+      interest->setHopLimit(20);
+
+      NS_LOG_DEBUG("Query another Node for ndnFault_tolerant(offline) " << *interest);
+
+      // Call trace (for logging purposes)
+      m_transmittedInterests(interest, this, m_face);
+
+      m_appLink->onReceiveInterest(*interest);
+
+      return;
+    }
+
     TargetNode = GetK_ptr()->GetKId();
 
-    ndn::Name outInterest;
 
     //確認flag 若為1則為match到的source節點傳來興趣封包
     if (flag.compare("1") == 0)
@@ -238,9 +282,6 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     else
     {
       //從K桶找下一目標 目前用預設第一個節點
-      std::size_t biTemp = std::hash<std::string>{}(DataName);
-      std::string binaryDataName = std::bitset<8>(biTemp).to_string();
-      //NS_LOG_DEBUG("hash Record for " << binaryDataName << " " << DataName);
 
       if (GetK_ptr()->GetNext_Node(binaryDataName, 1, SourceNode) == GetK_ptr()->GetKId())
       {

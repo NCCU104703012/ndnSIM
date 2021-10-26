@@ -185,6 +185,13 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     std::cout<< GetK_ptr()->GetKId() << "  data Delete: " << DataName <<"\n";
     return;
   }
+
+  //上下線狀態判定
+  if (!GetK_ptr()->getisOnline())
+  {
+    NS_LOG_DEBUG("error! this node is offline : " << interest->getName());
+    return;
+  }
   
   std::size_t hashRecord = std::hash<std::string>{}(DataName);
   std::string binaryRecord = std::bitset<8>(hashRecord).to_string();

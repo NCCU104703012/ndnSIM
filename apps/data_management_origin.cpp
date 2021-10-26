@@ -148,6 +148,13 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 {
   ndn::App::OnInterest(interest);
 
+  //上下線狀態判定
+  if (!GetK_ptr()->getisOnline())
+  {
+    NS_LOG_DEBUG("error! this node is offline : " << interest->getName());
+    return;
+  }
+
   NS_LOG_DEBUG("Received Interest packet for " << interest->getName());
 
   std::string inputString = interest->getName().toUri();
