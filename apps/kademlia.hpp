@@ -5,6 +5,7 @@
 #include <iostream>
 #include <set>
 #include <bitset>
+#include <cstring>
 
 #include <stdio.h>
 #include <sqlite3.h>
@@ -371,6 +372,18 @@ private:
 
     //節點是否上下線
     bool isOnline = true;
+
+    
+    //返回符合節點字串，用 | 隔開
+    static int DB_getDATA_string(void *NotUsed, int argc, char **argv, char **azColName){
+        char **result_str = (char **)NotUsed;
+        std::string s = "|";
+        strcat(*result_str,argv[1]);
+        strcat(*result_str, &s[0]);
+
+        // std::cout << "success get data : " << argv[0] << " " << argv[1] << "\n";
+        return 0;
+    }
 
 };
 

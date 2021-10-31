@@ -56,11 +56,11 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
         
         if (k_bucket[i] != "NULL")
         {
-            if (this->XOR(TargetNode, k_bucket[i]) < this->XOR(TargetNode, mostClose_Node))
+            if (this->XOR(TargetNode, k_bucket[i]) > this->XOR(TargetNode, mostClose_Node))
             {
                 mostClose_Node = k_bucket[i];
             }
-            if (this->XOR(TargetNode, k_bucket[i]) < this->XOR(TargetNode, output[arrIndex%3]))
+            if (this->XOR(TargetNode, k_bucket[i]) > this->XOR(TargetNode, output[arrIndex%3]))
             {
                 output[arrIndex%3] = k_bucket[i];
                 arrIndex++;
@@ -94,9 +94,9 @@ Kademlia::XOR(std::string input)
     {
         std::string str1 = std::to_string(this->KId[i]);
         std::string str2 = std::to_string(input[i]);
-        if (str1.compare(str2) == 0)
+        if (str1 == str2)
         {
-            distance = distance - pow(2, 8-i);
+            distance = distance + pow(2, 8-i);
         }
         
     }
@@ -113,9 +113,9 @@ Kademlia::XOR(std::string input, std::string input2)
     {
         std::string str1 = std::to_string(input2[i]);
         std::string str2 = std::to_string(input[i]);
-        if (str1.compare(str2) == 0)
+        if (str1 == str2)
         {
-            distance = distance - pow(2, 8-i);
+            distance = distance + pow(2, 8-i);
         }
         
     }
@@ -179,18 +179,28 @@ Kademlia::KBucket_update(std::string sourceNode)
         }
     }
     
+    std::string output_KID = sourceNode;
+    
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        int distance = XOR(sourceNode, this->GetKId());
+        int distance = XOR(output_KID, this->GetKId());
         if (XOR(k_bucket[i], this->GetKId()) < distance)
         {
-            return k_bucket[i];
+            output_KID = k_bucket[i];
         }
         
     }
 
-    //演算法需要決策出一個替換的節點
-    return "K-buk is full";
+    if (output_KID != sourceNode)
+    {
+        return output_KID;
+    }
+    else
+    {
+        //演算法需要決策出一個替換的節點
+        return "K-buk is full";
+    }
+
 }
 
 //將輸入節點從k桶中去除
@@ -307,26 +317,74 @@ Kademlia::Delete_data_query(std::string DataName)
 std::string
 Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
 {
+    char *zErrMsg = 0;
+    int rc;
+    std::string sqlCommand, sqlOutput; 
+    char* command_output = (char *)calloc(5000,sizeof(char)) ;
+    std::string s = "|";
+    strcpy(command_output, &s[0]);
 
+    sqlCommand = std::string("SELECT * from RECORD WHERE NODE=") + "'" + KId + "'" + " ;";  
+    
+    /* Execute SQL statement */
+   rc = sqlite3_exec(db, &sqlCommand[0], this->DB_getDATA_string, &command_output, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }
 
+    // std::cout << "string len = "<< command_output << "\n";
+    std::string inputString(command_output);
+    free(command_output);
 
-
-    std::string output = "|";
-    Data* DataPtr = dataList->next;
-
-    while (DataPtr != NULL)
+    if (inputString == "|")
     {
-        std::size_t hashData = std::hash<std::string>{}(DataPtr->Name);
+        return inputString;
+    }
+
+    int head = 0, tail = 0;
+    head = inputString.find_first_of("|", head);
+    tail = inputString.find_first_of("|", head+1);
+    std::string temp = inputString.substr(head+1, tail-head-1);
+    std::string output = "|";
+
+    while (1)
+    {
+        std::size_t hashData = std::hash<std::string>{}(temp);
         std::string binaryData = std::bitset<8>(hashData).to_string();
         int thisNode_distance = XOR(thisNode, binaryData);
         int targetNode_distance = XOR(targetNode, binaryData);
 
-        if (targetNode_distance < thisNode_distance)
+        if (targetNode_distance > thisNode_distance)
         {
-            output = output + DataPtr->Name + "|" ;
+            output = output + temp + "|" ;
         }
-        DataPtr = DataPtr->next;
+
+        if (inputString.find_first_of("|", tail) == inputString.find_last_of("|", tail))
+        {
+            return output;
+        }
+        head = tail;
+        tail = inputString.find_first_of("|", head+1);
     }
+    
+
+    
+    // Data* DataPtr = dataList->next;
+
+    // while (DataPtr != NULL)
+    // {
+    //     std::size_t hashData = std::hash<std::string>{}(DataPtr->Name);
+    //     std::string binaryData = std::bitset<8>(hashData).to_string();
+    //     int thisNode_distance = XOR(thisNode, binaryData);
+    //     int targetNode_distance = XOR(targetNode, binaryData);
+
+    //     if (targetNode_distance > thisNode_distance)
+    //     {
+    //         output = output + DataPtr->Name + "|" ;
+    //     }
+    //     DataPtr = DataPtr->next;
+    // }
     return output;
 }
 
@@ -414,7 +472,7 @@ Data::GetData(std::string DataName)
     Data *tempptr = this;
     while (tempptr != NULL)
     {
-        if (DataName.compare(tempptr->Name) == 0)
+        if (DataName == tempptr->Name)
         {
             return tempptr;
         }
@@ -475,7 +533,7 @@ Data::update_nextHop(std::string inputNode)
     std::string binaryData = std::bitset<8>(hashData).to_string();
     distance = XOR(binaryData,inputNode);
 
-    if (distance >= XOR(binaryData, closest_node))
+    if (distance <= XOR(binaryData, closest_node))
     {
         return;
     }
@@ -496,7 +554,7 @@ Data::update_nextHop(std::string inputNode)
             // 預防nextHop list出現相同節點，重複Query
             return;
         }
-        if (distance < XOR(binaryData, this->nextHop_list[i]))
+        if (distance > XOR(binaryData, this->nextHop_list[i]))
         {
             this->nextHop_list[i] = inputNode;
             return;
@@ -514,9 +572,9 @@ Data::XOR(std::string input, std::string input2)
     {
         std::string str1 = std::to_string(input2[i]);
         std::string str2 = std::to_string(input[i]);
-        if (str1.compare(str2) == 0)
+        if (str1 == str2)
         {
-            distance = distance - pow(2, 8-i);
+            distance = distance + pow(2, 8-i);
         }
         
     }

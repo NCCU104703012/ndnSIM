@@ -51,7 +51,10 @@ std::string Query_Algorithm = "DataManage";
 int NodeNumber = 49;
 
 //一個節點產生的order數量
-int OrderNumber = 30;
+int OrderNumber = 0;
+
+//order開始時間
+int orderStartTime = 15000;
 
 //平均幾秒處理下一個order
 int Guest_Poisson = 1000;
@@ -142,6 +145,8 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
 {
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
 
+  std::cout << "set manage at " << nodeName << " prefix: " << prefix << " KID: " <<  k_ptr->GetNodeName() <<"\n";
+
   std::ostringstream address;
   address << k_ptr;
   std::string location = address.str();
@@ -182,7 +187,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   
 
   //加入order
-  totalTime = 0;
+  totalTime = orderStartTime;
   for (int i = 0; i < targetNum; i++)
   {
     std::string orderName = "newRecord_Node" + to_string(nodeNum) + "_" + to_string(i);
@@ -242,9 +247,10 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
 
   //設定data management模組，為了NDN fault tolerant
   if(Query_Algorithm == "DataManage"){
-    std::string prefix1 = kptr->GetKId().substr(4) + "xxxx";
-    std::string prefix2 = kptr->GetKId().substr(6) + "xx";
-    std::string prefix3 = kptr->GetKId().substr(7) + "x";
+    std::string prefix1 = kptr->GetKId().substr(0,4) + "xxxx";
+    std::string prefix2 = kptr->GetKId().substr(0,6) + "xx";
+    std::string prefix3 = kptr->GetKId().substr(0,7) + "x";
+    std::cout << "KID: " << kptr->GetKId() << " P1: " << prefix1 << " P2: " << prefix2 << " P3: " << prefix3 << "\n";
     set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix1, kptr, queryString);
     set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix2, kptr, queryString);
     set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix3, kptr, queryString);
@@ -337,7 +343,7 @@ main(int argc, char* argv[])
   int rc;
   std::string sqlCommand;
 
-  rc = sqlite3_open("test.db", &db);
+  rc = sqlite3_open("1031test.db", &db);
 
   if( rc ){
      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));

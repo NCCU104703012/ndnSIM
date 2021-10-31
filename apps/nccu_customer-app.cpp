@@ -46,10 +46,13 @@
 //K桶大小
  int Kbuk_Size = 4;
 
-// 一週期的時間長度
-int week = 86400;
+// 一週期的時間長度 86400
+int week = 300;
 // 開始上下線時間
-int startTime = 100000;
+int startTime = 1000;
+
+// 上下線總次數
+int onlineNum = 30;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -58,7 +61,10 @@ int OrderQuery_num = 10;
 int MicroService_Timeout = 10;
 
 //一個節點顧客產生數量
-int GuestNumber = 100;
+int GuestNumber =30;
+
+// 開始產生資料時間
+int GueststartTime = 15000;
 
 //平均幾秒產生一筆資料
 int Record_Poisson = 500;
@@ -161,14 +167,14 @@ CustomerApp::StartApplication()
   {
     Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::InitSendQuery, this);
     Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+ MicroService_Timeout), &CustomerApp::OrderTimeout, this);
-    //std::cout << O_ptr->getTimeStamp() << " ";
+    
     O_ptr = O_ptr->getNext();
   }
 
   //設定資料產生時間
   std::poisson_distribution<int> poisson_record(Record_Poisson);
   std::default_random_engine generator(GetG_ptr()->getTimeStamp());
-  double totalTime = (double)poisson_record(generator)/Record_Poisson_div;
+  double totalTime = GueststartTime + (double)poisson_record(generator)/Record_Poisson_div;
 
   for (int i = 0; i < GuestNumber; i++)
   {
@@ -183,14 +189,14 @@ CustomerApp::StartApplication()
   //shiftTime: 隨機打散上下線時間
   int shiftTime = tempHash%100;
 
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < onlineNum; i++)
   {
     //設定開始進行上下線的時間, 以及一週的週期
     
     Simulator::Schedule(Seconds(startTime + week*i + week/3*dayOff + shiftTime), &CustomerApp::Node_OffLine, this);
     Simulator::Schedule(Seconds(startTime + week*i + week/3*(dayOff+1) + shiftTime), &CustomerApp::Node_OnLine, this);
   }
-  
+
 }
 
 // Processing when application is stopped
@@ -265,7 +271,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       std::string newNode = kbuk_string.substr(head+1, tail-head-1);
       std::string update_string = GetK_ptr()->KBucket_update(newNode);
 
-      std::cout << "update sstring: " << update_string << "\n";
+      // std::cout << "update sstring: " << update_string << "\n";
 
       if (update_string == "add sourceNode to a NULL" && newNode != TargetNode)
       {
@@ -289,17 +295,22 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     return;
   }
   
-  //上下線狀態判定
-  if (!GetK_ptr()->getisOnline())
-  {
-    NS_LOG_DEBUG("error! this node is offline : " << interest->getName());
-    return;
-  }
+  
 
   //收到K桶更新訊息
   //封包格式 prefix/自己節點/來源節點/dataName(Flag 0 or 1)/itemType
   if (itemtype == "Kbucket_connect")
   {
+    //上下線狀態判定，不在線則回傳disconnect，保證K桶雙向連接
+    if (!GetK_ptr()->GetisOnline())
+    {
+      std::string k_buk_string = "NULL";
+      ndn::Name interest;
+      interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
+      SendInterest(interest, "Kbucket_disconnect", true);
+      return;
+    }
+
     std::string flag_connect_handshake = DataName;
 
     // flag = 1 表示先前送過同意訊息給對方 對方已更新K桶
@@ -328,6 +339,8 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         {
           return;
         }
+
+        NS_LOG_DEBUG("transform Data: " << trans_list );
 
         int head = 0, tail;
         head = trans_list.find_first_of("|", head);
@@ -382,6 +395,13 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     }
     return;
   }
+
+  //上下線狀態判定
+  if (!GetK_ptr()->GetisOnline())
+  {
+    NS_LOG_DEBUG("error! this node is offline : " << interest->getName());
+    return;
+  }
   
 
   //收到儲存確認訊息，進行DataSet Changing
@@ -431,7 +451,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     }
 
     //新增order並處理 並註明是來自其他節點的order 後續完成後需回傳至原節點
-    Order* newOrder = GetO_ptr()->AddOrder_toTail("MicroOrder_" + DataName + "_" + std::to_string(micro_order_count) , SourceNode, 0, 0);
+    Order* newOrder = GetO_ptr()->AddOrder_toTail("MicroOrder_" + DataName + "_" + GetK_ptr()->GetKId() , SourceNode, 0, 0);
     micro_order_count++;
 
     newOrder->setHasSourceNode(true);
@@ -579,7 +599,7 @@ void
 CustomerApp::InitSendQuery(){
 
   //上下線狀態判定
-  if (!GetK_ptr()->getisOnline())
+  if (!GetK_ptr()->GetisOnline())
   {
     return;
   }
@@ -599,7 +619,7 @@ void
 CustomerApp::InitSendData(){
 
   //上下線狀態判定
-  if (!GetK_ptr()->getisOnline())
+  if (!GetK_ptr()->GetisOnline())
   {
     return;
   }
@@ -625,7 +645,7 @@ void
 CustomerApp::OrderTimeout(){
 
     //上下線狀態判定
-    if (!GetK_ptr()->getisOnline())
+    if (!GetK_ptr()->GetisOnline())
     {
       return;
     }
@@ -815,6 +835,11 @@ CustomerApp::DataSet_update(std::string inputDataName){
 void
 CustomerApp::Node_OnLine(){
 
+  if (GetK_ptr()->GetisOnline())
+  {
+    return;
+  }
+
   Kademlia* tempK_ptr = GetK_ptr();
 
   tempK_ptr->SetisOnline(true);
@@ -844,6 +869,11 @@ CustomerApp::Node_OnLine(){
 
 void
 CustomerApp::Node_OffLine(){
+
+  if (!GetK_ptr()->GetisOnline())
+  {
+    return;
+  }
 
   GetK_ptr()->SetisOnline(false);
   
@@ -875,7 +905,15 @@ CustomerApp::Node_OffLine(){
     }
 
   }
-    
+
+  //確認是否有節點K桶完全空白
+  if (Kbuk_string == "_")
+  {
+    NS_LOG_DEBUG("error! this node k_buk is NULL: " << this->NodeName);
+    return;
+  }
+  
+  
 
   isNodeOnline = false;
 }

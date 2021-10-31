@@ -180,11 +180,21 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
     }
 
+    //檢查是否有前綴異常
+    if (TargetNode.substr(0,4) != GetK_ptr()->GetKId().substr(0,4))
+    {
+      std::cout << "error: prefix forward four bits not same " << TargetNode << "|" << GetK_ptr()->GetKId() << "\n";
+      return;
+    }
+    
+
     std::size_t biTemp = std::hash<std::string>{}(DataName);
     std::string binaryDataName = std::bitset<8>(biTemp).to_string();
 
+    NS_LOG_DEBUG("Query data " << DataName << "  Hash: " << binaryDataName);
+
     //上下線狀態判定
-    if (!GetK_ptr()->getisOnline())
+    if (!GetK_ptr()->GetisOnline())
     {
       if (TargetNode == GetK_ptr()->GetKId())
       {
@@ -326,7 +336,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         interest->setMustBeFresh(1);
         interest->setInterestLifetime(ndn::time::seconds(1));
 
-        NS_LOG_DEBUG("Query another Node for data " << *interest);
+        NS_LOG_DEBUG( "NodeID: " << GetK_ptr()->GetKId() << " Query another Node for data " << *interest);
 
         // Call trace (for logging purposes)
         m_transmittedInterests(interest, this, m_face);

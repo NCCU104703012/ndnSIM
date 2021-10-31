@@ -187,7 +187,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   }
 
   //上下線狀態判定
-  if (!GetK_ptr()->getisOnline())
+  if (!GetK_ptr()->GetisOnline())
   {
     NS_LOG_DEBUG("error! this node is offline : " << interest->getName());
     return;
