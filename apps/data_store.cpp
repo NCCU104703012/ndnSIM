@@ -206,7 +206,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     if (itemType == "Transform_Data")
     {
       module_choose = "store";
-      GetK_ptr()->GetDataList()->printAllData();
+      //GetK_ptr()->GetDataList()->printAllData();
     }
 
     ndn::Name next ;

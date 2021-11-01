@@ -51,10 +51,10 @@ std::string Query_Algorithm = "DataManage";
 int NodeNumber = 49;
 
 //一個節點產生的order數量
-int OrderNumber = 0;
+int OrderNumber = 5;
 
 //order開始時間
-int orderStartTime = 15000;
+int orderStartTime = 40000;
 
 //平均幾秒處理下一個order
 int Guest_Poisson = 1000;

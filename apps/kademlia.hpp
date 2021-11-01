@@ -270,7 +270,7 @@ public:
     Node_info();
 
     //以輸入的節點名稱比較其他K桶中資訊，並決定是否將其加入
-    std::string
+    std::pair<std::string, std::string>
     KBucket_update(std::string sourceNode);
 
     //將輸入節點從k桶中去除
@@ -363,8 +363,8 @@ private:
     std::string node_name;
     std::string KId;
     Data *dataList;
-    // std::string k_bucket[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
-    std::string k_bucket[4] = {"NULL", "NULL", "NULL", "NULL"};
+    std::string k_bucket[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
+    // std::string k_bucket[4] = {"NULL", "NULL", "NULL", "NULL"};
     int knum = 0;
 
     //資料庫的輸出儲存變數

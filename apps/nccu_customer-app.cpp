@@ -39,12 +39,13 @@
 #include <string> 
 #include <memory>
 #include <unordered_map>
+#include <utility>
 
 #include <stdio.h>
 #include <sqlite3.h>
 
 //K桶大小
- int Kbuk_Size = 4;
+ int Kbuk_Size = 10;
 
 // 一週期的時間長度 86400
 int week = 300;
@@ -52,7 +53,7 @@ int week = 300;
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 30;
+int onlineNum = 50;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -269,26 +270,27 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     while (tail != -1)
     {
       std::string newNode = kbuk_string.substr(head+1, tail-head-1);
-      std::string update_string = GetK_ptr()->KBucket_update(newNode);
+      std::pair<std::string, std::string> update_string = GetK_ptr()->KBucket_update(newNode);
 
       // std::cout << "update sstring: " << update_string << "\n";
 
-      if (update_string == "add sourceNode to a NULL" && newNode != TargetNode)
+      if (update_string.first == newNode)
       {
         std::string flag_connect_handshake = "0";
         ndn::Name interest;
         interest.append("prefix").append("data").append("download").append(newNode).append(TargetNode).append(flag_connect_handshake).append("Kbucket_connect");
-        SendInterest(interest, "Kbucket_connect(NULL)", true);
-      }
-      else if (update_string.size() == 8)
-      {
-        std::string flag_connect_handshake = "0";
-        ndn::Name interest;
-        interest.append("prefix").append("data").append("download").append(newNode).append(TargetNode).append(flag_connect_handshake).append("Kbucket_connect");
-        SendInterest(interest, "Kbucket_connect(Node Replaced)", true);
+        SendInterest(interest, "Kbucket_connect", true);
       }
       
-
+      //向被取代的節點發送斷線訊息
+      if (update_string.second != "NULL")
+      {
+        std::string k_buk_string = "NULL";
+        ndn::Name interest;
+        interest.append("prefix").append("data").append("download").append(update_string.second).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
+        SendInterest(interest, "Kbucket_disconnect", true);
+      }
+      
       head = tail;
       tail = kbuk_string.find_first_of("_", head+1);
     }
@@ -365,22 +367,28 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     else if (flag_connect_handshake == "0")
     {
       //運行演算法，確定是否要加入此來源
-      std::string replaced_node = GetK_ptr()->KBucket_update(SourceNode);
+      std::pair<std::string, std::string> replaced_node = GetK_ptr()->KBucket_update(SourceNode);
       //若加入，則反送flag == 1
       //不加入，不動作or送其他封包
-      if (replaced_node != SourceNode)
+      if (replaced_node.first == SourceNode)
       {
         flag_connect_handshake = "1";
-        ndn::Name interest;
-        interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
-        SendInterest(interest, "Kbucket_connect", true);
       }
       else
       {
         flag_connect_handshake = "-1";
+      }
+
+      ndn::Name interest;
+      interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
+      SendInterest(interest, "Kbucket_connect", true);
+
+      if (replaced_node.second != "NULL")
+      {
+        std::string k_buk_string = "NULL";
         ndn::Name interest;
-        interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
-        SendInterest(interest, "Kbucket_connect", true);
+        interest.append("prefix").append("data").append("download").append(replaced_node.second).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
+        SendInterest(interest, "Kbucket_disconnect", true);
       }
     
     }
@@ -410,7 +418,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
     std::string updateNode = DataSet_update(DataName);
 
-    if (updateNode == NodeName)
+    if (updateNode == GetK_ptr()->GetKId())
     {
       this->SetDataSet(DataName);
       NS_LOG_DEBUG("DataSet-add " << DataName);
@@ -436,19 +444,19 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   if (itemtype == "serviceQuery")
   {
     //確認是否有來自同一源節點的Micro Order正在處理，有則不須新增，返回並同時滿足即可
-    Order* O_ptr = GetO_ptr()->getNext();
-    while (O_ptr != NULL)
-    {
-      if (O_ptr->getSourceNode() == SourceNode && !O_ptr->getTerminate())
-      {
-        NS_LOG_DEBUG("There is a  Micro order processing for " << SourceNode);
-        return;
-      }
-      else
-      {
-        O_ptr = O_ptr->getNext();
-      }
-    }
+    // Order* O_ptr = GetO_ptr()->getNext();
+    // while (O_ptr != NULL)
+    // {
+    //   if (O_ptr->getSourceNode() == SourceNode && !O_ptr->getTerminate())
+    //   {
+    //     NS_LOG_DEBUG("There is a  Micro order processing for " << SourceNode);
+    //     return;
+    //   }
+    //   else
+    //   {
+    //     O_ptr = O_ptr->getNext();
+    //   }
+    // }
 
     //新增order並處理 並註明是來自其他節點的order 後續完成後需回傳至原節點
     Order* newOrder = GetO_ptr()->AddOrder_toTail("MicroOrder_" + DataName + "_" + GetK_ptr()->GetKId() , SourceNode, 0, 0);
@@ -729,8 +737,8 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
   //當沒有任何資料可以query時，假設有自家菜單可以滿足，直接生成record
   if (dataSet.length() == 1 && !isOrder_from_otherNode && (shopSet.begin() == shopSet.end()))
   {
-
     O_ptr->setTerminate(true);
+    NS_LOG_DEBUG("error : dataset Empty, no data for SendQuery()\n");
     return;
   }
   
@@ -792,16 +800,16 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
 std::string
 CustomerApp::DataSet_update(std::string inputDataName){
   int distance = 0;
-  std::string output = NodeName.toUri();
+  std::string output = GetK_ptr()->GetKId();
   std::size_t biTemp = std::hash<std::string>{}(inputDataName);
   std::string binaryDataName = std::bitset<8>(biTemp).to_string();
   std::set<std::string> shopSet = GetO_ptr()->getShopList();
   std::set<std::string>::iterator o;
 
-  for (int i = 1; i < 9; i++)
+  for (int i = 0; i < 8; i++)
     {
         std::string str1 = binaryDataName.substr(i,1);
-        std::string str2 = NodeName.toUri().substr(i,1);
+        std::string str2 = output.substr(i,1);
         if (str1.compare(str2) == 0)
         {
             distance = distance + pow(2, 8-i);
@@ -812,7 +820,7 @@ CustomerApp::DataSet_update(std::string inputDataName){
   {
     std::string shopName = *o;
     int temp_distance = 0;
-    for (int i = 1; i < 9; i++)
+    for (int i = 0; i < 8; i++)
     {
          std::string str1 = binaryDataName.substr(i,1);
          std::string str2 = shopName.substr(i,1);

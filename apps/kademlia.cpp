@@ -152,12 +152,14 @@ Kademlia::SetData(std::string input, std::string type)
 }
 
 //以輸入的節點名稱比較其他K桶中資訊，並決定是否將其加入
-std::string
+std::pair<std::string, std::string>
 Kademlia::KBucket_update(std::string sourceNode)
 {
+    std::pair<std::string, std::string>outputPair("NULL", "NULL");
+
     if (sourceNode == KId)
     {
-        return "NULL";
+        return outputPair;
     }
     
 
@@ -166,7 +168,7 @@ Kademlia::KBucket_update(std::string sourceNode)
         if (k_bucket[i] == sourceNode)
         {
             //std::cout << "already have same node in K-buk\n";
-            return "NULL";
+            return outputPair;
         }    
     }
 
@@ -175,11 +177,13 @@ Kademlia::KBucket_update(std::string sourceNode)
         if (k_bucket[i] == "NULL")
         {
             k_bucket[i] = sourceNode;
-            return "add sourceNode to a NULL";
+            outputPair.first = sourceNode;
+            return outputPair;
         }
     }
     
     std::string output_KID = sourceNode;
+    int replaceIndex = 0;
     
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
@@ -187,19 +191,19 @@ Kademlia::KBucket_update(std::string sourceNode)
         if (XOR(k_bucket[i], this->GetKId()) < distance)
         {
             output_KID = k_bucket[i];
+            replaceIndex = i;
         }
         
     }
 
     if (output_KID != sourceNode)
     {
-        return output_KID;
+        k_bucket[replaceIndex] = sourceNode;
+        outputPair.second = output_KID;
     }
-    else
-    {
-        //演算法需要決策出一個替換的節點
-        return "K-buk is full";
-    }
+    
+    return outputPair;
+    
 
 }
 
@@ -244,7 +248,7 @@ Kademlia::Delete_data(std::string DataName)
     //     exit(0);
     // }
     
-    sqlCommand = std::string("DELETE * from RECORD WHERE NODE=") + "'" + GetKId() + "'" + " AND DATA='" + DataName + "';";  
+    sqlCommand = std::string("DELETE from RECORD WHERE NODE=") + "'" + GetKId() + "'" + " AND DATA='" + DataName + "';";  
                  
     
     /* Execute SQL statement */
