@@ -179,6 +179,8 @@ public:
         
     };
 
+    
+
     Data *head;
     Data *next = NULL;
     std::string Name = "NULL";
@@ -220,6 +222,10 @@ public:
 
     static int DB_DeleteData(void *NotUsed, int argc, char **argv, char **azColName){
         std::cout << "success delete data : " << argv[0] << " " << argv[1] << "\n";
+        return 0;
+    }
+
+    static int DB_NULL(void *NotUsed, int argc, char **argv, char **azColName){
         return 0;
     }
 
@@ -399,6 +405,13 @@ public:
 
     void
     SetisOnline(bool input){isOnline = input;};
+
+    void
+    Init_Kbucket();
+
+    //將目前K桶狀態存入資料庫中
+    void
+    SetK_bucket_to_DB();
 
 
     //用在原版kad使用，紀律這筆資料未來應該query的節點list

@@ -17,6 +17,8 @@ def main():
         total_Fulfill_Num = 0
 
         for node in data:
+            # if node != "44":
+            #     continue
             
             for orderName in data[node]:
 
@@ -44,7 +46,7 @@ def main():
                 totalDataNum = totalDataNum + dataList_count
                 
                 if "fulfill-order" not in data[node][orderName]:
-                    print(orderName)
+                    print(node + " " + orderName)
                     continue
                 
                 

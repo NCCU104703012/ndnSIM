@@ -62,10 +62,10 @@ int OrderQuery_num = 10;
 int MicroService_Timeout = 10;
 
 //一個節點顧客產生數量
-int GuestNumber =0;
+int GuestNumber = 0;
 
 // 開始產生資料時間
-int GueststartTime = 15000;
+int GueststartTime = 40000;
 
 //平均幾秒產生一筆資料
 int Record_Poisson = 500;
@@ -172,6 +172,13 @@ CustomerApp::StartApplication()
     O_ptr = O_ptr->getNext();
   }
 
+  //設定儲存K桶資訊的時間
+  Simulator::Schedule(Seconds(1), &CustomerApp::SetKubcket_init, this);
+  for (int i = 0; i < 100; i++)
+  {
+    Simulator::Schedule(Seconds(1000 * i), &CustomerApp::Store_kbucket, this);
+  }
+
   //設定資料產生時間
   std::poisson_distribution<int> poisson_record(Record_Poisson);
   std::default_random_engine generator(GetG_ptr()->getTimeStamp());
@@ -188,7 +195,7 @@ CustomerApp::StartApplication()
   std::cout << " dayOff: " <<  dayOff << std::endl;
 
   //shiftTime: 隨機打散上下線時間
-  int shiftTime = tempHash%100;
+  int shiftTime = tempHash%1000;
 
   for (int i = 0; i < onlineNum; i++)
   {

@@ -364,6 +364,132 @@ Kademlia::Delete_data_query(std::string DataName)
     
 }
 
+void
+Kademlia::SetK_bucket_to_DB(){
+    //刪除DB中K桶資訊
+
+    // sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+    std::string sqlCommand; 
+    
+    sqlCommand = std::string("DELETE from KBUCKET WHERE NODE=") + "'" + GetKId() + "'" + ";";  
+                 
+    /* Execute SQL statement */
+   rc = sqlite3_exec(db, &sqlCommand[0], dataList->DB_NULL, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+    fprintf(stderr, "SQL error: %s\n", zErrMsg);
+   }
+    
+    for (int i = 0; i < GetK_bucket_size(); i++)
+    {
+        if (k_bucket[i] == "NULL")
+        {
+            continue;
+        }
+
+        //將現有K桶資訊存入資料庫
+        sqlCommand = std::string("INSERT INTO KBUCKET (NODE,KID)") +
+                    "VALUES('"+ this->KId + "', '" + k_bucket[i] + "');";
+                    
+        /* Execute SQL statement */
+        rc = sqlite3_exec(db, &sqlCommand[0], dataList->DB_NULL, 0, &zErrMsg);
+        if( rc != SQLITE_OK ){
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        }
+    }
+
+    for (int i = 0; i < GetK_bucket_size(); i++)
+    {
+        if (k_bucket4[i] == "NULL")
+        {
+            continue;
+        }
+
+        //將現有K桶資訊存入資料庫
+        sqlCommand = std::string("INSERT INTO KBUCKET (NODE,KID)") +
+                    "VALUES('"+ this->KId + "', '" + k_bucket4[i] + "');";
+                    
+        /* Execute SQL statement */
+        rc = sqlite3_exec(db, &sqlCommand[0], dataList->DB_NULL, 0, &zErrMsg);
+        if( rc != SQLITE_OK ){
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        }
+    }
+
+    for (int i = 0; i < GetK_bucket_size(); i++)
+    {
+        if (k_bucket8[i] == "NULL")
+        {
+            continue;
+        }
+
+        //將現有K桶資訊存入資料庫
+        sqlCommand = std::string("INSERT INTO KBUCKET (NODE,KID)") +
+                    "VALUES('"+ this->KId + "', '" + k_bucket8[i] + "');";
+                    
+        /* Execute SQL statement */
+        rc = sqlite3_exec(db, &sqlCommand[0], dataList->DB_NULL, 0, &zErrMsg);
+        if( rc != SQLITE_OK ){
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        }
+    }
+    
+}
+
+//將資料庫中的K桶資訊轉移至變數中
+void
+Kademlia::Init_Kbucket(){
+    char *zErrMsg = 0;
+    int rc;
+    std::string sqlCommand, sqlOutput; 
+    char* command_output = (char *)calloc(5000,sizeof(char)) ;
+    std::string s = "|";
+    strcpy(command_output, &s[0]);
+
+    sqlCommand = std::string("SELECT * from KBUCKET WHERE NODE=") + "'" + KId + "'" + " ;";  
+    
+    /* Execute SQL statement */
+   rc = sqlite3_exec(db, &sqlCommand[0], this->DB_getDATA_string, &command_output, &zErrMsg);
+   if( rc != SQLITE_OK ){
+    fprintf(stderr, "SQL error: %s\n", zErrMsg);
+    sqlite3_free(zErrMsg);
+    return;
+   }
+
+    // std::cout << "string len = "<< command_output << "\n";
+    std::string inputString(command_output);
+    free(command_output);
+
+    if (inputString == "|")
+    {
+        return ;
+    }
+
+    int head = 0, tail = 0;
+    head = inputString.find_first_of("|", head);
+    tail = inputString.find_first_of("|", head+1);
+    std::string temp ;
+
+    while (tail != -1)
+    {
+        temp = inputString.substr(head+1, tail-head-1);
+        std::pair<std::string, std::string> update_result = KBucket_update(temp, GetSameBits(temp));
+        if (update_result.second != "NULL")
+        {
+            std::cout << "Init Kbucket error in Node " << this->KId << " / " << update_result.second << " replaced\n";
+        }
+
+        // if (inputString.find_first_of("|", tail) == inputString.find_last_of("|", tail))
+        // {
+        //     return ;
+        // }
+        head = tail;
+        tail = inputString.find_first_of("|", head+1);
+    }
+
+}
+
 //針對輸入節點，比較所有更接近的資料，回傳整理的字串
 //需要修改
 std::string
@@ -397,11 +523,12 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
     int head = 0, tail = 0;
     head = inputString.find_first_of("|", head);
     tail = inputString.find_first_of("|", head+1);
-    std::string temp = inputString.substr(head+1, tail-head-1);
+    std::string temp;
     std::string output = "|";
 
-    while (1)
+    while (tail != -1)
     {
+        temp = inputString.substr(head+1, tail-head-1);
         std::size_t hashData = std::hash<std::string>{}(temp);
         std::string binaryData = std::bitset<8>(hashData).to_string();
         int thisNode_distance = XOR(thisNode, binaryData);
@@ -412,10 +539,10 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
             output = output + temp + "|" ;
         }
 
-        if (inputString.find_first_of("|", tail) == inputString.find_last_of("|", tail))
-        {
-            return output;
-        }
+        // if (inputString.find_first_of("|", tail) == inputString.find_last_of("|", tail))
+        // {
+        //     return output;
+        // }
         head = tail;
         tail = inputString.find_first_of("|", head+1);
     }

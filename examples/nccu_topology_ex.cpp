@@ -358,27 +358,6 @@ main(int argc, char* argv[])
          "NODE           TEXT     NOT NULL," +
          "DATA           TEXT     NOT NULL);";
 
-  
-  /* Create SQL statement */
-  //  sql = "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) " 
-  //        "VALUES (1, 'Paul1', 32, 'California', 20000.00 ); "
-  //        "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) " 
-  //        "VALUES (2, 'Allen1', 25, 'Texas', 15000.00 ); " 
-  //        "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)"
-  //        "VALUES (3, 'Teddy1', 23, 'Norway', 20000.00 );"
-  //        "INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)"
-  //        "VALUES (5, 'Mark1', 25, 'Rich-Mond ', 65000.00 );"
-  //        "SELECT * from COMPANY";
-
-      // sqlCommand = std::string("INSERT INTO RECORD (NODE,DATA)") +
-      //       "VALUES('NODE1', 'DATA1');" +
-      //       "INSERT INTO RECORD (NODE,DATA)" +
-      //       "VALUES('NODE5', 'DATA4');" +
-      //       "SELECT * from RECORD";
-    
-  // /* Create SQL statement */
-  // sqlCommand = "SELECT * from RECORD ";
-
    /* Execute SQL statement */
    rc = sqlite3_exec(db, &sqlCommand[0], callback, 0, &zErrMsg);
    if( rc != SQLITE_OK ){
@@ -390,8 +369,19 @@ main(int argc, char* argv[])
 
    sqlCommand = std::string(" ") + "CREATE TABLE DATAKEYSET(" +
          "NODE           TEXT     NOT NULL," +
-         "DATA           TEXT     NOT NULL);" +
-         "SELECT * from DATAKEYSET ";
+         "DATA           TEXT     NOT NULL);" ;
+
+  rc = sqlite3_exec(db, &sqlCommand[0], callback, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }else{
+      fprintf(stdout, "Table select successfully\n");
+   }
+
+   sqlCommand = std::string(" ") + "CREATE TABLE KBUCKET(" +
+         "NODE           TEXT     NOT NULL," +
+         "KID           TEXT     NOT NULL);" ;
 
   rc = sqlite3_exec(db, &sqlCommand[0], callback, 0, &zErrMsg);
    if( rc != SQLITE_OK ){

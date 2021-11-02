@@ -196,6 +196,16 @@ public:
   std::string
   DataSet_update(std::string inputDataName);
 
+  void
+  SetKubcket_init(){
+    GetK_ptr()->Init_Kbucket();
+  }
+
+  void
+  Store_kbucket(){
+    GetK_ptr()->SetK_bucket_to_DB();
+  }
+
 
 private:
   //void
@@ -217,6 +227,7 @@ private:
       // std::cout << "success get data : " << argv[0] << " " << argv[1] << "\n";
       return 0;
   }
+
 
   ndn::Name m_prefix;
   ndn::Name m_postfix;
