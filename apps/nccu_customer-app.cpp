@@ -879,12 +879,12 @@ CustomerApp::Node_OnLine(){
 
     std::string flag_connect_handshake = "0";
 
-    for (int i = 0; i < Kbuk_Size; i++)
+    for (int j = 0; j < Kbuk_Size; j++)
     {
-      if (K_bucket[i] != "NULL")
+      if (K_bucket[j] != "NULL")
       {
         ndn::Name prefixInterest;
-        prefixInterest.append("prefix").append("data").append("download").append(K_bucket[i]).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
+        prefixInterest.append("prefix").append("data").append("download").append(K_bucket[j]).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
 
         SendInterest(prefixInterest, "Kbucket_connect: ", true);
       }
@@ -917,26 +917,29 @@ CustomerApp::Node_OffLine(){
   {
     K_bucket = tempK_ptr->GetK_bucket(i);
 
-    for (int i = 0; i < Kbuk_Size; i++)
+    for (int j = 0; j < Kbuk_Size; j++)
     {
-      if (K_bucket[i] != "NULL")
+      if (K_bucket[j] != "NULL")
       {
-        Kbuk_string = Kbuk_string + K_bucket[i] + "_";
+        Kbuk_string = Kbuk_string + K_bucket[j] + "_";
       }
 
     }
 
-    for (int i = 0; i < Kbuk_Size; i++)
+    for (int j = 0; j < Kbuk_Size; j++)
     {
-      if (K_bucket[i] != "NULL")
+      if (K_bucket[j] != "NULL")
       {
         ndn::Name prefixInterest;
-        prefixInterest.append("prefix").append("data").append("download").append(K_bucket[i]).append(NodeName).append(Kbuk_string).append("Kbucket_disconnect");
+        prefixInterest.append("prefix").append("data").append("download").append(K_bucket[j]).append(NodeName).append(Kbuk_string).append("Kbucket_disconnect");
 
         SendInterest(prefixInterest, "Kbucket_disconnect: ", true);
       }
 
+      
     }
+
+    
   }
   
 
