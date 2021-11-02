@@ -56,7 +56,7 @@ def main():
                         if arrive_time > longest_time:
                             longest_time = arrive_time
                 
-                if (longest_time - startTime) >= 1:
+                if (longest_time - startTime) >= 10:
                     continue
                 
                 total_Fulfill_Num = total_Fulfill_Num + fulfill_count

@@ -11,6 +11,7 @@
 #include <sqlite3.h>
 
 
+
 class Order
 {
 private:
@@ -247,10 +248,28 @@ public:
     GetNext_Node(std::string TargetNode, int output_num, std::string SourceNode);
 
     std::string*
-    GetK_bucket(){return k_bucket; };
+    GetK_bucket(int distance){
+        if (distance > 8 || distance < 0)
+        {
+            std::cout << "error: GetK_bucket() distance = " << distance << "\n";
+        }
+
+        if (distance >= 6)
+        {
+            return k_bucket;
+        }
+        else if (distance >= 4)
+        {
+            return k_bucket4;
+        }
+        return k_bucket8; 
+    };
 
     Data*
     GetDataList(){return dataList;};
+
+    int
+    GetSameBits(std::string intputKID);
 
     int
     XOR(std::string input);
@@ -271,7 +290,7 @@ public:
 
     //以輸入的節點名稱比較其他K桶中資訊，並決定是否將其加入
     std::pair<std::string, std::string>
-    KBucket_update(std::string sourceNode);
+    KBucket_update(std::string sourceNode, int distance);
 
     //將輸入節點從k桶中去除
     void
@@ -286,7 +305,14 @@ public:
             {
                 return true;
             }
-            
+            if (k_bucket4[i] == sourceNode)
+            {
+                return true;
+            }
+            if (k_bucket8[i] == sourceNode)
+            {
+                return true;
+            }
         }
         return false;
     }
@@ -306,11 +332,30 @@ public:
     //print K桶內容
     void
     print_Kbucket(){
+        std::cout << "k_bucket: ";
         for (int i = 0; i < GetK_bucket_size(); i++)
         {
             if (k_bucket[i] != "NULL")
             {
                 std::cout << k_bucket[i] + "|";
+            }
+        }
+         std::cout << "\n";
+        std::cout << "k_bucket4: ";
+         for (int i = 0; i < GetK_bucket_size(); i++)
+        {
+            if (k_bucket4[i] != "NULL")
+            {
+                std::cout << k_bucket4[i] + "|";
+            }
+        }
+        std::cout << "\n";
+        std::cout << "k_bucket8: ";
+         for (int i = 0; i < GetK_bucket_size(); i++)
+        {
+            if (k_bucket8[i] != "NULL")
+            {
+                std::cout << k_bucket8[i] + "|";
             }
         }
          std::cout << "\n";
@@ -344,7 +389,7 @@ public:
     update_nextHop(std::string inputNode);
 
     int
-    GetK_bucket_size(){return sizeof(k_bucket)/sizeof(k_bucket[0]);};
+    GetK_bucket_size();
 
     sqlite3*
     getDBptr(){return db;};
@@ -364,8 +409,8 @@ private:
     std::string KId;
     Data *dataList;
     std::string k_bucket[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
-    // std::string k_bucket[4] = {"NULL", "NULL", "NULL", "NULL"};
-    int knum = 0;
+    std::string k_bucket4[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
+    std::string k_bucket8[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
 
     //資料庫的輸出儲存變數
     sqlite3* db;

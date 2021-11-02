@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <sqlite3.h>
 
+int Kbucket_size = 10;
 
 Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID, sqlite3* inputDB)
 {
@@ -24,6 +25,9 @@ Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::str
     queryList->db = inputDB;
     
 }
+
+int
+Kademlia::GetK_bucket_size(){return Kbucket_size;};
 
 bool
 Kademlia::GetData(std::string DataName){
@@ -68,6 +72,48 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
         } 
     }
 
+    for (int i = 0; i < GetK_bucket_size(); i++)
+    {
+        if (SourceNode == k_bucket4[i])
+        {
+            continue;
+        }
+        
+        if (k_bucket4[i] != "NULL")
+        {
+            if (this->XOR(TargetNode, k_bucket4[i]) > this->XOR(TargetNode, mostClose_Node))
+            {
+                mostClose_Node = k_bucket4[i];
+            }
+            if (this->XOR(TargetNode, k_bucket4[i]) > this->XOR(TargetNode, output[arrIndex%3]))
+            {
+                output[arrIndex%3] = k_bucket4[i];
+                arrIndex++;
+            }
+        } 
+    }
+
+    for (int i = 0; i < GetK_bucket_size(); i++)
+    {
+        if (SourceNode == k_bucket8[i])
+        {
+            continue;
+        }
+        
+        if (k_bucket8[i] != "NULL")
+        {
+            if (this->XOR(TargetNode, k_bucket8[i]) > this->XOR(TargetNode, mostClose_Node))
+            {
+                mostClose_Node = k_bucket8[i];
+            }
+            if (this->XOR(TargetNode, k_bucket8[i]) > this->XOR(TargetNode, output[arrIndex%3]))
+            {
+                output[arrIndex%3] = k_bucket8[i];
+                arrIndex++;
+            }
+        } 
+    }
+
     if (output_num == 1)
     {
         return mostClose_Node;
@@ -85,9 +131,28 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
 }
 
 int
+Kademlia::GetSameBits(std::string inputKID){
+    int distance = 0;
+    for (int i = 0; i < 8; i++)
+    {
+        std::string str1 = std::to_string(this->KId[i]);
+        std::string str2 = std::to_string(inputKID[i]);
+        if (str1 == str2)
+        {
+            distance = distance + 1;
+        }
+        else
+        {
+            return distance;
+        }
+    }
+    return distance;
+}
+
+int
 Kademlia::XOR(std::string input)
 {
-    std::cout << "Xor: " << this->KId << " and " << input << "\n";
+    // std::cout << "Xor: " << this->KId << " and " << input << "\n";
 
     int distance = 0;
     for (int i = 0; i < 8; i++)
@@ -135,11 +200,12 @@ Kademlia::Node_info(){
 void
 Kademlia::Set_KBucket(std::string KNode)
 {
+    std::string* tempKbuk = GetK_bucket(GetSameBits(KNode));
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        if (k_bucket[i] == "NULL")
+        if (tempKbuk[i] == "NULL")
         {
-            k_bucket[i] = KNode;
+            tempKbuk[i] = KNode;
             return;
         }
     }
@@ -151,11 +217,12 @@ Kademlia::SetData(std::string input, std::string type)
     dataList->AddData(input, type);
 }
 
-//以輸入的節點名稱比較其他K桶中資訊，並決定是否將其加入
+//以輸入的節點名稱比較其他K桶中資訊，並決定是否將其加入, distance指定選擇哪一個K桶
 std::pair<std::string, std::string>
-Kademlia::KBucket_update(std::string sourceNode)
+Kademlia::KBucket_update(std::string sourceNode , int distance)
 {
     std::pair<std::string, std::string>outputPair("NULL", "NULL");
+    std::string* tempKbuk = GetK_bucket(distance);
 
     if (sourceNode == KId)
     {
@@ -165,7 +232,7 @@ Kademlia::KBucket_update(std::string sourceNode)
 
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        if (k_bucket[i] == sourceNode)
+        if (tempKbuk[i] == sourceNode)
         {
             //std::cout << "already have same node in K-buk\n";
             return outputPair;
@@ -174,9 +241,9 @@ Kademlia::KBucket_update(std::string sourceNode)
 
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        if (k_bucket[i] == "NULL")
+        if (tempKbuk[i] == "NULL")
         {
-            k_bucket[i] = sourceNode;
+            tempKbuk[i] = sourceNode;
             outputPair.first = sourceNode;
             return outputPair;
         }
@@ -188,9 +255,9 @@ Kademlia::KBucket_update(std::string sourceNode)
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
         int distance = XOR(output_KID, this->GetKId());
-        if (XOR(k_bucket[i], this->GetKId()) < distance)
+        if (XOR(tempKbuk[i], this->GetKId()) < distance)
         {
-            output_KID = k_bucket[i];
+            output_KID = tempKbuk[i];
             replaceIndex = i;
         }
         
@@ -198,7 +265,7 @@ Kademlia::KBucket_update(std::string sourceNode)
 
     if (output_KID != sourceNode)
     {
-        k_bucket[replaceIndex] = sourceNode;
+        tempKbuk[replaceIndex] = sourceNode;
         outputPair.second = output_KID;
     }
     
@@ -216,6 +283,16 @@ Kademlia::KBucket_delete(std::string sourceNode)
         if (k_bucket[i] == sourceNode)
         {
             k_bucket[i] = "NULL";
+            return;
+        }
+        if (k_bucket4[i] == sourceNode)
+        {
+            k_bucket4[i] = "NULL";
+            return;
+        }
+        if (k_bucket8[i] == sourceNode)
+        {
+            k_bucket8[i] = "NULL";
             return;
         }
         
@@ -240,13 +317,6 @@ Kademlia::Delete_data(std::string DataName)
     char *zErrMsg = 0;
     int rc;
     std::string sqlCommand; 
-
-    // rc = sqlite3_open("test.db", &db);
-
-    // if( rc ){
-    //     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-    //     exit(0);
-    // }
     
     sqlCommand = std::string("DELETE from RECORD WHERE NODE=") + "'" + GetKId() + "'" + " AND DATA='" + DataName + "';";  
                  
@@ -257,28 +327,6 @@ Kademlia::Delete_data(std::string DataName)
    fprintf(stderr, "SQL error: %s\n", zErrMsg);
       sqlite3_free(zErrMsg);
    }
-//    sqlite3_close(db);
-
-
-    
-    // Data* prePtr = dataList;
-
-    // while (1)
-    // {
-    //     if (prePtr->next == targetPtr)
-    //     {
-    //         prePtr->next = targetPtr->next;
-    //         delete targetPtr;
-    //         return;
-    //     }
-    //     prePtr = prePtr->next;
-
-    //     if (prePtr == NULL)
-    //     {
-    //        return;
-    //     }
-        
-    // }
     
 }
 
@@ -300,7 +348,7 @@ Kademlia::Delete_data_query(std::string DataName)
     {
         if (prePtr->next == targetPtr)
         {
-            std::cout << "Delete Data sucess: " << targetPtr->Name << "\n";
+            // std::cout << "Delete Data sucess: " << targetPtr->Name << "\n";
             prePtr->next = targetPtr->next;
             delete targetPtr;
             return;
@@ -372,23 +420,6 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
         tail = inputString.find_first_of("|", head+1);
     }
     
-
-    
-    // Data* DataPtr = dataList->next;
-
-    // while (DataPtr != NULL)
-    // {
-    //     std::size_t hashData = std::hash<std::string>{}(DataPtr->Name);
-    //     std::string binaryData = std::bitset<8>(hashData).to_string();
-    //     int thisNode_distance = XOR(thisNode, binaryData);
-    //     int targetNode_distance = XOR(targetNode, binaryData);
-
-    //     if (targetNode_distance > thisNode_distance)
-    //     {
-    //         output = output + DataPtr->Name + "|" ;
-    //     }
-    //     DataPtr = DataPtr->next;
-    // }
     return output;
 }
 
@@ -570,7 +601,7 @@ Data::update_nextHop(std::string inputNode)
 int
 Data::XOR(std::string input, std::string input2)
 {
-    std::cout << "Xor data: " << input2 << " and " << input << "\n";
+    // std::cout << "Xor data: " << input2 << " and " << input << "\n";
     int distance = 0;
     for (int i = 0; i < 8; i++)
     {

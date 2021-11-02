@@ -102,11 +102,11 @@ DataManageOrigin::StartApplication()
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
   // Schedule send of first interest
-  for (int i = 0; i < 100; i++)
+  for (int i = 0; i < 100000; i++)
   {
     //設定timeOut週期，會檢查超過時間的Data Query，進行next round或是data lost
     double startTime = 0.2;
-    Simulator::Schedule(Seconds(startTime + 0.2*i), &DataManageOrigin::timeOut, this);
+    Simulator::Schedule(Seconds(startTime + 0.5*i), &DataManageOrigin::timeOut, this);
   }
 }
 
@@ -175,27 +175,27 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       {
       case 3:
         TargetNode = temp;
-        NS_LOG_DEBUG("targetnode = " << TargetNode);
+        // NS_LOG_DEBUG("targetnode = " << TargetNode);
         break;
       case 4:
         flag = temp;
-        NS_LOG_DEBUG("flag = " << flag);
+        // NS_LOG_DEBUG("flag = " << flag);
         break;
       case 5:
         SourceNode = temp;
-        NS_LOG_DEBUG("sourcenode = " << SourceNode);
+        // NS_LOG_DEBUG("sourcenode = " << SourceNode);
         break;
       case 6:
         DataName = temp;
-        NS_LOG_DEBUG("dataname = " << DataName);
+        // NS_LOG_DEBUG("dataname = " << DataName);
         break;
       case 7:
         itemType = temp;
-        NS_LOG_DEBUG("itemType = " << itemType);
+        // NS_LOG_DEBUG("itemType = " << itemType);
         break;
       case 8:
         nextHop = temp;
-        NS_LOG_DEBUG("nextHop = " << nextHop);
+        // NS_LOG_DEBUG("nextHop = " << nextHop);
       }
     }
 
@@ -232,11 +232,30 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
         queryDataPtr->closest_node = SourceNode;
 
+        //從三個K桶中比較有無更接近的節點
         for (int i = 0; i < GetK_ptr()->GetK_bucket_size(); i++)
         {
-            if (GetK_ptr()->GetK_bucket()[i] != "NULL")
+            if (GetK_ptr()->GetK_bucket(6)[i] != "NULL")
             {
-                queryDataPtr->update_nextHop(GetK_ptr()->GetK_bucket()[i]);
+                queryDataPtr->update_nextHop(GetK_ptr()->GetK_bucket(6)[i]);
+            }
+        
+        }
+
+        for (int i = 0; i < GetK_ptr()->GetK_bucket_size(); i++)
+        {
+            if (GetK_ptr()->GetK_bucket(4)[i] != "NULL")
+            {
+                queryDataPtr->update_nextHop(GetK_ptr()->GetK_bucket(4)[i]);
+            }
+        
+        }
+
+        for (int i = 0; i < GetK_ptr()->GetK_bucket_size(); i++)
+        {
+            if (GetK_ptr()->GetK_bucket(0)[i] != "NULL")
+            {
+                queryDataPtr->update_nextHop(GetK_ptr()->GetK_bucket(0)[i]);
             }
         
         }
@@ -294,20 +313,20 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         head = nextHop.find_first_of("_", head);
         tail = nextHop.find_first_of("_", head+1);
 
-        std::cout << "head: " << head << " tail: " << tail << "\n";
+        // std::cout << "head: " << head << " tail: " << tail << "\n";
 
         while (tail != -1)
         {
             std::string newNode = nextHop.substr(head+1, tail-head-1);
 
-            std::cout <<"newNode : " << newNode <<std::endl;
+            // std::cout <<"newNode : " << newNode <<std::endl;
 
             if (newNode != SourceNode)
             {
                 queryDataPtr->update_nextHop(newNode);
             }
 
-            std::cout << newNode << "\n";
+            // std::cout << newNode << "\n";
 
             if (tail == int(nextHop.length()))
             {
@@ -405,7 +424,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       ndn::Name outData;
       outData.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
 
-      auto data = std::make_shared<ndn::Data>(outData);
+      auto data = std::make_shared<ndn::Data>(interest->getName());
       data->setFreshnessPeriod(ndn::time::milliseconds(1000));
       data->setContent(std::make_shared< ::ndn::Buffer>(1024));
       ndn::StackHelper::getKeyChain().sign(*data);
@@ -495,10 +514,10 @@ DataManageOrigin::timeOut()
     while (queryDataPtr != NULL)
     {
         //設定執行間隔
-        queryDataPtr->lifeTime = queryDataPtr->lifeTime + 0.2;
+        queryDataPtr->lifeTime = queryDataPtr->lifeTime + 0.5;
 
         //超過timeout者，確認是否有next hop，沒有即lost，有則送出
-        if (queryDataPtr->lifeTime >= 10)
+        if (queryDataPtr->lifeTime >= 0.5)
         {
             
             bool hasNextHop = false;
