@@ -66,30 +66,27 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
             continue;
         }
 
-        if (this->XOR(k_bucket[i], TargetNode) > this->XOR(TargetNode, mostClose_Node.first))
-        {
-            output[mostClose_Node.second] = k_bucket[i];
-            mostClose_Node.first = k_bucket[i];
-        }
-        else if (this->XOR(k_bucket[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
+        if (this->XOR(k_bucket[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
         {
             output[mostFar_Node.second] = k_bucket[i];
-            mostFar_Node.first = k_bucket[i];
-        }
-
-        for (int j = 0; j < 3; j++)
-        {
-            if (output[j] == mostClose_Node.first)
-            {
-                mostClose_Node.second = j;
-            }
-            if (output[j] == mostFar_Node.first)
-            {
-                mostFar_Node.second = j;
-            }
             
-        }
+            mostFar_Node.first = output[0];
+            mostFar_Node.second = 0;    
 
+            for (int j = 0; j < 3; j++)
+            {
+                if (this->XOR(output[j], TargetNode) > this->XOR(TargetNode, mostClose_Node.first))
+                {
+                    mostClose_Node.first = output[j];
+                    mostClose_Node.second = i;
+                }
+                if (this->XOR(output[j], TargetNode) < this->XOR(TargetNode, mostFar_Node.first))
+                {
+                    mostFar_Node.first = output[j];
+                    mostFar_Node.second = j;
+                }
+            }
+        }
     }
 
     for (int i = 0; i < GetK_bucket_size(); i++)
@@ -99,30 +96,27 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
             continue;
         }
 
-        if (this->XOR(k_bucket4[i], TargetNode) > this->XOR(TargetNode, mostClose_Node.first))
-        {
-            output[mostClose_Node.second] = k_bucket4[i];
-            mostClose_Node.first = k_bucket4[i];
-        }
-        else if (this->XOR(k_bucket4[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
+        if (this->XOR(k_bucket4[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
         {
             output[mostFar_Node.second] = k_bucket4[i];
-            mostFar_Node.first = k_bucket4[i];
-        }
 
-        for (int j = 0; j < 3; j++)
-        {
-            if (output[j] == mostClose_Node.first)
-            {
-                mostClose_Node.second = j;
-            }
-            if (output[j] == mostFar_Node.first)
-            {
-                mostFar_Node.second = j;
-            }
-            
-        }
+            mostFar_Node.first = output[0];
+            mostFar_Node.second = 0;    
 
+            for (int j = 0; j < 3; j++)
+            {
+                if (this->XOR(output[j], TargetNode) > this->XOR(TargetNode, mostClose_Node.first))
+                {
+                    mostClose_Node.first = output[j];
+                    mostClose_Node.second = i;
+                }
+                if (this->XOR(output[j], TargetNode) < this->XOR(TargetNode, mostFar_Node.first))
+                {
+                    mostFar_Node.first = output[j];
+                    mostFar_Node.second = j;
+                }
+            }
+        }
     }
 
     for (int i = 0; i < GetK_bucket_size(); i++)
@@ -132,30 +126,27 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
             continue;
         }
 
-        if (this->XOR(k_bucket8[i], TargetNode) > this->XOR(TargetNode, mostClose_Node.first))
-        {
-            output[mostClose_Node.second] = k_bucket8[i];
-            mostClose_Node.first = k_bucket8[i];
-        }
-        else if (this->XOR(k_bucket8[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
+        if (this->XOR(k_bucket8[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
         {
             output[mostFar_Node.second] = k_bucket8[i];
-            mostFar_Node.first = k_bucket8[i];
-        }
 
-        for (int j = 0; j < 3; j++)
-        {
-            if (output[j] == mostClose_Node.first)
-            {
-                mostClose_Node.second = j;
-            }
-            if (output[j] == mostFar_Node.first)
-            {
-                mostFar_Node.second = j;
-            }
-            
-        }
+            mostFar_Node.first = output[0];
+            mostFar_Node.second = 0;    
 
+            for (int j = 0; j < 3; j++)
+            {
+                if (this->XOR(output[j], TargetNode) > this->XOR(TargetNode, mostClose_Node.first))
+                {
+                    mostClose_Node.first = output[j];
+                    mostClose_Node.second = i;
+                }
+                if (this->XOR(output[j], TargetNode) < this->XOR(TargetNode, mostFar_Node.first))
+                {
+                    mostFar_Node.first = output[j];
+                    mostFar_Node.second = j;
+                }
+            }
+        }
     }
 
 
@@ -257,9 +248,9 @@ Kademlia::Set_KBucket(std::string KNode)
 }
 
 void
-Kademlia::SetData(std::string input, std::string type)
+Kademlia::SetData(std::string input, std::string K_id, std::string sourceNode, bool init)
 {
-    dataList->AddData(input, type);
+    dataList->AddData(input, K_id, sourceNode, init);
 }
 
 //以輸入的節點名稱比較其他K桶中資訊，並決定是否將其加入, distance指定選擇哪一個K桶
@@ -279,7 +270,7 @@ Kademlia::KBucket_update(std::string sourceNode , int distance)
     {
         if (tempKbuk[i] == sourceNode)
         {
-            //std::cout << "already have same node in K-buk\n";
+            outputPair.first = sourceNode;
             return outputPair;
         }    
     }
@@ -599,22 +590,51 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
 //---------------------Class Data-------------------------
 //需要修改
 void
-Data::AddData(std::string inputName, std::string k_ID)
+Data::AddData(std::string inputName, std::string k_ID, std::string sourceNode, bool init)
 {
     // sqlite3 *db;
+    std::cout << "Insert Data " << inputName << " in " << k_ID << " sourceNode: " << sourceNode <<"\n"; 
+
     char *zErrMsg = 0;
     int rc;
-    std::string sqlCommand; 
+    std::string sqlCommand;
+    int command_output = 0;
 
-    // rc = sqlite3_open("test.db", &db);
+    if (init == false || k_ID != sourceNode)
+    {
+        sqlCommand = std::string("SELECT * from RECORD WHERE NODE=") + "'" + sourceNode + "'" + " AND DATA='" + inputName + "';";  
+    
+        /* Execute SQL statement */
+        rc = sqlite3_exec(db, &sqlCommand[0], this->DB_getDATA, &command_output, &zErrMsg);
+        if( rc != SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        if (command_output == 0)
+        {
+            return;
+        }
 
-    // if( rc ){
-    //     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-    //     exit(0);
-    // }
+        sqlCommand = std::string("DELETE FROM RECORD WHERE ") +
+                 "NODE='"+ sourceNode + "' AND DATA= '" + inputName + "';";
+        
+        std::cout << sqlCommand <<"\n";
+    
+            /* Execute SQL statement */
+        rc = sqlite3_exec(db, &sqlCommand[0], this->DB_DeleteData, &command_output, &zErrMsg);
+        if( rc != SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+
+        
+    }
+    
     
     sqlCommand = std::string("INSERT INTO RECORD (NODE,DATA)") +
                  "VALUES('"+ k_ID + "', '" + inputName + "');";
+    
+    std::cout << sqlCommand <<"\n";
     
     /* Execute SQL statement */
    rc = sqlite3_exec(db, &sqlCommand[0], this->DB_addDATA, 0, &zErrMsg);
@@ -622,15 +642,7 @@ Data::AddData(std::string inputName, std::string k_ID)
    fprintf(stderr, "SQL error: %s\n", zErrMsg);
       sqlite3_free(zErrMsg);
    }
-//    sqlite3_close(db);
 
-    // Data *inputData = new Data();
-    // Data *nextPtr = this->next;
-    // inputData->next = nextPtr;
-    // this->next = inputData;
-    // inputData->head = this;
-    // inputData->Name = inputName;
-    // inputData->type = inputType;
 }
 
 void
@@ -742,6 +754,9 @@ Data::update_nextHop(std::string inputNode)
     std::size_t hashData = std::hash<std::string>{}(this->Name);
     std::string binaryData = std::bitset<8>(hashData).to_string();
     distance = XOR(binaryData,inputNode);
+    std::pair<std::string, int>mostFar_node;
+    mostFar_node.first = nextHop_list[0];
+    mostFar_node.second = 0;
 
     if (distance <= XOR(binaryData, closest_node))
     {
@@ -750,27 +765,30 @@ Data::update_nextHop(std::string inputNode)
 
     for (int  i = 0; i < 3; i++)
     {
-        if (this->nextHop_list[i] == "NULL")
-        {
-            this->nextHop_list[i] = inputNode;
-            return;
-        }
-    }
-    
-    for (int i = 0; i < 3; i++)
-    {
         if (this->nextHop_list[i] == inputNode)
         {
             // 預防nextHop list出現相同節點，重複Query
             return;
         }
-        if (distance > XOR(binaryData, this->nextHop_list[i]))
+
+        if (this->nextHop_list[i] == "NULL")
         {
             this->nextHop_list[i] = inputNode;
             return;
-        }     
+        }
+
+        if (XOR(mostFar_node.first, binaryData) > XOR(nextHop_list[i], binaryData))
+        {
+            mostFar_node.first = nextHop_list[i];
+            mostFar_node.second = i;
+        }
     }
     
+    if (distance > XOR(mostFar_node.first, binaryData))
+    {
+        nextHop_list[mostFar_node.second] = inputNode;
+    }
+    return;
 }
 
 int

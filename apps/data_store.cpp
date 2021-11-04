@@ -181,7 +181,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
   if (itemType == "Store_complete")
   {
-    GetK_ptr()->Delete_data(DataName);
+    // GetK_ptr()->Delete_data(DataName);
     std::cout<< GetK_ptr()->GetKId() << "  data Delete: " << DataName <<"\n";
     return;
   }
@@ -199,7 +199,10 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
   if (GetK_ptr()->GetKId() == nextTarget)
   {
-    GetK_ptr()->SetData(DataName, GetK_ptr()->GetKId());
+    if (TargetNode != SourceNode)
+    {
+      GetK_ptr()->SetData(DataName, GetK_ptr()->GetKId() , SourceNode, false);
+    }
     //GetK_ptr()->Node_info();
 
     std::string module_choose = "download";

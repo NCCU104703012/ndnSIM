@@ -53,7 +53,7 @@ int week = 300;
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 30;
+int onlineNum = 10;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -65,7 +65,7 @@ int MicroService_Timeout = 10;
 int GuestNumber = 0;
 
 // 開始產生資料時間
-int GueststartTime = 40000;
+int GueststartTime = 10000;
 
 //平均幾秒產生一筆資料
 int Record_Poisson = 100;
@@ -264,7 +264,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   if (itemtype == "Kbucket_connect")
   {
     //上下線狀態判定，不在線則回傳disconnect，保證K桶雙向連接
-    if (!GetK_ptr()->GetisOnline())
+    if (GetK_ptr()->GetisOnline() == false)
     {
       std::string k_buk_string = "NULL";
       ndn::Name interest;
@@ -314,7 +314,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
           trans_dataName = trans_list.substr(head+1, tail-head-1);
 
           //確認此前並無對其他節點送出此資料的Transform
-          GetK_ptr()->Delete_data(trans_dataName);
+          // GetK_ptr()->Delete_data(trans_dataName);
 
           ndn::Name interest;
           interest.append("prefix").append("data").append("store").append(SourceNode).append(NodeName).append(trans_dataName).append("Transform_Data");
@@ -349,7 +349,22 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
       if (replaced_node.second != "NULL")
       {
-        std::string k_buk_string = "NULL";
+        std::string k_buk_string = "_";
+        std::string* K_bucket ;
+        for (int i = 0; i < 10; i = i+4)
+        {
+          K_bucket = GetK_ptr()->GetK_bucket(i);
+
+          for (int j = 0; j < Kbuk_Size; j++)
+          {
+            if (K_bucket[j] != "NULL")
+            {
+              k_buk_string = k_buk_string + K_bucket[j] + "_";
+            }
+
+          }
+          
+        }
         ndn::Name interest;
         interest.append("prefix").append("data").append("download").append(replaced_node.second).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
         SendInterest(interest, "Kbucket_disconnect", true);
@@ -369,7 +384,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   }
 
   //上下線狀態判定
-  if (!GetK_ptr()->GetisOnline())
+  if (GetK_ptr()->GetisOnline() == false)
   {
     NS_LOG_DEBUG("error! this node is offline : " << interest->getName());
     return;
@@ -382,11 +397,18 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     int head = 0, tail;
     std::string kbuk_string = DataName;
     std::set<std::string> kbuk_update_set;
+    std::set<std::string> kbuk_delete_set;
+
 
     GetK_ptr()->KBucket_delete(SourceNode);
 
     std::cout <<"Disconnect " << NodeName << ": ";
     GetK_ptr()->print_Kbucket();
+
+    if (kbuk_string.length() < 5)
+    {
+      return;
+    }
 
     head = kbuk_string.find_first_of("_", head);
     tail = kbuk_string.find_first_of("_", head+1);
@@ -410,10 +432,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         }
         else
         {
-          std::string k_buk_string = "NULL";
-          ndn::Name interest;
-          interest.append("prefix").append("data").append("download").append(update_string.second).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
-          SendInterest(interest, "Kbucket_disconnect", true);
+          kbuk_delete_set.insert(update_string.second);
         }
       }
       
@@ -421,8 +440,35 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       tail = kbuk_string.find_first_of("_", head+1);
       }
 
-    //將更新好的K桶依據新連接對象分別connect
     std::set<std::string>::iterator i;
+    //將更新好的K桶依據斷線對象分別disconnect
+    for (auto i = kbuk_delete_set.begin(); i != kbuk_delete_set.end(); ++i)
+    {
+      std::string disCoonectNode = *i;
+      std::string k_buk_string = "_";
+      ndn::Name interest;
+      std::string* K_bucket ;
+
+      for (int i = 0; i < 10; i = i+4)
+      {
+        K_bucket = GetK_ptr()->GetK_bucket(i);
+
+        for (int j = 0; j < Kbuk_Size; j++)
+        {
+          if (K_bucket[j] != "NULL")
+          {
+            k_buk_string = k_buk_string + K_bucket[j] + "_";
+          }
+
+        }
+        
+      }
+
+      interest.append("prefix").append("data").append("download").append(disCoonectNode).append(GetK_ptr()->GetKId()).append(k_buk_string).append("Kbucket_disconnect");
+      SendInterest(interest, "Kbucket_disconnect", true);
+    }
+
+    //將更新好的K桶依據新連接對象分別connect
     for (auto i = kbuk_update_set.begin(); i != kbuk_update_set.end(); ++i)
     {
       std::string coonectNode = *i;
@@ -579,6 +625,12 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
     }
 
     Order* O_ptr = GetO_ptr()->getNext();
+
+    if (query_algorithm.toUri() == "/DataManageOrigin")
+    {
+      GetK_ptr()->Delete_data_query(DataString);
+    }
+    
     
     //遍歷所有order, 滿足所有需要此筆資料的order
     while (O_ptr != NULL)
@@ -660,6 +712,8 @@ CustomerApp::InitSendData(){
   std::string newRecord = GetG_ptr()->getRecordName() + "_" + std::to_string(guest_serialNum);
   guest_serialNum++;
   GetG_ptr()->setSerialNum(guest_serialNum);
+
+  GetK_ptr()->SetData(newRecord, GetK_ptr()->GetKId(), GetK_ptr()->GetKId(), true);
 
   std::size_t hashRecord = std::hash<std::string>{}(newRecord);
   std::string binaryRecord = std::bitset<8>(hashRecord).to_string();

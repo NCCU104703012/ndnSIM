@@ -261,10 +261,10 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         }
 
         //std::cout << "nextHop List: " ;
-        for (int i = 0; i < 3; i++)
-        {
+        // for (int i = 0; i < 3; i++)
+        // {
             //std::cout << queryDataPtr->nextHop_list[i] << "  "  ;
-        }
+        // }
         //std::cout<< "\n";
 
         bool hasNextHop = false;
@@ -356,12 +356,13 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
             tail = nextHop.find_first_of("_", head+1);
         }
         
-        queryDataPtr->SetClosest_Node();
+        
 
         if (queryDataPtr->reply_count == queryDataPtr->target_reply_count)
         {
             bool hasNextHop = false;
             queryDataPtr->target_reply_count = 0;
+            queryDataPtr->SetClosest_Node();
             
             for (int i = 0; i < 3; i++)
             {
@@ -374,7 +375,8 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
                     //queryDataPtr->timeout_check[i] = queryDataPtr->nextHop_list[i];
 
-                    outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(GetK_ptr()->GetKId()).append(queryDataPtr->Name).append("timeOut").append("NULL");
+                    //outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(GetK_ptr()->GetKId()).append(queryDataPtr->Name).append("timeOut").append("NULL");
+                    outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(GetK_ptr()->GetKId()).append(queryDataPtr->Name).append("next-round").append("NULL").append(std::to_string(time(NULL)));
                     SendInterest(outInterest, "Get all query back! next round Query: ", true);
                 }
                 queryDataPtr->nextHop_list[i] = "NULL";
@@ -538,7 +540,7 @@ DataManageOrigin::timeOut()
         queryDataPtr->lifeTime = queryDataPtr->lifeTime + 0.5;
 
         //超過timeout者，確認是否有next hop，沒有即lost，有則送出
-        if (queryDataPtr->lifeTime >= 0.5)
+        if (queryDataPtr->lifeTime > 5)
         {
             
             bool hasNextHop = false;

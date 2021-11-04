@@ -51,7 +51,7 @@ std::string Query_Algorithm = "DataManageOrigin";
 int NodeNumber = 49;
 
 //一個節點產生的order數量
-int OrderNumber = 5;
+int OrderNumber = 0;
 
 //order開始時間
 int orderStartTime = 40000;
@@ -343,7 +343,7 @@ main(int argc, char* argv[])
   int rc;
   std::string sqlCommand;
 
-  rc = sqlite3_open("1103_100data.db", &db);
+  rc = sqlite3_open("1104_100data.db", &db);
 
   if( rc ){
      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -390,6 +390,18 @@ main(int argc, char* argv[])
    }else{
       fprintf(stdout, "Table select successfully\n");
    }
+
+  std::cout << "RECORD COUNT : ";
+  sqlCommand = std::string(" ") + "SELECT COUNT(*) FROM RECORD";
+
+  rc = sqlite3_exec(db, &sqlCommand[0], callback, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }else{
+      fprintf(stdout, "Table select successfully\n");
+   }
+   std::cout << "\n";
 
   // Install NDN stack on all nodes
   // 可以設定cs size,cache policy等

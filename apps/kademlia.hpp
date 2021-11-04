@@ -142,7 +142,7 @@ public:
         head = this;
     }
 
-    void AddData(std::string inputName, std::string k_ID);
+    void AddData(std::string inputName, std::string k_ID, std::string sourceNode, bool init);
 
     void AddData(std::string inputName, std::string inputType, int Empty);
 
@@ -170,7 +170,7 @@ public:
         {
             if (nextHop_list[i] != "NULL")
             {
-                if (XOR(nextHop_list[i], binaryData) < XOR(closest_node, binaryData))
+                if (XOR(nextHop_list[i], binaryData) > XOR(closest_node, binaryData))
                 {
                     closest_node = nextHop_list[i];
                 }
@@ -221,6 +221,8 @@ public:
     }
 
     static int DB_DeleteData(void *NotUsed, int argc, char **argv, char **azColName){
+        int *flag = (int*)NotUsed;
+        *flag = 1;
         std::cout << "success delete data : " << argv[0] << " " << argv[1] << "\n";
         return 0;
     }
@@ -247,8 +249,9 @@ public:
         return node_name;
     };
 
+    //將資料加入資料庫，init代表是否為初始產生，與transform區分
     void
-    SetData(std::string input, std::string type);
+    SetData(std::string input, std::string K_id, std::string sourceNode, bool init);
 
     std::string
     GetNext_Node(std::string TargetNode, int output_num, std::string SourceNode);
