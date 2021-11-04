@@ -48,75 +48,120 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
 
     std::string output[3] = {this->KId, this->KId, this->KId};
     std::string outputString = "";
-    std::string mostClose_Node = this->KId;
-    int arrIndex = 0;
+    std::pair<std::string, int> mostClose_Node;
+    std::pair<std::string, int> mostFar_Node;
+    // std::string mostClose_Node = this->KId;
+    // std::string mostFar_Node = this->KId;
+    // int arrIndex = 0;
+
+    mostClose_Node.first = this->KId;
+    mostClose_Node.second = 0;
+    mostFar_Node.first = this->KId;
+    mostFar_Node.second = 0;
 
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        if (SourceNode == k_bucket[i])
+        if (SourceNode == k_bucket[i] || k_bucket[i] == "NULL")
         {
             continue;
         }
-        
-        if (k_bucket[i] != "NULL")
+
+        if (this->XOR(k_bucket[i], TargetNode) > this->XOR(TargetNode, mostClose_Node.first))
         {
-            if (this->XOR(TargetNode, k_bucket[i]) > this->XOR(TargetNode, mostClose_Node))
+            output[mostClose_Node.second] = k_bucket[i];
+            mostClose_Node.first = k_bucket[i];
+        }
+        else if (this->XOR(k_bucket[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
+        {
+            output[mostFar_Node.second] = k_bucket[i];
+            mostFar_Node.first = k_bucket[i];
+        }
+
+        for (int j = 0; j < 3; j++)
+        {
+            if (output[j] == mostClose_Node.first)
             {
-                mostClose_Node = k_bucket[i];
+                mostClose_Node.second = j;
             }
-            if (this->XOR(TargetNode, k_bucket[i]) > this->XOR(TargetNode, output[arrIndex%3]))
+            if (output[j] == mostFar_Node.first)
             {
-                output[arrIndex%3] = k_bucket[i];
-                arrIndex++;
+                mostFar_Node.second = j;
             }
-        } 
+            
+        }
+
     }
 
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        if (SourceNode == k_bucket4[i])
+        if (SourceNode == k_bucket4[i] || k_bucket4[i] == "NULL")
         {
             continue;
         }
-        
-        if (k_bucket4[i] != "NULL")
+
+        if (this->XOR(k_bucket4[i], TargetNode) > this->XOR(TargetNode, mostClose_Node.first))
         {
-            if (this->XOR(TargetNode, k_bucket4[i]) > this->XOR(TargetNode, mostClose_Node))
+            output[mostClose_Node.second] = k_bucket4[i];
+            mostClose_Node.first = k_bucket4[i];
+        }
+        else if (this->XOR(k_bucket4[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
+        {
+            output[mostFar_Node.second] = k_bucket4[i];
+            mostFar_Node.first = k_bucket4[i];
+        }
+
+        for (int j = 0; j < 3; j++)
+        {
+            if (output[j] == mostClose_Node.first)
             {
-                mostClose_Node = k_bucket4[i];
+                mostClose_Node.second = j;
             }
-            if (this->XOR(TargetNode, k_bucket4[i]) > this->XOR(TargetNode, output[arrIndex%3]))
+            if (output[j] == mostFar_Node.first)
             {
-                output[arrIndex%3] = k_bucket4[i];
-                arrIndex++;
+                mostFar_Node.second = j;
             }
-        } 
+            
+        }
+
     }
 
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        if (SourceNode == k_bucket8[i])
+        if (SourceNode == k_bucket8[i] || k_bucket8[i] == "NULL")
         {
             continue;
         }
-        
-        if (k_bucket8[i] != "NULL")
+
+        if (this->XOR(k_bucket8[i], TargetNode) > this->XOR(TargetNode, mostClose_Node.first))
         {
-            if (this->XOR(TargetNode, k_bucket8[i]) > this->XOR(TargetNode, mostClose_Node))
+            output[mostClose_Node.second] = k_bucket8[i];
+            mostClose_Node.first = k_bucket8[i];
+        }
+        else if (this->XOR(k_bucket8[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
+        {
+            output[mostFar_Node.second] = k_bucket8[i];
+            mostFar_Node.first = k_bucket8[i];
+        }
+
+        for (int j = 0; j < 3; j++)
+        {
+            if (output[j] == mostClose_Node.first)
             {
-                mostClose_Node = k_bucket8[i];
+                mostClose_Node.second = j;
             }
-            if (this->XOR(TargetNode, k_bucket8[i]) > this->XOR(TargetNode, output[arrIndex%3]))
+            if (output[j] == mostFar_Node.first)
             {
-                output[arrIndex%3] = k_bucket8[i];
-                arrIndex++;
+                mostFar_Node.second = j;
             }
-        } 
+            
+        }
+
     }
+
 
     if (output_num == 1)
     {
-        return mostClose_Node;
+        return mostClose_Node.first;
     }
 
     for (int i = 0; i < 3; i++)
@@ -297,11 +342,10 @@ Kademlia::KBucket_delete(std::string sourceNode)
         }
         
     }
-    
+    return;
 }
 
-//從datalist中刪除資料
-//需要修改
+//從DB中刪除資料
 void
 Kademlia::Delete_data(std::string DataName)
 {
@@ -498,7 +542,7 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
     char *zErrMsg = 0;
     int rc;
     std::string sqlCommand, sqlOutput; 
-    char* command_output = (char *)calloc(5000,sizeof(char)) ;
+    char* command_output = (char *)calloc(500000,sizeof(char)) ;
     std::string s = "|";
     strcpy(command_output, &s[0]);
 
@@ -592,11 +636,15 @@ Data::AddData(std::string inputName, std::string k_ID)
 void
 Data::AddData(std::string inputName, std::string inputType, int Empty)
 {
+    Data* tailptr = this;
+    while (tailptr->next != NULL)
+    {
+        tailptr = tailptr->next;
+    }
 
     Data *inputData = new Data();
-    Data *nextPtr = this->next;
-    inputData->next = nextPtr;
-    this->next = inputData;
+    inputData->next = NULL;
+    tailptr->next = inputData;
     inputData->head = this;
     inputData->Name = inputName;
     inputData->type = inputType;

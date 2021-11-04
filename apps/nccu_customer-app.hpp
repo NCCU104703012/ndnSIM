@@ -199,6 +199,7 @@ public:
   void
   SetKubcket_init(){
     GetK_ptr()->Init_Kbucket();
+    GetK_ptr()->print_Kbucket();
   }
 
   void

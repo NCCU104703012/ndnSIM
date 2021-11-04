@@ -53,7 +53,7 @@ int week = 300;
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 50;
+int onlineNum = 30;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -68,7 +68,7 @@ int GuestNumber = 0;
 int GueststartTime = 40000;
 
 //平均幾秒產生一筆資料
-int Record_Poisson = 500;
+int Record_Poisson = 100;
 //分母 化小數點用
 int Record_Poisson_div = 1;
 
@@ -173,7 +173,7 @@ CustomerApp::StartApplication()
   }
 
   //設定儲存K桶資訊的時間
-  Simulator::Schedule(Seconds(1), &CustomerApp::SetKubcket_init, this);
+  SetKubcket_init();
   for (int i = 0; i < 100; i++)
   {
     Simulator::Schedule(Seconds(1000 * i), &CustomerApp::Store_kbucket, this);
@@ -307,18 +307,22 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         int head = 0, tail;
         head = trans_list.find_first_of("|", head);
         tail = trans_list.find_first_of("|", head+1);
-        std::string trans_targetNode = trans_list.substr(head+1, tail-head-1);
+        std::string trans_dataName = trans_list.substr(head+1, tail-head-1);
 
         while (tail != -1)
         {
-          trans_targetNode = trans_list.substr(head+1, tail-head-1);
+          trans_dataName = trans_list.substr(head+1, tail-head-1);
+
+          //確認此前並無對其他節點送出此資料的Transform
+          GetK_ptr()->Delete_data(trans_dataName);
+
           ndn::Name interest;
-          interest.append("prefix").append("data").append("store").append(SourceNode).append(NodeName).append(trans_targetNode).append("Transform_Data");
+          interest.append("prefix").append("data").append("store").append(SourceNode).append(NodeName).append(trans_dataName).append("Transform_Data");
           SendInterest(interest, "Transform_Data: ", true);
 
           head = tail;
           tail = trans_list.find_first_of("|", head+1);
-          std::cout << "data transform: " << trans_targetNode << " to Node: " << SourceNode << std::endl;
+          std::cout << "data transform: " << trans_dataName << " to Node: " << SourceNode << std::endl;
         }
         
       }
@@ -415,7 +419,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       
       head = tail;
       tail = kbuk_string.find_first_of("_", head+1);
-    }
+      }
 
     //將更新好的K桶依據新連接對象分別connect
     std::set<std::string>::iterator i;
@@ -925,8 +929,12 @@ CustomerApp::Node_OffLine(){
       }
 
     }
+    
+  }
 
-    for (int j = 0; j < Kbuk_Size; j++)
+  for (int i = 0; i < 10; i = i+4)
+  {
+      for (int j = 0; j < Kbuk_Size; j++)
     {
       if (K_bucket[j] != "NULL")
       {
@@ -935,16 +943,9 @@ CustomerApp::Node_OffLine(){
 
         SendInterest(prefixInterest, "Kbucket_disconnect: ", true);
       }
-
-      
     }
-
-    
   }
   
-
-
-
   //確認是否有節點K桶完全空白
   if (Kbuk_string == "_")
   {
@@ -952,8 +953,6 @@ CustomerApp::Node_OffLine(){
     return;
   }
   
-  
-
   isNodeOnline = false;
 }
 

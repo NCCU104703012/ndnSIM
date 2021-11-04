@@ -44,7 +44,7 @@
 #include <sqlite3.h>
 
 //kad演算法 DataManageOrigin ＆ DataManage
-std::string Query_Algorithm = "DataManage";
+std::string Query_Algorithm = "DataManageOrigin";
 
 //節點數量
 // int NodeNumber = 17;
@@ -343,7 +343,7 @@ main(int argc, char* argv[])
   int rc;
   std::string sqlCommand;
 
-  rc = sqlite3_open("1031test.db", &db);
+  rc = sqlite3_open("1103_100data.db", &db);
 
   if( rc ){
      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));

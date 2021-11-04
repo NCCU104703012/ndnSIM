@@ -260,12 +260,12 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         
         }
 
-        std::cout << "nextHop List: " ;
+        //std::cout << "nextHop List: " ;
         for (int i = 0; i < 3; i++)
         {
-            std::cout << queryDataPtr->nextHop_list[i] << "  "  ;
+            //std::cout << queryDataPtr->nextHop_list[i] << "  "  ;
         }
-        std::cout<< "\n";
+        //std::cout<< "\n";
 
         bool hasNextHop = false;
         for (int i = 0; i < 3; i++)
@@ -301,6 +301,8 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         //紀錄進queryList
         int head = 0, tail;
         Data* queryDataPtr = GetK_ptr()->GetQueryItem(DataName);
+        std::set<std::string> kbuk_update_set;
+        std::set<std::string> kbuk_delete_set;
 
         //error check
         if (queryDataPtr == NULL)
@@ -318,15 +320,32 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         while (tail != -1)
         {
             std::string newNode = nextHop.substr(head+1, tail-head-1);
+            std::pair<std::string, std::string> update_string = GetK_ptr()->KBucket_update(newNode, GetK_ptr()->GetSameBits(newNode));
 
-            // std::cout <<"newNode : " << newNode <<std::endl;
+            //K桶更新
+            if (update_string.first == newNode)
+            {
+              kbuk_update_set.insert(newNode);
+            }
+            
+            //將需要連接的節點先行紀錄
+            if (update_string.second != "NULL")
+            {
+              if (kbuk_update_set.find(update_string.second) != kbuk_update_set.end())
+              {
+                kbuk_update_set.erase(update_string.second);
+              }
+              else
+              {
+                kbuk_delete_set.insert(update_string.second);
+              }
+            }
 
+            //next round hop更新
             if (newNode != SourceNode)
             {
                 queryDataPtr->update_nextHop(newNode);
             }
-
-            // std::cout << newNode << "\n";
 
             if (tail == int(nextHop.length()))
             {
@@ -353,12 +372,12 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
                     ndn::Name outInterest;
                     std::string targetNode = queryDataPtr->nextHop_list[i];
 
-                    queryDataPtr->nextHop_list[i] = "NULL";
                     //queryDataPtr->timeout_check[i] = queryDataPtr->nextHop_list[i];
 
                     outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(GetK_ptr()->GetKId()).append(queryDataPtr->Name).append("timeOut").append("NULL");
                     SendInterest(outInterest, "Get all query back! next round Query: ", true);
                 }
+                queryDataPtr->nextHop_list[i] = "NULL";
             }
 
             if (hasNextHop)
@@ -372,25 +391,27 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
                 GetK_ptr()->Delete_data_query(queryDataPtr->Name);
             }
 
-            // if (queryDataPtr->nextHop_list[0] == "NULL")
-            // {
-            //     NS_LOG_DEBUG("NO-match-Data-&-next-Node");
-            //     GetK_ptr()->Delete_data_query(DataName);
-            //     return;
-            // }
-            // for (int i = 0; i < 3; i++)
-            // {
-            //     if (queryDataPtr->nextHop_list[i] != "NULL")
-            //     {
-            //        ndn::Name outInterest;
-            //        std::string targetNode = queryDataPtr->nextHop_list[i];
-            //        queryDataPtr->nextHop_list[i] = "NULL";
-            //        outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(SourceNode).append(DataName).append(itemType).append("NULL");
-            //        SendInterest(outInterest, "next round Query: ", true);
-            //     }
-                
-            // }
-            // queryDataPtr->reply_count = 0;
+        }
+
+        std::set<std::string>::iterator i;
+        //將更新好的K桶依據斷線對象分別disconnect
+        for (auto i = kbuk_delete_set.begin(); i != kbuk_delete_set.end(); ++i)
+        {
+          std::string disCoonectNode = *i;
+          std::string k_buk_string = "NULL";
+          ndn::Name interest;
+          interest.append("prefix").append("data").append("download").append(disCoonectNode).append(GetK_ptr()->GetKId()).append(k_buk_string).append("Kbucket_disconnect");
+          SendInterest(interest, "Kbucket_disconnect", true);
+        }
+
+        //將更新好的K桶依據新連接對象分別connect
+        for (auto i = kbuk_update_set.begin(); i != kbuk_update_set.end(); ++i)
+        {
+          std::string coonectNode = *i;
+          std::string flag_connect_handshake = "0";
+          ndn::Name interest;
+          interest.append("prefix").append("data").append("download").append(coonectNode).append(TargetNode).append(flag_connect_handshake).append("Kbucket_connect");
+          SendInterest(interest, "Kbucket_connect", true);
         }
         
 

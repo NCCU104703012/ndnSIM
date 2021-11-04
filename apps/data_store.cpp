@@ -203,10 +203,12 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     //GetK_ptr()->Node_info();
 
     std::string module_choose = "download";
+
+    //若已完成Transform，則不用回傳儲存完畢訊息
     if (itemType == "Transform_Data")
     {
       module_choose = "store";
-      //GetK_ptr()->GetDataList()->printAllData();
+      return;
     }
 
     ndn::Name next ;
