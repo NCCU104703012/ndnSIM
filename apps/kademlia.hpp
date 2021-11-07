@@ -446,6 +446,13 @@ private:
         return 0;
     }
 
+    static int DB_getDATA(void *NotUsed, int argc, char **argv, char **azColName){
+        int *flag = (int*)NotUsed;
+        *flag = 1;
+        std::cout << "success get data : " << argv[0] << " " << argv[1] << "\n";
+        return 0;
+    }
+
 };
 
 class Guest

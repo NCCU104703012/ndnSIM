@@ -186,6 +186,12 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     return;
   }
 
+  if (itemType == "Transform_Data_Duplicate")
+  {
+    GetK_ptr()->SetData(DataName, GetK_ptr()->GetKId() , SourceNode, true);
+    return;
+  }
+
   //上下線狀態判定
   if (!GetK_ptr()->GetisOnline())
   {
@@ -199,6 +205,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
   if (GetK_ptr()->GetKId() == nextTarget)
   {
+
     if (TargetNode != SourceNode)
     {
       GetK_ptr()->SetData(DataName, GetK_ptr()->GetKId() , SourceNode, false);
@@ -208,12 +215,101 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     std::string module_choose = "download";
 
     //若已完成Transform，則不用回傳儲存完畢訊息
-    if (itemType == "Transform_Data")
+    if (itemType == "Transform_Data" || itemType == "Transform_Data_Duplicate")
     {
-      module_choose = "store";
       return;
     }
 
+    //選擇另外兩個節點進行資料複製
+    std::pair<std::string, std::string> transform_node;
+    transform_node.first = "NULL";
+    transform_node.second = "NULL";
+
+    for (int i = 0; i < 10; i = i+4)
+    {
+       std::string* K_bucket = GetK_ptr()->GetK_bucket(i);
+       for (int j = 0; j < GetK_ptr()->GetK_bucket_size() ; j++)
+       {
+         std::string tempNode = K_bucket[j];
+         if (tempNode == "NULL")
+         {
+           continue;
+         }
+
+         if (transform_node.first == "NULL")
+         {
+           transform_node.first = tempNode;
+           continue;
+         }
+
+         if (transform_node.second == "NULL")
+         {
+           transform_node.second = tempNode;
+           if (GetK_ptr()->XOR(transform_node.first, binaryRecord) > GetK_ptr()->XOR(transform_node.second, binaryRecord))
+          {
+            tempNode = transform_node.first;
+            transform_node.first = transform_node.second;
+            transform_node.second = tempNode;
+          }
+           continue;
+         }
+         
+         if (GetK_ptr()->XOR(transform_node.first, binaryRecord) < GetK_ptr()->XOR(tempNode, binaryRecord))
+         {
+           transform_node.first = tempNode;
+         }
+
+         if (GetK_ptr()->XOR(transform_node.first, binaryRecord) > GetK_ptr()->XOR(transform_node.second, binaryRecord))
+         {
+           tempNode = transform_node.first;
+           transform_node.first = transform_node.second;
+           transform_node.second = tempNode;
+         }
+         
+       }
+       
+    }
+
+    //傳送備份給另外兩個節點
+    if (transform_node.first != "NULL")
+    {
+      ndn::Name first_trans;
+      first_trans.append("prefix").append("data").append("store").append(transform_node.first).append(GetK_ptr()->GetKId()).append(DataName).append("Transform_Data_Duplicate");
+      auto first_interest = std::make_shared<ndn::Interest>(first_trans);
+      Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+      first_interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+      first_interest->setMustBeFresh(1);
+      first_interest->setInterestLifetime(ndn::time::seconds(3));
+      m_transmittedInterests(first_interest, this, m_face);
+
+      m_appLink->onReceiveInterest(*first_interest);
+    }
+    else
+    {
+      std::cout << "error: no other node to Duplicate data\n";
+    }
+    
+    
+    if (transform_node.second != "NULL")
+    {
+      ndn::Name second_trans;
+      second_trans.append("prefix").append("data").append("store").append(transform_node.second).append(GetK_ptr()->GetKId()).append(DataName).append("Transform_Data_Duplicate");
+      auto second_interest = std::make_shared<ndn::Interest>(second_trans);
+      Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+      second_interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+      second_interest->setMustBeFresh(1);
+      second_interest->setInterestLifetime(ndn::time::seconds(3));
+      m_transmittedInterests(second_interest, this, m_face);
+
+      m_appLink->onReceiveInterest(*second_interest);
+    }
+    else
+    {
+      std::cout << "error: no other node to Duplicate data\n";
+    } 
+    
+
+    //回傳給源節點，進行dataSet Update
     ndn::Name next ;
     next.append("prefix").append("data").append(module_choose).append(SourceNode).append("NULL").append(DataName).append("Store_complete");
     auto next_interest = std::make_shared<ndn::Interest>(next);

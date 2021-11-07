@@ -37,7 +37,12 @@
 #include <string> 
 #include <memory>
 
+
+bool ndnFault_tolerant_disable = false;
+
+
 NS_LOG_COMPONENT_DEFINE("DataManage");
+
 
 namespace ns3 {
 
@@ -297,7 +302,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       {
         std::string TargetNode = ndnFault_tolerant(binaryDataName);
 
-        if (TargetNode == "NULL")
+        if (TargetNode == "NULL" || ndnFault_tolerant_disable)
         {
           //std::cout << "******************" << std::endl;
           NS_LOG_DEBUG("NO-match-Data-&-next-Node");

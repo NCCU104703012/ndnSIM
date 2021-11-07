@@ -53,7 +53,7 @@ int week = 300;
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 10;
+int onlineNum = 50;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -65,7 +65,7 @@ int MicroService_Timeout = 10;
 int GuestNumber = 0;
 
 // 開始產生資料時間
-int GueststartTime = 10000;
+int GueststartTime = 40000;
 
 //平均幾秒產生一筆資料
 int Record_Poisson = 100;
@@ -258,6 +258,15 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         break;
       }
     }
+  
+
+  if (itemtype == "dataSet_update")
+  {
+    this->SetDataSet(DataName);
+    NS_LOG_DEBUG("Get DataSet update from " << SourceNode << " Data: " << DataName);
+    NS_LOG_DEBUG("DataSet-add " << DataName);
+    return;
+  }
 
   //收到K桶更新訊息
   //封包格式 prefix/自己節點/來源節點/dataName(Flag 0 or 1)/itemType
@@ -440,29 +449,30 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       tail = kbuk_string.find_first_of("_", head+1);
       }
 
-    std::set<std::string>::iterator i;
+
     //將更新好的K桶依據斷線對象分別disconnect
+    std::string k_buk_string = "_";
+    std::string* K_bucket ;
+    for (int i = 0; i < 10; i = i+4)
+    {
+      K_bucket = GetK_ptr()->GetK_bucket(i);
+
+      for (int j = 0; j < Kbuk_Size; j++)
+      {
+        if (K_bucket[j] != "NULL")
+        {
+          k_buk_string = k_buk_string + K_bucket[j] + "_";
+        }
+
+      }
+        
+    }
+
+    std::set<std::string>::iterator i;
     for (auto i = kbuk_delete_set.begin(); i != kbuk_delete_set.end(); ++i)
     {
       std::string disCoonectNode = *i;
-      std::string k_buk_string = "_";
       ndn::Name interest;
-      std::string* K_bucket ;
-
-      for (int i = 0; i < 10; i = i+4)
-      {
-        K_bucket = GetK_ptr()->GetK_bucket(i);
-
-        for (int j = 0; j < Kbuk_Size; j++)
-        {
-          if (K_bucket[j] != "NULL")
-          {
-            k_buk_string = k_buk_string + K_bucket[j] + "_";
-          }
-
-        }
-        
-      }
 
       interest.append("prefix").append("data").append("download").append(disCoonectNode).append(GetK_ptr()->GetKId()).append(k_buk_string).append("Kbucket_disconnect");
       SendInterest(interest, "Kbucket_disconnect", true);
@@ -500,15 +510,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     SendInterest(interest, "DataSet_update", true);
     return;
   }
-  else if (itemtype == "dataSet_update")
-  {
-    this->SetDataSet(DataName);
-    NS_LOG_DEBUG("Get DataSet update from " << SourceNode << " Data: " << DataName);
-    NS_LOG_DEBUG("DataSet-add " << DataName);
-    return;
-  }
-  
-  
+
 
   //若興趣封包是其他節點的Order委託
   if (itemtype == "serviceQuery")

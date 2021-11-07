@@ -564,20 +564,34 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
     while (tail != -1)
     {
         temp = inputString.substr(head+1, tail-head-1);
-        std::size_t hashData = std::hash<std::string>{}(temp);
-        std::string binaryData = std::bitset<8>(hashData).to_string();
-        int thisNode_distance = XOR(thisNode, binaryData);
-        int targetNode_distance = XOR(targetNode, binaryData);
-
-        if (targetNode_distance > thisNode_distance)
-        {
-            output = output + temp + "|" ;
+        
+        //確認此資料沒有存在於目標節點中，有則不進行transform
+        int flag = 0;
+        sqlCommand = std::string("SELECT * from RECORD WHERE NODE=") + "'" + targetNode + "'" + " AND DATA='" + temp + "';";
+        rc = sqlite3_exec(db, &sqlCommand[0], this->DB_getDATA, &flag, &zErrMsg);
+        if( rc != SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
         }
 
-        // if (inputString.find_first_of("|", tail) == inputString.find_last_of("|", tail))
-        // {
-        //     return output;
-        // }
+        if (flag == 0)
+        {
+            std::size_t hashData = std::hash<std::string>{}(temp);
+            std::string binaryData = std::bitset<8>(hashData).to_string();
+            int thisNode_distance = XOR(thisNode, binaryData);
+            int targetNode_distance = XOR(targetNode, binaryData);
+
+            if (targetNode_distance > thisNode_distance)
+            {
+                output = output + temp + "|" ;
+            }
+        }
+        else
+        {
+            std::cout << "error: this data is exist in targetNode " << temp << "\n";
+        }
+        
+       
         head = tail;
         tail = inputString.find_first_of("|", head+1);
     }
@@ -600,7 +614,7 @@ Data::AddData(std::string inputName, std::string k_ID, std::string sourceNode, b
     std::string sqlCommand;
     int command_output = 0;
 
-    if (init == false || k_ID != sourceNode)
+    if (init == false && k_ID != sourceNode)
     {
         sqlCommand = std::string("SELECT * from RECORD WHERE NODE=") + "'" + sourceNode + "'" + " AND DATA='" + inputName + "';";  
     
@@ -618,7 +632,7 @@ Data::AddData(std::string inputName, std::string k_ID, std::string sourceNode, b
         sqlCommand = std::string("DELETE FROM RECORD WHERE ") +
                  "NODE='"+ sourceNode + "' AND DATA= '" + inputName + "';";
         
-        std::cout << sqlCommand <<"\n";
+        // std::cout << sqlCommand <<"\n";
     
             /* Execute SQL statement */
         rc = sqlite3_exec(db, &sqlCommand[0], this->DB_DeleteData, &command_output, &zErrMsg);
@@ -634,7 +648,7 @@ Data::AddData(std::string inputName, std::string k_ID, std::string sourceNode, b
     sqlCommand = std::string("INSERT INTO RECORD (NODE,DATA)") +
                  "VALUES('"+ k_ID + "', '" + inputName + "');";
     
-    std::cout << sqlCommand <<"\n";
+    // std::cout << sqlCommand <<"\n";
     
     /* Execute SQL statement */
    rc = sqlite3_exec(db, &sqlCommand[0], this->DB_addDATA, 0, &zErrMsg);
