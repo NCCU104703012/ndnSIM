@@ -113,29 +113,29 @@ DataManage::StopApplication()
   ndn::App::StopApplication();
 }
 
-void
-DataManage::SendInterest()
-{
-  /////////////////////////////////////
-  // Sending one Interest packet out //
-  /////////////////////////////////////
+// void
+// DataManage::SendInterest()
+// {
+//   /////////////////////////////////////
+//   // Sending one Interest packet out //
+//   /////////////////////////////////////
 
 
-  // Create and configure ndn::Interest
-  auto interest = std::make_shared<ndn::Interest>(m_prefix);
-  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
-  interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-  interest->setMustBeFresh(1);
-  interest->setInterestLifetime(ndn::time::seconds(3));
+//   // Create and configure ndn::Interest
+//   auto interest = std::make_shared<ndn::Interest>(m_prefix);
+//   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+//   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+//   interest->setMustBeFresh(1);
+//   interest->setInterestLifetime(ndn::time::seconds(3));
 
 
-  NS_LOG_DEBUG("Sending Interest packet for " << *interest);
+//   NS_LOG_DEBUG("Sending Interest packet for " << *interest);
 
-  // Call trace (for logging purposes)
-  m_transmittedInterests(interest, this, m_face);
+//   // Call trace (for logging purposes)
+//   m_transmittedInterests(interest, this, m_face);
 
-  m_appLink->onReceiveInterest(*interest);
-}
+//   m_appLink->onReceiveInterest(*interest);
+// }
 
 // Callback that will be called when Interest arrives
 void
@@ -194,7 +194,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     
 
     std::size_t biTemp = std::hash<std::string>{}(DataName);
-    std::string binaryDataName = std::bitset<8>(biTemp).to_string();
+    std::string binaryDataName = std::bitset<16>(biTemp).to_string();
 
     NS_LOG_DEBUG("Query data " << DataName << "  Hash: " << binaryDataName);
 
@@ -213,13 +213,17 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       {
         //std::cout << "******************" << std::endl;
         NS_LOG_DEBUG("NO-match-Data-&-next-Node");
+        if (SourceNode != GetK_ptr()->GetKId())
+        {
+          ndn::Name interest;
+          interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
+          SendInterest(interest, "Kbucket_connect", true);
+        }
         //std::cout << "******************" << std::endl;
         return;
       }
 
       outInterest.append("prefix").append("data").append("query").append(TargetNode).append("0").append(SourceNode).append(DataName).append(itemType);
-
-      // Create and configure ndn::Interest
       auto interest = std::make_shared<ndn::Interest>(outInterest);
       Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
       interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
@@ -279,20 +283,15 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     else if(GetK_ptr()->GetData(DataName))
     {
       outInterest.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
+      SendInterest(outInterest, "Sending Interest packet for ", true);
 
-      // Create and configure ndn::Interest
-      auto interest = std::make_shared<ndn::Interest>(outInterest);
-      Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
-      interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-      interest->setMustBeFresh(1);
-      interest->setInterestLifetime(ndn::time::seconds(1));
-
-      NS_LOG_DEBUG("Sending Interest packet for " << *interest);
-
-      // Call trace (for logging purposes)
-      m_transmittedInterests(interest, this, m_face);
-
-      m_appLink->onReceiveInterest(*interest);
+      if (SourceNode != GetK_ptr()->GetKId())
+      {
+        ndn::Name interest;
+        interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
+        SendInterest(interest, "Kbucket_connect", true);
+      }
+      
     }
     else
     {
@@ -306,13 +305,17 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         {
           //std::cout << "******************" << std::endl;
           NS_LOG_DEBUG("NO-match-Data-&-next-Node");
+          if (SourceNode != GetK_ptr()->GetKId())
+          {
+            ndn::Name interest;
+            interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
+            SendInterest(interest, "Kbucket_connect", true);
+          }
           //std::cout << "******************" << std::endl;
           return;
         }
         
         outInterest.append("prefix").append("data").append("query").append(TargetNode).append("0").append(SourceNode).append(DataName).append(itemType);
-
-        // Create and configure ndn::Interest
         auto interest = std::make_shared<ndn::Interest>(outInterest);
         Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
         interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
@@ -320,33 +323,20 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         interest->setInterestLifetime(ndn::time::seconds(1));
         interest->setHopLimit(20);
 
-        NS_LOG_DEBUG("Query another Node for ndnFault_tolerant " << *interest);
+        NS_LOG_DEBUG("Query another Node for ndnFault_tolerant(offline) " << *interest);
 
         // Call trace (for logging purposes)
         m_transmittedInterests(interest, this, m_face);
 
         m_appLink->onReceiveInterest(*interest);
-
         return;
       }
       else
       {
         TargetNode = GetK_ptr()->GetNext_Node(binaryDataName, 1, SourceNode);
         outInterest.append("prefix").append("data").append("query").append(TargetNode).append("0").append(SourceNode).append(DataName).append(itemType);
+        SendInterest(outInterest, "NodeID: " + GetK_ptr()->GetKId() + " Query another Node for data ", true);
 
-        // Create and configure ndn::Interest
-        auto interest = std::make_shared<ndn::Interest>(outInterest);
-        Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
-        interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-        interest->setMustBeFresh(1);
-        interest->setInterestLifetime(ndn::time::seconds(1));
-
-        NS_LOG_DEBUG( "NodeID: " << GetK_ptr()->GetKId() << " Query another Node for data " << *interest);
-
-        // Call trace (for logging purposes)
-        m_transmittedInterests(interest, this, m_face);
-
-        m_appLink->onReceiveInterest(*interest);
       }
     }
 }
@@ -366,20 +356,40 @@ DataManage::SetNode_Pointer(Ptr<Node> input)
   parent_node = input;
 }
 
+void
+DataManage::SendInterest(ndn::Name prefix, std::string logging, bool freshness){
+  auto interest = std::make_shared<ndn::Interest>(prefix);
+      
+  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+  interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+  interest->setMustBeFresh(freshness);
+
+  interest->setInterestLifetime(ndn::time::seconds(3));
+
+  if (logging.length() != 0)
+  {
+    NS_LOG_DEBUG(logging << interest->getName());
+  }
+  // Call trace (for logging purposes)
+  m_transmittedInterests(interest, this, m_face);
+
+  m_appLink->onReceiveInterest(*interest);
+}
+
 
 //NDN錯誤容忍，輸出下一個目標前綴
 std::string
 DataManage::ndnFault_tolerant(std::string DataName)
 {
-  if(DataName.length() != 8){
-    std::cout << "error: ndnFault_tolerant DataName < 8\n";
+  if(DataName.length() != 16){
+    std::cout << "error: ndnFault_tolerant DataName != 16\n";
     return "NULL";
   }
 
   int sameBits = 0, careBits = 1;
   std::string TargetNode ;
 
-  for (int i = 0; i < 8; i++)
+  for (int i = 0; i < 16; i++)
     {
         std::string str1 = std::to_string((GetK_ptr()->GetKId())[i]);
         std::string str2 = std::to_string(DataName[i]);
@@ -394,26 +404,26 @@ DataManage::ndnFault_tolerant(std::string DataName)
     }
   
   if (sameBits == 0){ sameBits++; }
-  else if (sameBits >= 8){ return "NULL"; }
+  else if (sameBits >= 16){ return "NULL"; }
 
-  careBits = 8 / 2;
+  careBits = 16 / 2;
   
-  while (8 - careBits <= sameBits)
+  while (16 - careBits <= sameBits)
   {
     careBits = careBits / 2;
   }
 
   std::cout << "Node k-id : " + GetK_ptr()->GetKId() + "dataName: " + DataName + "\n"; 
 
-  TargetNode = DataName.substr(0,(8 - careBits));
+  TargetNode = DataName.substr(0,(16 - careBits));
 
   for (int i = 0; i < careBits; i++)
   {
     TargetNode = TargetNode + "x";
   }
   
-  if(TargetNode.length() != 8){
-    std::cout << "error: ndnFault_tolerant output DataName != 8  : " << TargetNode << "  careBits = " << std::to_string(careBits)  <<  "\n" ;
+  if(TargetNode.length() != 16){
+    std::cout << "error: ndnFault_tolerant output DataName != 16  : " << TargetNode << "  careBits = " << std::to_string(careBits)  <<  "\n" ;
     return "NULL";
   }
 

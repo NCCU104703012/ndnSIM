@@ -96,6 +96,9 @@ public:
   void
   Node_OffLine();
 
+  void
+  NDN_prefix_connect();
+
   //將Guest 轉換成指標
   Guest*
   GetG_ptr()

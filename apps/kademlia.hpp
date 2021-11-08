@@ -155,7 +155,7 @@ public:
 
     Data* GetTail();
 
-    int
+    long int
     XOR(std::string input, std::string input2);
 
     void
@@ -164,7 +164,7 @@ public:
     void
     SetClosest_Node(){
         std::size_t hashData = std::hash<std::string>{}(this->Name);
-        std::string binaryData = std::bitset<8>(hashData).to_string();
+        std::string binaryData = std::bitset<16>(hashData).to_string();
 
         for (int i = 0; i < 3; i++)
         {
@@ -258,16 +258,16 @@ public:
 
     std::string*
     GetK_bucket(int distance){
-        if (distance > 8 || distance < 0)
+        if (distance > 16 || distance < 0)
         {
             std::cout << "error: GetK_bucket() distance = " << distance << "\n";
         }
 
-        if (distance >= 6)
+        if (distance >= 12)
         {
             return k_bucket;
         }
-        else if (distance >= 4)
+        else if (distance >= 8)
         {
             return k_bucket4;
         }
@@ -280,10 +280,10 @@ public:
     int
     GetSameBits(std::string intputKID);
 
-    int
+    long int
     XOR(std::string input);
 
-    int
+    long int
     XOR(std::string input, std::string input2);
 
     std::string
@@ -449,7 +449,7 @@ private:
     static int DB_getDATA(void *NotUsed, int argc, char **argv, char **azColName){
         int *flag = (int*)NotUsed;
         *flag = 1;
-        std::cout << "success get data : " << argv[0] << " " << argv[1] << "\n";
+        // std::cout << "success get data : " << argv[0] << " " << argv[1] << "\n";
         return 0;
     }
 

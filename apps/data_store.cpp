@@ -196,11 +196,15 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   if (!GetK_ptr()->GetisOnline())
   {
     NS_LOG_DEBUG("error! this node is offline : " << interest->getName());
+    if (itemType == "Transform_Data")
+    {
+      GetK_ptr()->SetData(DataName, GetK_ptr()->GetKId() , SourceNode, false);
+    }
     return;
   }
   
   std::size_t hashRecord = std::hash<std::string>{}(DataName);
-  std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
+  std::string binaryRecord = std::bitset<16>(hashRecord).to_string();
   std::string nextTarget = GetK_ptr()->GetNext_Node(binaryRecord, 1, SourceNode);
 
   if (GetK_ptr()->GetKId() == nextTarget)
@@ -225,13 +229,13 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     transform_node.first = "NULL";
     transform_node.second = "NULL";
 
-    for (int i = 0; i < 10; i = i+4)
+    for (int i = 4; i <= 12; i = i+4)
     {
        std::string* K_bucket = GetK_ptr()->GetK_bucket(i);
        for (int j = 0; j < GetK_ptr()->GetK_bucket_size() ; j++)
        {
          std::string tempNode = K_bucket[j];
-         if (tempNode == "NULL")
+         if (tempNode == "NULL" || tempNode == GetK_ptr()->GetKId())
          {
            continue;
          }
@@ -281,8 +285,9 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       first_interest->setMustBeFresh(1);
       first_interest->setInterestLifetime(ndn::time::seconds(3));
       m_transmittedInterests(first_interest, this, m_face);
-
+      
       m_appLink->onReceiveInterest(*first_interest);
+
     }
     else
     {

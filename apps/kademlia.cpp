@@ -169,7 +169,7 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
 int
 Kademlia::GetSameBits(std::string inputKID){
     int distance = 0;
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 16; i++)
     {
         std::string str1 = std::to_string(this->KId[i]);
         std::string str2 = std::to_string(inputKID[i]);
@@ -185,38 +185,38 @@ Kademlia::GetSameBits(std::string inputKID){
     return distance;
 }
 
-int
+long int
 Kademlia::XOR(std::string input)
 {
     // std::cout << "Xor: " << this->KId << " and " << input << "\n";
 
-    int distance = 0;
-    for (int i = 0; i < 8; i++)
+    long int distance = 0;
+    for (int i = 0; i < 16; i++)
     {
         std::string str1 = std::to_string(this->KId[i]);
         std::string str2 = std::to_string(input[i]);
         if (str1 == str2)
         {
-            distance = distance + pow(2, 8-i);
+            distance = distance + pow(2, 16-i);
         }
         
     }
     return distance;
 }
 
-int
+long int
 Kademlia::XOR(std::string input, std::string input2)
 {
     //std::cout << "Xor2: " << input2 << " and " << input << "\n";
 
-    int distance = 0;
-    for (int i = 0; i < 8; i++)
+    long int distance = 0;
+    for (int i = 0; i < 16; i++)
     {
         std::string str1 = std::to_string(input2[i]);
         std::string str2 = std::to_string(input[i]);
         if (str1 == str2)
         {
-            distance = distance + pow(2, 8-i);
+            distance = distance + pow(2, 16-i);
         }
         
     }
@@ -290,7 +290,7 @@ Kademlia::KBucket_update(std::string sourceNode , int distance)
     
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        int distance = XOR(output_KID, this->GetKId());
+        long int distance = XOR(output_KID, this->GetKId());
         if (XOR(tempKbuk[i], this->GetKId()) < distance)
         {
             output_KID = tempKbuk[i];
@@ -577,18 +577,14 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
         if (flag == 0)
         {
             std::size_t hashData = std::hash<std::string>{}(temp);
-            std::string binaryData = std::bitset<8>(hashData).to_string();
-            int thisNode_distance = XOR(thisNode, binaryData);
-            int targetNode_distance = XOR(targetNode, binaryData);
+            std::string binaryData = std::bitset<16>(hashData).to_string();
+            long int thisNode_distance = XOR(thisNode, binaryData);
+            long int targetNode_distance = XOR(targetNode, binaryData);
 
             if (targetNode_distance > thisNode_distance)
             {
                 output = output + temp + "|" ;
             }
-        }
-        else
-        {
-            std::cout << "error: this data is exist in targetNode " << temp << "\n";
         }
         
        
@@ -616,8 +612,21 @@ Data::AddData(std::string inputName, std::string k_ID, std::string sourceNode, b
 
     if (init == false && k_ID != sourceNode)
     {
+        //若自身已經擁有資料，則將資料加回原本節點中
+        sqlCommand = std::string("SELECT * from RECORD WHERE NODE=") + "'" + k_ID + "'" + " AND DATA='" + inputName + "';";  
+        rc = sqlite3_exec(db, &sqlCommand[0], this->DB_getDATA, &command_output, &zErrMsg);
+        if( rc != SQLITE_OK ){
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        if (command_output == 1)
+        {
+            return;
+        }
+        
+        //自身沒有資料，若原本節點也沒有資料，則轉移至其他節點中
         sqlCommand = std::string("SELECT * from RECORD WHERE NODE=") + "'" + sourceNode + "'" + " AND DATA='" + inputName + "';";  
-    
+        command_output = 0;
         /* Execute SQL statement */
         rc = sqlite3_exec(db, &sqlCommand[0], this->DB_getDATA, &command_output, &zErrMsg);
         if( rc != SQLITE_OK ){
@@ -764,9 +773,9 @@ Data::GetData(std::string DataName, std::string k_ID)
 void
 Data::update_nextHop(std::string inputNode)
 {
-    int distance;
+    long int distance;
     std::size_t hashData = std::hash<std::string>{}(this->Name);
-    std::string binaryData = std::bitset<8>(hashData).to_string();
+    std::string binaryData = std::bitset<16>(hashData).to_string();
     distance = XOR(binaryData,inputNode);
     std::pair<std::string, int>mostFar_node;
     mostFar_node.first = nextHop_list[0];
@@ -805,18 +814,18 @@ Data::update_nextHop(std::string inputNode)
     return;
 }
 
-int
+long int
 Data::XOR(std::string input, std::string input2)
 {
     // std::cout << "Xor data: " << input2 << " and " << input << "\n";
-    int distance = 0;
-    for (int i = 0; i < 8; i++)
+    long int distance = 0;
+    for (int i = 0; i < 16; i++)
     {
         std::string str1 = std::to_string(input2[i]);
         std::string str2 = std::to_string(input[i]);
         if (str1 == str2)
         {
-            distance = distance + pow(2, 8-i);
+            distance = distance + pow(2, 16-i);
         }
         
     }

@@ -476,7 +476,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     {
       //此節點沒有資料，確認是否有K桶節點可返回
       std::size_t biTemp = std::hash<std::string>{}(DataName);
-      std::string binaryDataName = std::bitset<8>(biTemp).to_string();
+      std::string binaryDataName = std::bitset<16>(biTemp).to_string();
       //NS_LOG_DEBUG("hash Record for " << binaryDataName << " " << DataName);
 
       if (GetK_ptr()->GetNext_Node(binaryDataName, 1, SourceNode) == GetK_ptr()->GetKId())

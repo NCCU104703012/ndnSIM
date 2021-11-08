@@ -69,6 +69,9 @@ public:
   void
   SetNode_Pointer(Ptr<Node> input);
 
+  void
+  SendInterest(ndn::Name prefix, std::string logging, bool freshness);
+
   //將kademlia struct位址從字串轉成指標
   Kademlia*
   GetK_ptr()
@@ -98,8 +101,8 @@ public:
 private:
 
   //此function暫未使用
-  void
-  SendInterest();
+  // void
+  // SendInterest();
 
   ndn::Name m_prefix;
   ndn::Name m_postfix;

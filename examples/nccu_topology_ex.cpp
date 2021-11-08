@@ -51,10 +51,10 @@ std::string Query_Algorithm = "DataManage";
 int NodeNumber = 49;
 
 //一個節點產生的order數量
-int OrderNumber = 0;
+int OrderNumber = 1;
 
 //order開始時間
-int orderStartTime = 40000;
+int orderStartTime = 1000;
 
 //平均幾秒處理下一個order
 int Guest_Poisson = 1000;
@@ -62,6 +62,11 @@ int Guest_Poisson_div = 1;
 
 //初始K桶大小
 int Kbuk_Number = 4;
+
+//是否設定初始K桶
+bool set_kbucket_bool = false;
+
+
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
    int i;
@@ -113,14 +118,14 @@ std::string toBinary(int n)
         n /= 2;
     }
     reverse(r.begin(), r.end());
-    bitset<8> bs1(r);
+    bitset<16> bs1(r);
     return bs1.to_string();
 }
 
 std::string hashNodeName(std::string NodeName)
 {
   std::size_t biTemp = std::hash<std::string>{}(NodeName);
-  std::string binaryNodeName = std::bitset<8>(biTemp).to_string();
+  std::string binaryNodeName = std::bitset<16>(biTemp).to_string();
   return binaryNodeName;
 }
 
@@ -247,10 +252,12 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
 
   //設定data management模組，為了NDN fault tolerant
   if(Query_Algorithm == "DataManage"){
-    std::string prefix1 = kptr->GetKId().substr(0,4) + "xxxx";
-    std::string prefix2 = kptr->GetKId().substr(0,6) + "xx";
-    std::string prefix3 = kptr->GetKId().substr(0,7) + "x";
+    std::string prefix0 = kptr->GetKId().substr(0,8) + "xxxxxxxx";
+    std::string prefix1 = kptr->GetKId().substr(0,12) + "xxxx";
+    std::string prefix2 = kptr->GetKId().substr(0,14) + "xx";
+    std::string prefix3 = kptr->GetKId().substr(0,15) + "x";
     std::cout << "KID: " << kptr->GetKId() << " P1: " << prefix1 << " P2: " << prefix2 << " P3: " << prefix3 << "\n";
+    set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix0, kptr, queryString);
     set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix1, kptr, queryString);
     set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix2, kptr, queryString);
     set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix3, kptr, queryString);
@@ -261,16 +268,27 @@ void generate_node(sqlite3* db){
 
   //將節點指標存成陣列
   Kademlia *kptr_arr[NodeNumber];
+  std::set<std::string> k_id_check_set;
   for (int i = 0; i < NodeNumber; i++)
   {
     std::string nodeName = "Node" + to_string(i);
     kptr_arr[i] = new Kademlia(nodeName, nodeName, hashNodeName(nodeName), db);
+    if (k_id_check_set.find(kptr_arr[i]->GetKId()) != k_id_check_set.end())
+    {
+      std::cout<< "error: there is a Same KID node " << nodeName << "\n";
+    }
+    k_id_check_set.insert(kptr_arr[i]->GetKId());
     set_data_store(nodeName, "/prefix/data/store/" + hashNodeName(nodeName), kptr_arr[i]);
   }
 
   //設定K桶，目前以名字相近的四個節點為K桶
   for (int i = 0; i < NodeNumber; i++)
   {
+    if (!set_kbucket_bool)
+    {
+      break;
+    }
+
     int targetNode = i-2;
     for (int m = 0; m < Kbuk_Number+1 ; m++)
     {
@@ -286,6 +304,7 @@ void generate_node(sqlite3* db){
       }
     }
   }
+
 
   //設定合作商家，暫時分為三群
   std::set<int> set1 = {0, 1, 2, 3, 4, };

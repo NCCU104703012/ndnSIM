@@ -53,7 +53,7 @@ int week = 300;
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 50;
+int onlineNum = 3;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -292,7 +292,20 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       if (!update_flag)
       {
         //沒有節點存在，需要回送disconnect訊息
-        std::string k_buk_string = "NULL";
+        std::string k_buk_string = "_";
+        std::string* K_bucket ;
+        for (int i = 4; i <= 12; i = i+4)
+        {
+          K_bucket = GetK_ptr()->GetK_bucket(i);
+
+          for (int j = 0; j < Kbuk_Size; j++)
+          {
+            if (K_bucket[j] != "NULL")
+            {
+              k_buk_string = k_buk_string + K_bucket[j] + "_";
+            }
+          } 
+        }
         ndn::Name interest;
         interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
         SendInterest(interest, "Kbucket_disconnect", true);
@@ -360,7 +373,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       {
         std::string k_buk_string = "_";
         std::string* K_bucket ;
-        for (int i = 0; i < 10; i = i+4)
+        for (int i = 4; i <= 12; i = i+4)
         {
           K_bucket = GetK_ptr()->GetK_bucket(i);
 
@@ -453,7 +466,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     //將更新好的K桶依據斷線對象分別disconnect
     std::string k_buk_string = "_";
     std::string* K_bucket ;
-    for (int i = 0; i < 10; i = i+4)
+    for (int i = 4; i <= 12; i = i+4)
     {
       K_bucket = GetK_ptr()->GetK_bucket(i);
 
@@ -627,6 +640,7 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
     }
 
     Order* O_ptr = GetO_ptr()->getNext();
+    Order* Pre_O_ptr = GetO_ptr();
 
     if (query_algorithm.toUri() == "/DataManageOrigin")
     {
@@ -648,6 +662,7 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
     }
 
     O_ptr = GetO_ptr()->getNext();
+    
 
     //搜尋所有order, 將已滿足order返回或完成
     while (O_ptr != NULL)
@@ -657,7 +672,7 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
         if (O_ptr->getHasSourceNode())
         {
           ndn::Name returnServiceQuery;
-          returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(O_ptr->getOrderName()).append("food");
+          returnServiceQuery.append("prefix").append("data").append("download").append(O_ptr->getSourceNode()).append(NodeName).append(NodeName).append("food");
           O_ptr->setTerminate(true);
 
           SendInterest(returnServiceQuery, "MicroService return: ", true);
@@ -669,10 +684,19 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 
         //將已滿足order terminate -> ture
         O_ptr->setTerminate(true);
+        Pre_O_ptr = O_ptr;
         O_ptr = O_ptr->getNext();
+
+      }
+      else if (O_ptr->getTerminate() && O_ptr->getOrderName().find("MicroOrder") != std::string::npos)
+      {
+        O_ptr = O_ptr->getNext();
+        delete Pre_O_ptr->getNext();
+        Pre_O_ptr->setNext(O_ptr);
       }
       else
       {
+        Pre_O_ptr = O_ptr;
         O_ptr = O_ptr->getNext();
       }
       
@@ -718,7 +742,7 @@ CustomerApp::InitSendData(){
   GetK_ptr()->SetData(newRecord, GetK_ptr()->GetKId(), GetK_ptr()->GetKId(), true);
 
   std::size_t hashRecord = std::hash<std::string>{}(newRecord);
-  std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
+  std::string binaryRecord = std::bitset<16>(hashRecord).to_string();
   NS_LOG_DEBUG("Guest coming: " << newRecord );
 
   ndn::Name temp;
@@ -878,34 +902,34 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
 
 std::string
 CustomerApp::DataSet_update(std::string inputDataName){
-  int distance = 0;
+  long int distance = 0;
   std::string output = GetK_ptr()->GetKId();
   std::size_t biTemp = std::hash<std::string>{}(inputDataName);
-  std::string binaryDataName = std::bitset<8>(biTemp).to_string();
+  std::string binaryDataName = std::bitset<16>(biTemp).to_string();
   std::set<std::string> shopSet = GetO_ptr()->getShopList();
   std::set<std::string>::iterator o;
 
-  for (int i = 0; i < 8; i++)
+  for (int i = 0; i < 16; i++)
     {
         std::string str1 = binaryDataName.substr(i,1);
         std::string str2 = output.substr(i,1);
         if (str1.compare(str2) == 0)
         {
-            distance = distance + pow(2, 8-i);
+            distance = distance + pow(2, 16-i);
         }
     }
 
   for (auto o = shopSet.begin(); o != shopSet.end(); ++o)
   {
     std::string shopName = *o;
-    int temp_distance = 0;
-    for (int i = 0; i < 8; i++)
+    long int temp_distance = 0;
+    for (int i = 0; i < 16; i++)
     {
          std::string str1 = binaryDataName.substr(i,1);
          std::string str2 = shopName.substr(i,1);
        if (str1.compare(str2) == 0)
         {
-            temp_distance = temp_distance + pow(2, 8-i);
+            temp_distance = temp_distance + pow(2, 16-i);
         }
     }
     if (temp_distance > distance)
@@ -933,7 +957,7 @@ CustomerApp::Node_OnLine(){
 
   std::string* K_bucket ;
 
-  for (int i = 0; i < 10; i = i+4)
+  for (int i = 4; i <= 12; i = i+4)
   {
     K_bucket = tempK_ptr->GetK_bucket(i);
 
@@ -973,7 +997,7 @@ CustomerApp::Node_OffLine(){
   std::string* K_bucket ;
   std::string Kbuk_string = "_";
 
-  for (int i = 0; i < 10; i = i+4)
+  for (int i = 4; i <= 12; i = i+4)
   {
     K_bucket = tempK_ptr->GetK_bucket(i);
 
@@ -988,7 +1012,7 @@ CustomerApp::Node_OffLine(){
     
   }
 
-  for (int i = 0; i < 10; i = i+4)
+  for (int i = 4; i <= 12; i = i+4)
   {
       for (int j = 0; j < Kbuk_Size; j++)
     {
@@ -1011,5 +1035,48 @@ CustomerApp::Node_OffLine(){
   
   isNodeOnline = false;
 }
+
+//透過寬鬆前綴認識其他節點
+void
+CustomerApp::NDN_prefix_connect(){
+  // std::string* k_bucket ;
+  // std::string ndn_prefix;
+  // K_bucket = GetK_ptr()->GetK_bucket(6);
+  // ndn_prefix = GetK_ptr()->GetKId().substr(0,12) + "xxxx";
+
+  // std::string flag_connect_handshake = "0";
+
+  // for (int j = 0; j < Kbuk_Size; j++)
+  // {
+
+  //   if (K_bucket[j] == "NULL")
+  //   {
+  //     ndn::Name prefixInterest;
+
+  //     prefixInterest.append("prefix").append("data").append("download").append(ndn_prefix).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
+
+  //     SendInterest(prefixInterest, "Kbucket_connect: ", true);
+  //     break;
+  //   }
+  // }
+
+  // K_bucket = GetK_ptr()->GetK_bucket(4);
+  // ndn_prefix = GetK_ptr()->GetKId().substr(0,8) + "xxxxxxxx";
+  
+  // for (int j = 0; j < Kbuk_Size; j++)
+  // {
+  //   if (K_bucket[j] == "NULL")
+  //   {
+  //     ndn::Name prefixInterest;
+
+  //     prefixInterest.append("prefix").append("data").append("download").append(ndn_prefix).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
+
+  //     SendInterest(prefixInterest, "Kbucket_connect: ", true);
+  //     break;
+  //   }
+  // }
+
+}
+
 
 } // namespace ns3
