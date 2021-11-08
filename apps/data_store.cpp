@@ -333,6 +333,17 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   }
   else
   {
+    //若對方節點具有此資料，則原地儲存不進行transform
+    if (itemType == "Transform_Data")
+    {
+      if (GetK_ptr()->GetDataList()->GetData(DataName, nextTarget) != NULL)
+      {
+        GetK_ptr()->SetData(DataName, GetK_ptr()->GetKId() , SourceNode, false);
+        return;
+      }
+    }
+    
+
     ndn::Name next ;
     
     next.append("prefix").append("data").append("store").append(nextTarget).append(SourceNode).append(DataName).append(itemType);

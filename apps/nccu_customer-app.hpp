@@ -206,9 +206,7 @@ public:
   }
 
   void
-  Store_kbucket(){
-    GetK_ptr()->SetK_bucket_to_DB();
-  }
+  Store_kbucket();
 
 
 private:

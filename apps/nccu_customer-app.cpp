@@ -53,7 +53,7 @@ int week = 300;
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 3;
+int onlineNum = 50;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -354,39 +354,41 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     {
       //運行演算法，確定是否要加入此來源
       std::pair<std::string, std::string> replaced_node = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
+      std::string k_buk_string = "_";
+      std::string* K_bucket ;
+      for (int i = 4; i <= 12; i = i+4)
+      {
+        K_bucket = GetK_ptr()->GetK_bucket(i);
+
+        for (int j = 0; j < Kbuk_Size; j++)
+        {
+          if (K_bucket[j] != "NULL")
+          {
+            k_buk_string = k_buk_string + K_bucket[j] + "_";
+          }
+        }
+        
+      }
       //若加入，則反送flag == 1
       //不加入，不動作or送其他封包
       if (replaced_node.first == SourceNode)
       {
         flag_connect_handshake = "1";
+        ndn::Name interest;
+        interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
+        SendInterest(interest, "Kbucket_connect", true);
       }
       else
       {
-        flag_connect_handshake = "-1";
+        ndn::Name interest;
+        interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append("NULL").append("Kbucket_disconnect");
+        SendInterest(interest, "Kbucket_disconnect", true);
       }
 
-      ndn::Name interest;
-      interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
-      SendInterest(interest, "Kbucket_connect", true);
+      
 
       if (replaced_node.second != "NULL")
       {
-        std::string k_buk_string = "_";
-        std::string* K_bucket ;
-        for (int i = 4; i <= 12; i = i+4)
-        {
-          K_bucket = GetK_ptr()->GetK_bucket(i);
-
-          for (int j = 0; j < Kbuk_Size; j++)
-          {
-            if (K_bucket[j] != "NULL")
-            {
-              k_buk_string = k_buk_string + K_bucket[j] + "_";
-            }
-
-          }
-          
-        }
         ndn::Name interest;
         interest.append("prefix").append("data").append("download").append(replaced_node.second).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
         SendInterest(interest, "Kbucket_disconnect", true);
@@ -1076,6 +1078,16 @@ CustomerApp::NDN_prefix_connect(){
   //   }
   // }
 
+}
+
+void
+CustomerApp::Store_kbucket(){
+  if (this->GetK_ptr()->GetKId() == "1110001111010001")
+  {
+    NS_LOG_DEBUG("SetK_bucket_to_DB()");
+  }
+    
+  GetK_ptr()->SetK_bucket_to_DB();
 }
 
 

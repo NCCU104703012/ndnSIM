@@ -213,12 +213,6 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       {
         //std::cout << "******************" << std::endl;
         NS_LOG_DEBUG("NO-match-Data-&-next-Node");
-        if (SourceNode != GetK_ptr()->GetKId())
-        {
-          ndn::Name interest;
-          interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
-          SendInterest(interest, "Kbucket_connect", true);
-        }
         //std::cout << "******************" << std::endl;
         return;
       }
@@ -287,6 +281,43 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
       if (SourceNode != GetK_ptr()->GetKId())
       {
+        //運行演算法，確定是否要加入此來源
+        std::pair<std::string, std::string> replaced_node = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
+        std::string k_buk_string = "_";
+        std::string* K_bucket ;
+        for (int i = 4; i <= 12; i = i+4)
+        {
+          K_bucket = GetK_ptr()->GetK_bucket(i);
+
+          for (int j = 0; j < GetK_ptr()->GetK_bucket_size() ; j++)
+          {
+            if (K_bucket[j] != "NULL")
+            {
+              k_buk_string = k_buk_string + K_bucket[j] + "_";
+            }
+          }
+          
+        }
+        //若加入，則反送flag == 0
+        //不加入，不動作or送其他封包
+        if (replaced_node.first == SourceNode)
+        {
+          ndn::Name interest;
+          interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
+          SendInterest(interest, "Kbucket_connect", true);
+        }
+        else
+        {
+          return;
+        }
+
+        if (replaced_node.second != "NULL")
+        {
+          ndn::Name interest;
+          interest.append("prefix").append("data").append("download").append(replaced_node.second).append(GetK_ptr()->GetKId()).append(k_buk_string).append("Kbucket_disconnect");
+          SendInterest(interest, "Kbucket_disconnect", true);
+        }
+
         ndn::Name interest;
         interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
         SendInterest(interest, "Kbucket_connect", true);
@@ -305,12 +336,6 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         {
           //std::cout << "******************" << std::endl;
           NS_LOG_DEBUG("NO-match-Data-&-next-Node");
-          if (SourceNode != GetK_ptr()->GetKId())
-          {
-            ndn::Name interest;
-            interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
-            SendInterest(interest, "Kbucket_connect", true);
-          }
           //std::cout << "******************" << std::endl;
           return;
         }
