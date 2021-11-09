@@ -53,7 +53,7 @@ int week = 300;
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 50;
+int onlineNum = 0;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;

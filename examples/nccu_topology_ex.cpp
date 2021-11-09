@@ -48,7 +48,7 @@ std::string Query_Algorithm = "DataManage";
 
 //節點數量
 // int NodeNumber = 17;
-int NodeNumber = 49;
+int NodeNumber = 1024;
 
 //一個節點產生的order數量
 int OrderNumber = 0;
@@ -61,11 +61,13 @@ int Guest_Poisson = 1000;
 int Guest_Poisson_div = 1;
 
 //初始K桶大小
-int Kbuk_Number = 4;
+int Kbuk_Number = 8;
 
 //是否設定初始K桶
-bool set_kbucket_bool = false;
+bool set_kbucket_bool = true;
 
+//商店合作鏈大小
+int ShopChain_num = 4;
 
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
@@ -272,13 +274,19 @@ void generate_node(sqlite3* db){
   for (int i = 0; i < NodeNumber; i++)
   {
     std::string nodeName = "Node" + to_string(i);
-    kptr_arr[i] = new Kademlia(nodeName, nodeName, hashNodeName(nodeName), db);
-    if (k_id_check_set.find(kptr_arr[i]->GetKId()) != k_id_check_set.end())
+    std::string k_id = hashNodeName(nodeName);
+    std::string temp_nodeName = nodeName;
+    while (k_id_check_set.find(k_id) != k_id_check_set.end())
     {
-      std::cout<< "error: there is a Same KID node " << nodeName << "\n";
+      temp_nodeName = temp_nodeName + to_string(i);
+      k_id = hashNodeName(temp_nodeName);
     }
+
+    kptr_arr[i] = new Kademlia(nodeName, nodeName, k_id, db);
+    // std::cout << k_id << "\n";
+
     k_id_check_set.insert(kptr_arr[i]->GetKId());
-    set_data_store(nodeName, "/prefix/data/store/" + hashNodeName(nodeName), kptr_arr[i]);
+    set_data_store(nodeName, "/prefix/data/store/" + k_id, kptr_arr[i]);
   }
 
   //設定K桶，目前以名字相近的四個節點為K桶
@@ -289,7 +297,7 @@ void generate_node(sqlite3* db){
       break;
     }
 
-    int targetNode = i-2;
+    int targetNode = i- Kbuk_Number/2;
     for (int m = 0; m < Kbuk_Number+1 ; m++)
     {
       if (targetNode < 0 || targetNode == i || targetNode >= NodeNumber)
@@ -305,41 +313,35 @@ void generate_node(sqlite3* db){
     }
   }
 
-
-  //設定合作商家，暫時分為三群
-  std::set<int> set1 = {0, 1, 2, 3, 4, };
-  std::set<int> set2 = {5, 6, 7, 8, 9};
-  std::set<int> set3 = {10 ,11, 12, 13, 14, 15};
-  std::set<int> set4 = {16,17,18,19,20};
-  std::set<int> set5 = {21,22,23,24,25};
-  std::set<int> set6 = {26,27,28,29,30};
-  std::set<int> set7 = {31,32,33,34,35};
-  std::set<int> set8 = {36,37,38,39,40};
-  std::set<int> set9 = {41,42,43,44,45};
-  std::set<int> set10 = {46,47,48,49};
-  
+  //設定合作商家
   for (int i = 0; i < NodeNumber; i++)
   {
-    std::set<int> tempSet;
-    if (set1.find(i) != set1.end()){tempSet = set1;}
-    else if(set2.find(i) != set2.end()){tempSet = set2;}
-    else if(set3.find(i) != set3.end()){tempSet = set3;}
-    else if(set4.find(i) != set4.end()){tempSet = set4;}
-    else if(set5.find(i) != set5.end()){tempSet = set5;}
-    else if(set6.find(i) != set6.end()){tempSet = set6;}
-    else if(set7.find(i) != set7.end()){tempSet = set7;}
-    else if(set8.find(i) != set8.end()){tempSet = set8;}
-    else if(set9.find(i) != set9.end()){tempSet = set9;}
-    else if(set10.find(i) != set10.end()){tempSet = set10;}
-    else
+    std::set<int> shopSet;
+    int upper_count = i+1;
+    int lower_count = i-1;
+
+    while (upper_count % ShopChain_num != 0 && upper_count < NodeNumber)
     {
-      std::cout << "error this node has no shopset: " << std::to_string(NodeNumber) << "\n"; 
+      shopSet.insert(upper_count);
+      upper_count++;
     }
-    
 
-    tempSet.erase(i);
+    while (lower_count >= 0 && i % ShopChain_num != 0)
+    {
+      shopSet.insert(lower_count);
+      if (lower_count % ShopChain_num == 0)
+      {
+        break;
+      }
+      lower_count--;
+    }
 
-    set_customerApp(OrderNumber, "food/food/food/food/food/", kptr_arr[i], i, tempSet);
+    if (int(shopSet.size())+1 != ShopChain_num)
+    {
+      std::cout << "error: shopSet Init size is " << shopSet.size() << " in node " << i << "\n";
+    }
+
+    set_customerApp(OrderNumber, "food/food/food/food/food/", kptr_arr[i], i, shopSet);
   }
   
 }
@@ -352,8 +354,8 @@ main(int argc, char* argv[])
 
 
   AnnotatedTopologyReader topologyReader("", 25);
-  //topologyReader.SetFileName("src/ndnSIM/examples/topologies/nccu_topo.txt");
-  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo50.txt");
+  // topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo50.txt");
+  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo1000.txt");
   topologyReader.Read();
 
   //資料庫測試
@@ -362,7 +364,7 @@ main(int argc, char* argv[])
   int rc;
   std::string sqlCommand;
 
-  rc = sqlite3_open("1107_duplicate_test.db", &db);
+  rc = sqlite3_open("1109_1000node.db", &db);
 
   if( rc ){
      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
