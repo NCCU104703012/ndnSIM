@@ -536,8 +536,9 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
     char* command_output = (char *)calloc(500000,sizeof(char)) ;
     std::string s = "|";
     strcpy(command_output, &s[0]);
+    long int node_distance = XOR(thisNode, targetNode);
 
-    sqlCommand = std::string("SELECT * from RECORD WHERE NODE=") + "'" + KId + "'" + " ;";  
+    sqlCommand = std::string("SELECT * from RECORD WHERE NODE=") + "'" + KId + "'" + "AND DISTANCE >=" + std::to_string(node_distance/2) + " ;";  
     
     /* Execute SQL statement */
    rc = sqlite3_exec(db, &sqlCommand[0], this->DB_getDATA_string, &command_output, &zErrMsg);
@@ -652,10 +653,13 @@ Data::AddData(std::string inputName, std::string k_ID, std::string sourceNode, b
 
         
     }
+
+    std::size_t hashData = std::hash<std::string>{}(inputName);
+    std::string binaryData = std::bitset<16>(hashData).to_string();
     
-    
-    sqlCommand = std::string("INSERT INTO RECORD (NODE,DATA)") +
-                 "VALUES('"+ k_ID + "', '" + inputName + "');";
+    long int node_distance = XOR(binaryData, k_ID);
+    sqlCommand = std::string("INSERT INTO RECORD (NODE,DATA,DISTANCE)") +
+                 "VALUES('"+ k_ID + "', '" + inputName + "', " + std::to_string(node_distance) + ");";
     
     // std::cout << sqlCommand <<"\n";
     

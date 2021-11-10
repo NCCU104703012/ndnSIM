@@ -44,14 +44,14 @@
 #include <sqlite3.h>
 
 //kad演算法 DataManageOrigin ＆ DataManage
-std::string Query_Algorithm = "DataManage";
+std::string Query_Algorithm = "DataManageOrigin";
 
 //節點數量
 // int NodeNumber = 17;
-int NodeNumber = 1024;
+int NodeNumber = 49;
 
 //一個節點產生的order數量
-int OrderNumber = 0;
+int OrderNumber = 1;
 
 //order開始時間
 int orderStartTime = 1000;
@@ -353,9 +353,9 @@ main(int argc, char* argv[])
   cmd.Parse(argc, argv);
 
 
-  AnnotatedTopologyReader topologyReader("", 25);
+  AnnotatedTopologyReader topologyReader("", 1000);
   // topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo50.txt");
-  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo1000.txt");
+  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo50.txt");
   topologyReader.Read();
 
   //資料庫測試
@@ -364,7 +364,7 @@ main(int argc, char* argv[])
   int rc;
   std::string sqlCommand;
 
-  rc = sqlite3_open("1109_1000node.db", &db);
+  rc = sqlite3_open("1109_50node.db", &db);
 
   if( rc ){
      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -377,7 +377,8 @@ main(int argc, char* argv[])
   //所在Node, 資料名稱, 
    sqlCommand = std::string(" ") + "CREATE TABLE RECORD(" +
          "NODE           TEXT     NOT NULL," +
-         "DATA           TEXT     NOT NULL);";
+         "DATA           TEXT     NOT NULL," +
+         "DISTANCE       INT      NOT NULL);";
 
    /* Execute SQL statement */
    rc = sqlite3_exec(db, &sqlCommand[0], callback, 0, &zErrMsg);
@@ -414,6 +415,18 @@ main(int argc, char* argv[])
 
   std::cout << "RECORD COUNT : ";
   sqlCommand = std::string(" ") + "SELECT COUNT(*) FROM RECORD";
+
+  rc = sqlite3_exec(db, &sqlCommand[0], callback, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }else{
+      fprintf(stdout, "Table select successfully\n");
+   }
+  std::cout << "\n";
+
+  std::cout << "Record duplicate : ";
+  sqlCommand = std::string(" ") + "SELECT * FROM RECORD GROUP BY NODE, DATA HAVING count(*)>1";
 
   rc = sqlite3_exec(db, &sqlCommand[0], callback, 0, &zErrMsg);
    if( rc != SQLITE_OK ){

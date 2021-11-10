@@ -62,7 +62,7 @@ int OrderQuery_num = 10;
 int MicroService_Timeout = 10;
 
 //一個節點顧客產生數量
-int GuestNumber = 0;
+int GuestNumber = 20;
 
 // 開始產生資料時間
 int GueststartTime = 40000;
@@ -174,9 +174,9 @@ CustomerApp::StartApplication()
 
   //設定儲存K桶資訊的時間
   SetKubcket_init();
-  for (int i = 0; i < 100; i++)
+  for (int i = 0; i < 10; i++)
   {
-    Simulator::Schedule(Seconds(1000 * i), &CustomerApp::Store_kbucket, this);
+    Simulator::Schedule(Seconds(10000 * i), &CustomerApp::Store_kbucket, this);
   }
 
   //設定資料產生時間
@@ -292,20 +292,20 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       if (!update_flag)
       {
         //沒有節點存在，需要回送disconnect訊息
-        std::string k_buk_string = "_";
+        std::string k_buk_string = "NULL";
         std::string* K_bucket ;
-        for (int i = 4; i <= 12; i = i+4)
-        {
-          K_bucket = GetK_ptr()->GetK_bucket(i);
+        // for (int i = 4; i <= 12; i = i+4)
+        // {
+        //   K_bucket = GetK_ptr()->GetK_bucket(i);
 
-          for (int j = 0; j < Kbuk_Size; j++)
-          {
-            if (K_bucket[j] != "NULL")
-            {
-              k_buk_string = k_buk_string + K_bucket[j] + "_";
-            }
-          } 
-        }
+        //   for (int j = 0; j < Kbuk_Size; j++)
+        //   {
+        //     if (K_bucket[j] != "NULL")
+        //     {
+        //       k_buk_string = k_buk_string + K_bucket[j] + "_";
+        //     }
+        //   } 
+        // }
         ndn::Name interest;
         interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
         SendInterest(interest, "Kbucket_disconnect", true);
@@ -822,22 +822,22 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
   std::set<std::string> shopSet = GetO_ptr()->getShopList();
 
   //從shopSet找出節點 發送service Query
-  if (!isOrder_from_otherNode)
-  {
-    for (i = shopSet.begin(); i != shopSet.end(); ++i)
-    {
-      std::string dataString = *i;
+  // if (!isOrder_from_otherNode)
+  // {
+  //   for (i = shopSet.begin(); i != shopSet.end(); ++i)
+  //   {
+  //     std::string dataString = *i;
 
-      //將資料存入Order中
-      O_ptr->setDataList(dataString);
-      NS_LOG_DEBUG("setDataList " << dataString << " in-order " << O_ptr->getOrderName());
+  //     //將資料存入Order中
+  //     O_ptr->setDataList(dataString);
+  //     NS_LOG_DEBUG("setDataList " << dataString << " in-order " << O_ptr->getOrderName());
 
-      ndn::Name prefixInterest;
-      prefixInterest.append("prefix").append("data").append("download").append(dataString).append(NodeName).append(O_ptr->getOrderName()).append("serviceQuery");
+  //     ndn::Name prefixInterest;
+  //     prefixInterest.append("prefix").append("data").append("download").append(dataString).append(NodeName).append(O_ptr->getOrderName()).append("serviceQuery");
 
-      SendInterest(prefixInterest, "Sending Service Query for ", true);
-    }
-  }
+  //     SendInterest(prefixInterest, "Sending Service Query for ", true);
+  //   }
+  // }
 
   //當沒有任何資料可以query時，假設有自家菜單可以滿足，直接生成record
   if (dataSet.length() == 1 && !isOrder_from_otherNode && (shopSet.begin() == shopSet.end()))
