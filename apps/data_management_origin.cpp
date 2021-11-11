@@ -542,7 +542,7 @@ DataManageOrigin::timeOut()
         NS_LOG_DEBUG("DataName: " << queryDataPtr->Name << " LifeTime: " << queryDataPtr->lifeTime);
 
         //超過timeout者，確認是否有next hop，沒有即lost，有則送出
-        if (queryDataPtr->lifeTime > 5)
+        if (queryDataPtr->lifeTime > 0.9)
         {
             
             bool hasNextHop = false;

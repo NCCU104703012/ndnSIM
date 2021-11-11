@@ -13,8 +13,22 @@ import json
 
 def main():
     f = open("nccu1109.txt")
+    dataManage_file = open("DataManage_log.txt", 'w')
+    customerApp_file = open("CustomerApp_log.txt", 'w')
+    dataStore_file = open("DataStore_log.txt", 'w')
     data = dict()
     for line in f.readlines():
+        
+        if line.find('DataManage:') != -1:
+            dataManage_file.writelines(line)
+        
+        if line.find('CustomerApp:') != -1:
+            customerApp_file.writelines(line)
+        
+        if line.find('DataStore:') != -1:
+            dataStore_file.writelines(line)
+            
+    
         
         words = line.split();
         if len(words) < 5:

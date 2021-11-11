@@ -54,7 +54,7 @@ int NodeNumber = 100;
 int OrderNumber = 5;
 
 //order開始時間
-int orderStartTime = 1000;
+int orderStartTime = 5000;
 
 //平均幾秒處理下一個order
 int Guest_Poisson = 1000;
@@ -64,7 +64,7 @@ int Guest_Poisson_div = 1;
 int Kbuk_Number = 5;
 
 //是否設定初始K桶
-bool set_kbucket_bool = false;
+bool set_kbucket_bool = true;
 
 //商店合作鏈大小
 int ShopChain_num = 5;

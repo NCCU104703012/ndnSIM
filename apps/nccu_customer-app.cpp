@@ -48,12 +48,12 @@
  int Kbuk_Size = 5;
 
 // 一週期的時間長度 86400
-int week = 300;
+int week = 86400;
 // 開始上下線時間
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 0;
+int onlineNum = 1;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -161,6 +161,8 @@ CustomerApp::StartApplication()
   ndn::FibHelper::AddRoute(GetNode(), m_prefix, m_face, 0);
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
+  std::size_t tempHash = std::hash<std::string>{}(NodeName.toUri());
+
   Order* O_ptr = GetO_ptr()->getNext();
   //Guest* G_ptr = GetG_ptr();
 
@@ -174,7 +176,7 @@ CustomerApp::StartApplication()
 
   //設定儲存K桶資訊的時間，並初始化K桶，根據其資訊在實驗開始時先connect
   SetKubcket_init();
-  Simulator::Schedule(Seconds(10), &CustomerApp::Node_OnLine, this);
+  Simulator::Schedule(Seconds(10 + tempHash%100), &CustomerApp::Node_OnLine, this);
 
   for (int i = 0; i < 10; i++)
   {
@@ -192,7 +194,7 @@ CustomerApp::StartApplication()
     totalTime = totalTime + (double)poisson_record(generator)/Record_Poisson_div;
   }
   
-  std::size_t tempHash = std::hash<std::string>{}(NodeName.toUri());
+  
   dayOff = (tempHash%3);
   std::cout << " dayOff: " <<  dayOff << std::endl;
 
@@ -1016,9 +1018,11 @@ CustomerApp::Node_OffLine(){
     
   }
 
-  for (int i = 4; i <= 12; i = i+4)
+  for (int i = 2; i <= 6; i = i+2)
   {
-      for (int j = 0; j < Kbuk_Size; j++)
+    K_bucket = tempK_ptr->GetK_bucket(i);
+    
+    for (int j = 0; j < Kbuk_Size; j++)
     {
       if (K_bucket[j] != "NULL")
       {
