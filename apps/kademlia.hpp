@@ -216,7 +216,7 @@ public:
     static int DB_getDATA(void *NotUsed, int argc, char **argv, char **azColName){
         int *flag = (int*)NotUsed;
         *flag = 1;
-        std::cout << "success get data : " << argv[0] << " " << argv[1] << "\n";
+        // std::cout << "success get data : " << argv[0] << " " << argv[1] << "\n";
         return 0;
     }
 
@@ -258,16 +258,16 @@ public:
 
     std::string*
     GetK_bucket(int distance){
-        if (distance > 16 || distance < 0)
+        if (distance > 8 || distance < 0)
         {
             std::cout << "error: GetK_bucket() distance = " << distance << "\n";
         }
 
-        if (distance >= 12)
+        if (distance >= 6)
         {
             return k_bucket;
         }
-        else if (distance >= 8)
+        else if (distance >= 4)
         {
             return k_bucket4;
         }

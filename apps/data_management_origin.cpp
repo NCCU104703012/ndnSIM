@@ -307,7 +307,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         //error check
         if (queryDataPtr == NULL)
         {
-            std::cout << "error: queryDataPtr is NULL\n";
+            // std::cout << "error: queryDataPtr is NULL\n";
             return;
         }
 
@@ -476,7 +476,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     {
       //此節點沒有資料，確認是否有K桶節點可返回
       std::size_t biTemp = std::hash<std::string>{}(DataName);
-      std::string binaryDataName = std::bitset<16>(biTemp).to_string();
+      std::string binaryDataName = std::bitset<8>(biTemp).to_string();
       //NS_LOG_DEBUG("hash Record for " << binaryDataName << " " << DataName);
 
       if (GetK_ptr()->GetNext_Node(binaryDataName, 1, SourceNode) == GetK_ptr()->GetKId())
@@ -516,6 +516,7 @@ DataManageOrigin::SendInterest(ndn::Name prefix, std::string logging, bool fresh
   Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
   interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
   interest->setMustBeFresh(freshness);
+  interest->setDefaultCanBePrefix(true);
 
   interest->setInterestLifetime(ndn::time::seconds(3));
   if (logging.length() != 0)

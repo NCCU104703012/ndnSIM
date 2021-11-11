@@ -45,7 +45,7 @@
 #include <sqlite3.h>
 
 //K桶大小
- int Kbuk_Size = 10;
+ int Kbuk_Size = 5;
 
 // 一週期的時間長度 86400
 int week = 300;
@@ -62,10 +62,10 @@ int OrderQuery_num = 10;
 int MicroService_Timeout = 10;
 
 //一個節點顧客產生數量
-int GuestNumber = 20;
+int GuestNumber = 0;
 
 // 開始產生資料時間
-int GueststartTime = 40000;
+int GueststartTime = 1000;
 
 //平均幾秒產生一筆資料
 int Record_Poisson = 100;
@@ -172,8 +172,10 @@ CustomerApp::StartApplication()
     O_ptr = O_ptr->getNext();
   }
 
-  //設定儲存K桶資訊的時間
+  //設定儲存K桶資訊的時間，並初始化K桶，根據其資訊在實驗開始時先connect
   SetKubcket_init();
+  Simulator::Schedule(Seconds(10), &CustomerApp::Node_OnLine, this);
+
   for (int i = 0; i < 10; i++)
   {
     Simulator::Schedule(Seconds(10000 * i), &CustomerApp::Store_kbucket, this);
@@ -293,7 +295,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       {
         //沒有節點存在，需要回送disconnect訊息
         std::string k_buk_string = "NULL";
-        std::string* K_bucket ;
+        // std::string* K_bucket ;
         // for (int i = 4; i <= 12; i = i+4)
         // {
         //   K_bucket = GetK_ptr()->GetK_bucket(i);
@@ -354,21 +356,21 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     {
       //運行演算法，確定是否要加入此來源
       std::pair<std::string, std::string> replaced_node = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
-      std::string k_buk_string = "_";
-      std::string* K_bucket ;
-      for (int i = 4; i <= 12; i = i+4)
-      {
-        K_bucket = GetK_ptr()->GetK_bucket(i);
+      std::string k_buk_string = "NULL";
+      // std::string* K_bucket ;
+      // for (int i = 2; i <= 6; i = i+2)
+      // {
+      //   K_bucket = GetK_ptr()->GetK_bucket(i);
 
-        for (int j = 0; j < Kbuk_Size; j++)
-        {
-          if (K_bucket[j] != "NULL")
-          {
-            k_buk_string = k_buk_string + K_bucket[j] + "_";
-          }
-        }
+      //   for (int j = 0; j < Kbuk_Size; j++)
+      //   {
+      //     if (K_bucket[j] != "NULL")
+      //     {
+      //       k_buk_string = k_buk_string + K_bucket[j] + "_";
+      //     }
+      //   }
         
-      }
+      // }
       //若加入，則反送flag == 1
       //不加入，不動作or送其他封包
       if (replaced_node.first == SourceNode)
@@ -466,22 +468,22 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
 
     //將更新好的K桶依據斷線對象分別disconnect
-    std::string k_buk_string = "_";
-    std::string* K_bucket ;
-    for (int i = 4; i <= 12; i = i+4)
-    {
-      K_bucket = GetK_ptr()->GetK_bucket(i);
+    std::string k_buk_string = "NULL";
+    // std::string* K_bucket ;
+    // for (int i = 2; i <= 6; i = i+2)
+    // {
+    //   K_bucket = GetK_ptr()->GetK_bucket(i);
 
-      for (int j = 0; j < Kbuk_Size; j++)
-      {
-        if (K_bucket[j] != "NULL")
-        {
-          k_buk_string = k_buk_string + K_bucket[j] + "_";
-        }
+    //   for (int j = 0; j < Kbuk_Size; j++)
+    //   {
+    //     if (K_bucket[j] != "NULL")
+    //     {
+    //       k_buk_string = k_buk_string + K_bucket[j] + "_";
+    //     }
 
-      }
+    //   }
         
-    }
+    // }
 
     std::set<std::string>::iterator i;
     for (auto i = kbuk_delete_set.begin(); i != kbuk_delete_set.end(); ++i)
@@ -744,7 +746,7 @@ CustomerApp::InitSendData(){
   GetK_ptr()->SetData(newRecord, GetK_ptr()->GetKId(), GetK_ptr()->GetKId(), true);
 
   std::size_t hashRecord = std::hash<std::string>{}(newRecord);
-  std::string binaryRecord = std::bitset<16>(hashRecord).to_string();
+  std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
   NS_LOG_DEBUG("Guest coming: " << newRecord );
 
   ndn::Name temp;
@@ -782,7 +784,7 @@ CustomerApp::OrderTimeout(){
 
     if (targetOrder->getTerminate())
     {
-      std::cout << "TargetOrder is terminate !!!!!" <<std::endl;
+      // std::cout << "TargetOrder is terminate !!!!!" <<std::endl;
       return;
     }
     
@@ -907,17 +909,17 @@ CustomerApp::DataSet_update(std::string inputDataName){
   long int distance = 0;
   std::string output = GetK_ptr()->GetKId();
   std::size_t biTemp = std::hash<std::string>{}(inputDataName);
-  std::string binaryDataName = std::bitset<16>(biTemp).to_string();
+  std::string binaryDataName = std::bitset<8>(biTemp).to_string();
   std::set<std::string> shopSet = GetO_ptr()->getShopList();
   std::set<std::string>::iterator o;
 
-  for (int i = 0; i < 16; i++)
+  for (int i = 0; i < 8; i++)
     {
         std::string str1 = binaryDataName.substr(i,1);
         std::string str2 = output.substr(i,1);
         if (str1.compare(str2) == 0)
         {
-            distance = distance + pow(2, 16-i);
+            distance = distance + pow(2, 8-i);
         }
     }
 
@@ -925,13 +927,13 @@ CustomerApp::DataSet_update(std::string inputDataName){
   {
     std::string shopName = *o;
     long int temp_distance = 0;
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < 8; i++)
     {
          std::string str1 = binaryDataName.substr(i,1);
          std::string str2 = shopName.substr(i,1);
        if (str1.compare(str2) == 0)
         {
-            temp_distance = temp_distance + pow(2, 16-i);
+            temp_distance = temp_distance + pow(2, 8-i);
         }
     }
     if (temp_distance > distance)
@@ -948,10 +950,10 @@ CustomerApp::DataSet_update(std::string inputDataName){
 void
 CustomerApp::Node_OnLine(){
 
-  if (GetK_ptr()->GetisOnline())
-  {
-    return;
-  }
+  // if (GetK_ptr()->GetisOnline())
+  // {
+  //   return;
+  // }
 
   Kademlia* tempK_ptr = GetK_ptr();
 
@@ -959,7 +961,7 @@ CustomerApp::Node_OnLine(){
 
   std::string* K_bucket ;
 
-  for (int i = 4; i <= 12; i = i+4)
+  for (int i = 2; i <= 6; i = i+2)
   {
     K_bucket = tempK_ptr->GetK_bucket(i);
 
@@ -999,7 +1001,7 @@ CustomerApp::Node_OffLine(){
   std::string* K_bucket ;
   std::string Kbuk_string = "_";
 
-  for (int i = 4; i <= 12; i = i+4)
+  for (int i = 2; i <= 6; i = i+2)
   {
     K_bucket = tempK_ptr->GetK_bucket(i);
 
@@ -1082,7 +1084,7 @@ CustomerApp::NDN_prefix_connect(){
 
 void
 CustomerApp::Store_kbucket(){
-  if (this->GetK_ptr()->GetKId() == "1110001111010001")
+  if (this->GetK_ptr()->GetKId() == "11010001")
   {
     NS_LOG_DEBUG("SetK_bucket_to_DB()");
   }

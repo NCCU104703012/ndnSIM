@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <sqlite3.h>
 
-int Kbucket_size = 10;
+int Kbucket_size = 5;
 
 Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID, sqlite3* inputDB)
 {
@@ -169,7 +169,7 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
 int
 Kademlia::GetSameBits(std::string inputKID){
     int distance = 0;
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < 8; i++)
     {
         std::string str1 = std::to_string(this->KId[i]);
         std::string str2 = std::to_string(inputKID[i]);
@@ -191,13 +191,13 @@ Kademlia::XOR(std::string input)
     // std::cout << "Xor: " << this->KId << " and " << input << "\n";
 
     long int distance = 0;
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < 8; i++)
     {
         std::string str1 = std::to_string(this->KId[i]);
         std::string str2 = std::to_string(input[i]);
         if (str1 == str2)
         {
-            distance = distance + pow(2, 16-i);
+            distance = distance + pow(2, 8-i);
         }
         
     }
@@ -210,13 +210,13 @@ Kademlia::XOR(std::string input, std::string input2)
     //std::cout << "Xor2: " << input2 << " and " << input << "\n";
 
     long int distance = 0;
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < 8; i++)
     {
         std::string str1 = std::to_string(input2[i]);
         std::string str2 = std::to_string(input[i]);
         if (str1 == str2)
         {
-            distance = distance + pow(2, 16-i);
+            distance = distance + pow(2, 8-i);
         }
         
     }
@@ -344,7 +344,7 @@ Kademlia::Delete_data(std::string DataName)
 
     if (targetPtr == NULL)
     {
-        std::cout << "In delete_data(), GetData() is NULL\n";
+        // std::cout << "In delete_data(), GetData() is NULL\n";
         return;
     }
 
@@ -373,7 +373,7 @@ Kademlia::Delete_data_query(std::string DataName)
 
     if (targetPtr == NULL)
     {
-        std::cout << "In delete_data(), GetData() is NULL\n";
+        // std::cout << "In delete_data(), GetData() is NULL\n";
         return;
     }
     
@@ -578,7 +578,7 @@ Kademlia::Transform_Data(std::string thisNode, std::string targetNode)
         if (flag == 0)
         {
             std::size_t hashData = std::hash<std::string>{}(temp);
-            std::string binaryData = std::bitset<16>(hashData).to_string();
+            std::string binaryData = std::bitset<8>(hashData).to_string();
             long int thisNode_distance = XOR(thisNode, binaryData);
             long int targetNode_distance = XOR(targetNode, binaryData);
 
@@ -655,7 +655,7 @@ Data::AddData(std::string inputName, std::string k_ID, std::string sourceNode, b
     }
 
     std::size_t hashData = std::hash<std::string>{}(inputName);
-    std::string binaryData = std::bitset<16>(hashData).to_string();
+    std::string binaryData = std::bitset<8>(hashData).to_string();
     
     long int node_distance = XOR(binaryData, k_ID);
     sqlCommand = std::string("INSERT INTO RECORD (NODE,DATA,DISTANCE)") +
@@ -779,7 +779,7 @@ Data::update_nextHop(std::string inputNode)
 {
     long int distance;
     std::size_t hashData = std::hash<std::string>{}(this->Name);
-    std::string binaryData = std::bitset<16>(hashData).to_string();
+    std::string binaryData = std::bitset<8>(hashData).to_string();
     distance = XOR(binaryData,inputNode);
     std::pair<std::string, int>mostFar_node;
     mostFar_node.first = nextHop_list[0];
@@ -823,13 +823,13 @@ Data::XOR(std::string input, std::string input2)
 {
     // std::cout << "Xor data: " << input2 << " and " << input << "\n";
     long int distance = 0;
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < 8; i++)
     {
         std::string str1 = std::to_string(input2[i]);
         std::string str2 = std::to_string(input[i]);
         if (str1 == str2)
         {
-            distance = distance + pow(2, 16-i);
+            distance = distance + pow(2, 8-i);
         }
         
     }

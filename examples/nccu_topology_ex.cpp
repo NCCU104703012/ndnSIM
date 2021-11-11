@@ -48,10 +48,10 @@ std::string Query_Algorithm = "DataManageOrigin";
 
 //節點數量
 // int NodeNumber = 17;
-int NodeNumber = 49;
+int NodeNumber = 100;
 
 //一個節點產生的order數量
-int OrderNumber = 1;
+int OrderNumber = 5;
 
 //order開始時間
 int orderStartTime = 1000;
@@ -61,13 +61,13 @@ int Guest_Poisson = 1000;
 int Guest_Poisson_div = 1;
 
 //初始K桶大小
-int Kbuk_Number = 8;
+int Kbuk_Number = 5;
 
 //是否設定初始K桶
-bool set_kbucket_bool = true;
+bool set_kbucket_bool = false;
 
 //商店合作鏈大小
-int ShopChain_num = 4;
+int ShopChain_num = 5;
 
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
@@ -120,14 +120,14 @@ std::string toBinary(int n)
         n /= 2;
     }
     reverse(r.begin(), r.end());
-    bitset<16> bs1(r);
+    bitset<8> bs1(r);
     return bs1.to_string();
 }
 
 std::string hashNodeName(std::string NodeName)
 {
   std::size_t biTemp = std::hash<std::string>{}(NodeName);
-  std::string binaryNodeName = std::bitset<16>(biTemp).to_string();
+  std::string binaryNodeName = std::bitset<8>(biTemp).to_string();
   return binaryNodeName;
 }
 
@@ -254,12 +254,12 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
 
   //設定data management模組，為了NDN fault tolerant
   if(Query_Algorithm == "DataManage"){
-    std::string prefix0 = kptr->GetKId().substr(0,8) + "xxxxxxxx";
-    std::string prefix1 = kptr->GetKId().substr(0,12) + "xxxx";
-    std::string prefix2 = kptr->GetKId().substr(0,14) + "xx";
-    std::string prefix3 = kptr->GetKId().substr(0,15) + "x";
+    // std::string prefix0 = kptr->GetKId().substr(0,8) + "xxxxxxxx";
+    std::string prefix1 = kptr->GetKId().substr(0,4) + "xxxx";
+    std::string prefix2 = kptr->GetKId().substr(0,6) + "xx";
+    std::string prefix3 = kptr->GetKId().substr(0,7) + "x";
     std::cout << "KID: " << kptr->GetKId() << " P1: " << prefix1 << " P2: " << prefix2 << " P3: " << prefix3 << "\n";
-    set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix0, kptr, queryString);
+    // set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix0, kptr, queryString);
     set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix1, kptr, queryString);
     set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix2, kptr, queryString);
     set_data_management("Node" + to_string(nodeNum), "/prefix/data/query/" + prefix3, kptr, queryString);
@@ -355,7 +355,7 @@ main(int argc, char* argv[])
 
   AnnotatedTopologyReader topologyReader("", 1000);
   // topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo50.txt");
-  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo50.txt");
+  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo225.txt");
   topologyReader.Read();
 
   //資料庫測試
@@ -364,7 +364,7 @@ main(int argc, char* argv[])
   int rc;
   std::string sqlCommand;
 
-  rc = sqlite3_open("1109_50node.db", &db);
+  rc = sqlite3_open("1110_100node.db", &db);
 
   if( rc ){
      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));

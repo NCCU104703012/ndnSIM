@@ -15,7 +15,7 @@
 import numpy as np
 
 def main():
-    scale = 10
+    scale = 15
 
     print("OK")
     arr = arrayA = np.arange(scale*scale)
@@ -26,7 +26,7 @@ def main():
 
     print(arr)
 
-    fp = open("nccu_topo100.txt", "a")
+    fp = open("nccu_topo225.txt", "a")
 
     yPos = 0
     xPos = 0
@@ -50,11 +50,11 @@ def main():
     for item in range(0, scale*scale):
 
         if item + scale <= scale*scale-1:
-            output = "Node" + str(item) + "       Node" + str(item+scale) + "       100Mbps       " + "1       " + "10ms    " + "10" + "\n"
+            output = "Node" + str(item) + "       Node" + str(item+scale) + "       100Mbps       " + "1       " + "10ms    " + "100" + "\n"
             fp.writelines(output)
 
         if (item+1) % scale != 0:
-            output = "Node" + str(item) + "       Node" + str(item+1) + "       100Mbps       " + "1       " + "10ms    " + "10" + "\n"
+            output = "Node" + str(item) + "       Node" + str(item+1) + "       100Mbps       " + "1       " + "10ms    " + "100" + "\n"
             fp.writelines(output)
             
 

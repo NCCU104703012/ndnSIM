@@ -204,7 +204,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
   }
   
   std::size_t hashRecord = std::hash<std::string>{}(DataName);
-  std::string binaryRecord = std::bitset<16>(hashRecord).to_string();
+  std::string binaryRecord = std::bitset<8>(hashRecord).to_string();
   std::string nextTarget = GetK_ptr()->GetNext_Node(binaryRecord, 1, SourceNode);
 
   if (GetK_ptr()->GetKId() == nextTarget)
@@ -229,7 +229,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     transform_node.first = "NULL";
     transform_node.second = "NULL";
 
-    for (int i = 4; i <= 12; i = i+4)
+    for (int i = 2; i <= 6; i = i+2)
     {
        std::string* K_bucket = GetK_ptr()->GetK_bucket(i);
        for (int j = 0; j < GetK_ptr()->GetK_bucket_size() ; j++)

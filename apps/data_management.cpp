@@ -194,7 +194,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     
 
     std::size_t biTemp = std::hash<std::string>{}(DataName);
-    std::string binaryDataName = std::bitset<16>(biTemp).to_string();
+    std::string binaryDataName = std::bitset<8>(biTemp).to_string();
 
     NS_LOG_DEBUG("Query data " << DataName << "  Hash: " << binaryDataName);
 
@@ -285,7 +285,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         std::pair<std::string, std::string> replaced_node = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
         std::string k_buk_string = "_";
         std::string* K_bucket ;
-        for (int i = 4; i <= 12; i = i+4)
+        for (int i = 2; i <= 6; i = i+2)
         {
           K_bucket = GetK_ptr()->GetK_bucket(i);
 
@@ -336,6 +336,47 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         {
           //std::cout << "******************" << std::endl;
           NS_LOG_DEBUG("NO-match-Data-&-next-Node");
+          //運行演算法，確定是否要加入此來源
+          std::pair<std::string, std::string> replaced_node = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
+          std::string k_buk_string = "_";
+          std::string* K_bucket ;
+          for (int i = 2; i <= 6; i = i+2)
+          {
+            K_bucket = GetK_ptr()->GetK_bucket(i);
+
+            for (int j = 0; j < GetK_ptr()->GetK_bucket_size() ; j++)
+            {
+              if (K_bucket[j] != "NULL")
+              {
+                k_buk_string = k_buk_string + K_bucket[j] + "_";
+              }
+            }
+            
+          }
+          //若加入，則反送flag == 0
+          //不加入，不動作or送其他封包
+          if (replaced_node.first == SourceNode)
+          {
+            ndn::Name interest;
+            interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
+            SendInterest(interest, "Kbucket_connect", true);
+          }
+          else
+          {
+            return;
+          }
+
+          if (replaced_node.second != "NULL")
+          {
+            ndn::Name interest;
+            interest.append("prefix").append("data").append("download").append(replaced_node.second).append(GetK_ptr()->GetKId()).append(k_buk_string).append("Kbucket_disconnect");
+            SendInterest(interest, "Kbucket_disconnect", true);
+          }
+
+          ndn::Name interest;
+          interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
+          SendInterest(interest, "Kbucket_connect", true);
+        
           //std::cout << "******************" << std::endl;
           return;
         }
@@ -348,7 +389,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         interest->setInterestLifetime(ndn::time::seconds(1));
         interest->setHopLimit(20);
 
-        NS_LOG_DEBUG("Query another Node for ndnFault_tolerant(offline) " << *interest);
+        NS_LOG_DEBUG("Query another Node for ndnFault_tolerant " << *interest);
 
         // Call trace (for logging purposes)
         m_transmittedInterests(interest, this, m_face);
@@ -406,15 +447,15 @@ DataManage::SendInterest(ndn::Name prefix, std::string logging, bool freshness){
 std::string
 DataManage::ndnFault_tolerant(std::string DataName)
 {
-  if(DataName.length() != 16){
-    std::cout << "error: ndnFault_tolerant DataName != 16\n";
+  if(DataName.length() != 8){
+    std::cout << "error: ndnFault_tolerant DataName != 8\n";
     return "NULL";
   }
 
   int sameBits = 0, careBits = 1;
   std::string TargetNode ;
 
-  for (int i = 0; i < 16; i++)
+  for (int i = 0; i < 8; i++)
     {
         std::string str1 = std::to_string((GetK_ptr()->GetKId())[i]);
         std::string str2 = std::to_string(DataName[i]);
@@ -429,26 +470,26 @@ DataManage::ndnFault_tolerant(std::string DataName)
     }
   
   if (sameBits == 0){ sameBits++; }
-  else if (sameBits >= 16){ return "NULL"; }
+  else if (sameBits >= 8){ return "NULL"; }
 
-  careBits = 16 / 2;
+  careBits = 8 / 2;
   
-  while (16 - careBits <= sameBits)
+  while (8 - careBits <= sameBits)
   {
     careBits = careBits / 2;
   }
 
   std::cout << "Node k-id : " + GetK_ptr()->GetKId() + "dataName: " + DataName + "\n"; 
 
-  TargetNode = DataName.substr(0,(16 - careBits));
+  TargetNode = DataName.substr(0,(8 - careBits));
 
   for (int i = 0; i < careBits; i++)
   {
     TargetNode = TargetNode + "x";
   }
   
-  if(TargetNode.length() != 16){
-    std::cout << "error: ndnFault_tolerant output DataName != 16  : " << TargetNode << "  careBits = " << std::to_string(careBits)  <<  "\n" ;
+  if(TargetNode.length() != 8){
+    std::cout << "error: ndnFault_tolerant output DataName != 8  : " << TargetNode << "  careBits = " << std::to_string(careBits)  <<  "\n" ;
     return "NULL";
   }
 

@@ -48,11 +48,11 @@ def main():
     for item in range(0, 49):
 
         if item + 7 <= 48:
-            output = "Node" + str(item) + "       Node" + str(item+7) + "       100Mbps       " + "1       " + "10ms    " + "10" + "\n"
+            output = "Node" + str(item) + "       Node" + str(item+7) + "       100Mbps       " + "1       " + "10ms    " + "100" + "\n"
             fp.writelines(output)
 
         if (item+1) % 7 != 0:
-            output = "Node" + str(item) + "       Node" + str(item+1) + "       100Mbps       " + "1       " + "10ms    " + "10" + "\n"
+            output = "Node" + str(item) + "       Node" + str(item+1) + "       100Mbps       " + "1       " + "10ms    " + "100" + "\n"
             fp.writelines(output)
             
 

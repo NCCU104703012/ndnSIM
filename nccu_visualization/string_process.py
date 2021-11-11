@@ -75,7 +75,8 @@ def main():
             
             
             
-    print(json.dumps(data,sort_keys=True, indent=4))
+    # print(json.dumps(data,sort_keys=True, indent=4))
+    print('process done')
     f.close()
 
     file = open('nccu_output_origin.json', "w")
