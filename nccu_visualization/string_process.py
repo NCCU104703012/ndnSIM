@@ -12,12 +12,24 @@
 import json
 
 def main():
-    f = open("nccu1109.txt")
+    # f = open("nccu1115.txt")
+    f = open("nccu1115_origin_10kbuk.txt")
+    # f = open("nccu1115_noNDN.txt")
+
     dataManage_file = open("DataManage_log.txt", 'w')
+    dataManageOrigin_file = open("DataManageOrigin_log.txt", 'w')
     customerApp_file = open("CustomerApp_log.txt", 'w')
     dataStore_file = open("DataStore_log.txt", 'w')
     data = dict()
     for line in f.readlines():
+
+        words = line.split();
+        if len(words) < 5:
+            continue
+        if len(words[0]) < 13 :
+            continue
+        if len(words[0]) > 17:
+            continue
         
         if line.find('DataManage:') != -1:
             dataManage_file.writelines(line)
@@ -27,16 +39,10 @@ def main():
         
         if line.find('DataStore:') != -1:
             dataStore_file.writelines(line)
-            
-    
         
-        words = line.split();
-        if len(words) < 5:
-            continue
-        if len(words[0]) < 13 :
-            continue
-        if len(words[0]) > 17:
-            continue
+        
+        if line.find('DataManageOrigin:') != -1:
+            dataManageOrigin_file.writelines(line)
 
         if words[4] == 'Start-process-Order':
             if words[1] not in data:
@@ -45,7 +51,7 @@ def main():
                 data[words[1]][words[5]] = dict()
 
             data[words[1]][words[5]][words[4]] = dict()
-            data[words[1]][words[5]][words[4]]["Time"] = words[0]
+            data[words[1]][words[5]][words[4]]["Time"] = words[0].strip('s').strip('+')
         
         if words[4] == 'Order-Complete':
             if words[1] not in data:
@@ -54,17 +60,17 @@ def main():
                 data[words[1]][words[5]] = dict()
 
             data[words[1]][words[5]][words[4]] = dict()
-            data[words[1]][words[5]][words[4]]["Time"] = words[0]
+            data[words[1]][words[5]][words[4]]["Time"] = words[0].strip('s').strip('+')
         
         if words[4] == 'fulfill-order':
             if words[4] not in data[words[1]][words[5]]:
                 data[words[1]][words[5]][words[4]] = dict()
-            data[words[1]][words[5]][words[4]][words[7]] = words[0]
+            data[words[1]][words[5]][words[4]][words[7]] = words[0].strip('s').strip('+')
 
         if words[4] == 'MicroService_timeout':
             if words[4] not in data[words[1]][words[5]]:
                 data[words[1]][words[5]][words[4]] = dict()
-            data[words[1]][words[5]][words[4]]["Time"] = words[0]
+            data[words[1]][words[5]][words[4]]["Time"] = words[0].strip('s').strip('+')
 
         if words[4] == 'setDataList':
             if words[4] not in data[words[1]][words[7]]:

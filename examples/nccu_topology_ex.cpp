@@ -51,7 +51,7 @@ std::string Query_Algorithm = "DataManageOrigin";
 int NodeNumber = 100;
 
 //一個節點產生的order數量
-int OrderNumber = 5;
+int OrderNumber = 3;
 
 //order開始時間
 int orderStartTime = 5000;
@@ -61,7 +61,7 @@ int Guest_Poisson = 1000;
 int Guest_Poisson_div = 1;
 
 //初始K桶大小
-int Kbuk_Number = 5;
+int Kbuk_Number = 10;
 
 //是否設定初始K桶
 bool set_kbucket_bool = true;
@@ -364,7 +364,7 @@ main(int argc, char* argv[])
   int rc;
   std::string sqlCommand;
 
-  rc = sqlite3_open("1110_100node.db", &db);
+  rc = sqlite3_open("1115_100node.db", &db);
 
   if( rc ){
      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));

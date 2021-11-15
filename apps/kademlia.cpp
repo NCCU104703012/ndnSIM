@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <sqlite3.h>
 
-int Kbucket_size = 5;
+int Kbucket_size = 10;
 
 Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID, sqlite3* inputDB)
 {
@@ -270,7 +270,7 @@ Kademlia::KBucket_update(std::string sourceNode , int distance)
     {
         if (tempKbuk[i] == sourceNode)
         {
-            outputPair.first = sourceNode;
+            // outputPair.first = sourceNode;
             return outputPair;
         }    
     }

@@ -151,7 +151,8 @@ main(int argc, char* argv[])
   /****************************************************************************/
   // Tracer:
 
-  L2RateTracer::InstallAll("drop-trace.txt", Seconds(0.5));
+  // L2RateTracer::InstallAll("drop-trace.txt", Seconds(0.5));
+  ndn::L3RateTracer::Install(Names::Find<Node>("Rtr7"), "rate-trace.txt", Seconds(5));
 
   Simulator::Run();
   Simulator::Destroy();

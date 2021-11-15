@@ -148,15 +148,6 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 {
   ndn::App::OnInterest(interest);
 
-  //上下線狀態判定
-  if (!GetK_ptr()->GetisOnline())
-  {
-    NS_LOG_DEBUG("error! this node is offline : " << interest->getName());
-    return;
-  }
-
-  NS_LOG_DEBUG("Received Interest packet for " << interest->getName());
-
   std::string inputString = interest->getName().toUri();
 
     int head = 0, tail;
@@ -204,14 +195,27 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     if (flag == "-1")
     {
         //告知dataManagement 目標節點已找到資料，可將待決資料結構刪除
+        NS_LOG_DEBUG("Get data complete(Delete data query): " << interest->getName());
         GetK_ptr()->Delete_data_query(DataName);
         return;
     }
 
+    //上下線狀態判定
+    if (!GetK_ptr()->GetisOnline())
+    {
+      if (itemType == "next-round")
+      {
+        NS_LOG_DEBUG("error! this node is offline : " << interest->getName());
+        ndn::Name interest;
+        interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("NULL").append("Kbucket_disconnect");
+        SendInterest(interest, "Kbucket_disconnect", true);
+      }
+      return;
+    }
 
     if (itemType == "init")
     {
-        //GetK_ptr()->queryList->AddData(DataName, "food");
+
         Data* queryDataPtr = GetK_ptr()->GetQueryItem(DataName);
 
         //特別注意！！！！會有queryData不見的狀況，目前出現率不高
@@ -287,7 +291,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
         if (!hasNextHop)
         {
-            std::cout << "NO-match-Data-&-next-Node(init): " << queryDataPtr->Name <<"\n";
+            NS_LOG_DEBUG("NO-match-Data-&-next-Node(init): " << queryDataPtr->Name);
             GetK_ptr()->Delete_data_query(queryDataPtr->Name);
         }
 
@@ -298,6 +302,8 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     //收到其他節點的資訊，可能是幾個next hop，可能是無更接近節點
     if (itemType == "Return")
     {
+        NS_LOG_DEBUG("Query return: " << interest->getName());
+
         //紀錄進queryList
         int head = 0, tail;
         Data* queryDataPtr = GetK_ptr()->GetQueryItem(DataName);
@@ -322,24 +328,38 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
             std::string newNode = nextHop.substr(head+1, tail-head-1);
             std::pair<std::string, std::string> update_string = GetK_ptr()->KBucket_update(newNode, GetK_ptr()->GetSameBits(newNode));
 
-            //K桶更新
+            // //K桶更新
+            // if (update_string.first == newNode)
+            // {
+            //   kbuk_update_set.insert(newNode);
+            // }
+            
+            // //將需要連接的節點先行紀錄
+            // if (update_string.second != "NULL")
+            // {
+            //   if (kbuk_update_set.find(update_string.second) != kbuk_update_set.end())
+            //   {
+            //     kbuk_update_set.erase(update_string.second);
+            //   }
+              
+            //   kbuk_delete_set.insert(update_string.second);
+              
+            // }
+
             if (update_string.first == newNode)
             {
-              kbuk_update_set.insert(newNode);
+              ndn::Name interest;
+              interest.append("prefix").append("data").append("download").append(newNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
+              SendInterest(interest, "Kbucket_connect", true);
             }
-            
-            //將需要連接的節點先行紀錄
+
             if (update_string.second != "NULL")
             {
-              if (kbuk_update_set.find(update_string.second) != kbuk_update_set.end())
-              {
-                kbuk_update_set.erase(update_string.second);
-              }
-              else
-              {
-                kbuk_delete_set.insert(update_string.second);
-              }
+              ndn::Name interest;
+              interest.append("prefix").append("data").append("download").append(update_string.second).append(GetK_ptr()->GetKId()).append("NULL").append("Kbucket_disconnect");
+              SendInterest(interest, "Kbucket_disconnect", true);
             }
+
 
             //next round hop更新
             if (newNode != SourceNode)
@@ -389,32 +409,32 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
             }
             else
             {
-                std::cout << "NO-match-Data-&-next-Node(reply_count == 3): " << queryDataPtr->Name <<"\n";
+                NS_LOG_DEBUG("NO-match-Data-&-next-Node(reply_count == 3): " << queryDataPtr->Name);
                 GetK_ptr()->Delete_data_query(queryDataPtr->Name);
             }
 
         }
 
-        std::set<std::string>::iterator i;
-        //將更新好的K桶依據斷線對象分別disconnect
-        for (auto i = kbuk_delete_set.begin(); i != kbuk_delete_set.end(); ++i)
-        {
-          std::string disCoonectNode = *i;
-          std::string k_buk_string = "NULL";
-          ndn::Name interest;
-          interest.append("prefix").append("data").append("download").append(disCoonectNode).append(GetK_ptr()->GetKId()).append(k_buk_string).append("Kbucket_disconnect");
-          SendInterest(interest, "Kbucket_disconnect", true);
-        }
+        // std::set<std::string>::iterator i;
+        // //將更新好的K桶依據斷線對象分別disconnect
+        // for (auto i = kbuk_delete_set.begin(); i != kbuk_delete_set.end(); ++i)
+        // {
+        //   std::string disCoonectNode = *i;
+        //   std::string k_buk_string = "NULL";
+        //   ndn::Name interest;
+        //   interest.append("prefix").append("data").append("download").append(disCoonectNode).append(GetK_ptr()->GetKId()).append(k_buk_string).append("Kbucket_disconnect");
+        //   SendInterest(interest, "Kbucket_disconnect", true);
+        // }
 
-        //將更新好的K桶依據新連接對象分別connect
-        for (auto i = kbuk_update_set.begin(); i != kbuk_update_set.end(); ++i)
-        {
-          std::string coonectNode = *i;
-          std::string flag_connect_handshake = "0";
-          ndn::Name interest;
-          interest.append("prefix").append("data").append("download").append(coonectNode).append(TargetNode).append(flag_connect_handshake).append("Kbucket_connect");
-          SendInterest(interest, "Kbucket_connect", true);
-        }
+        // //將更新好的K桶依據新連接對象分別connect
+        // for (auto i = kbuk_update_set.begin(); i != kbuk_update_set.end(); ++i)
+        // {
+        //   std::string coonectNode = *i;
+        //   std::string flag_connect_handshake = "0";
+        //   ndn::Name interest;
+        //   interest.append("prefix").append("data").append("download").append(coonectNode).append(GetK_ptr()->GetKId()).append(flag_connect_handshake).append("Kbucket_connect");
+        //   SendInterest(interest, "Kbucket_connect", true);
+        // }
         
 
         //紀錄最靠近的節點，作為下一次選節點的判斷標準，在將list社為NULL
@@ -428,6 +448,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     //確認flag 若為1則為match到的source節點傳來興趣封包
     if (flag.compare("1") == 0)
     {
+      NS_LOG_DEBUG("Get data return: " << interest->getName());
       Order* Optr = GetO_ptr()->getNext();
       Order* preOrder = GetO_ptr();
       while (Optr != NULL)
@@ -463,6 +484,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     //此節點擁有資料，送回給sourceNode
     else if(GetK_ptr()->GetData(DataName))
     {
+      NS_LOG_DEBUG("Find targetNode: " << interest->getName());
       outInterest.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
       SendInterest(outInterest, "getData return to customer: ", true);
 
@@ -474,6 +496,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     }
     else
     {
+      NS_LOG_DEBUG("No data: " << interest->getName());
       //此節點沒有資料，確認是否有K桶節點可返回
       std::size_t biTemp = std::hash<std::string>{}(DataName);
       std::string binaryDataName = std::bitset<8>(biTemp).to_string();
@@ -542,7 +565,7 @@ DataManageOrigin::timeOut()
         NS_LOG_DEBUG("DataName: " << queryDataPtr->Name << " LifeTime: " << queryDataPtr->lifeTime);
 
         //超過timeout者，確認是否有next hop，沒有即lost，有則送出
-        if (queryDataPtr->lifeTime > 0.9)
+        if (queryDataPtr->lifeTime > 1)
         {
             
             bool hasNextHop = false;
@@ -577,7 +600,7 @@ DataManageOrigin::timeOut()
             else
             {
                 std::string deleteData = queryDataPtr->Name;
-                std::cout << "NO-match-Data-&-next-Node(Timeout): " << queryDataPtr->Name <<"\n";
+                NS_LOG_DEBUG("NO-match-Data-&-next-Node(Timeout): " << queryDataPtr->Name);
 
                 queryDataPtr = queryDataPtr->next;
                 GetK_ptr()->Delete_data_query(deleteData);

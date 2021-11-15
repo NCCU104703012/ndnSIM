@@ -38,7 +38,7 @@
 #include <memory>
 
 
-bool ndnFault_tolerant_disable = false;
+bool ndnFault_tolerant_disable = true;
 
 
 NS_LOG_COMPONENT_DEFINE("DataManage");
@@ -196,7 +196,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     std::size_t biTemp = std::hash<std::string>{}(DataName);
     std::string binaryDataName = std::bitset<8>(biTemp).to_string();
 
-    NS_LOG_DEBUG("Query data " << DataName << "  Hash: " << binaryDataName);
+    // NS_LOG_DEBUG("Query data " << DataName << "  Hash: " << binaryDataName);
 
     //上下線狀態判定
     if (!GetK_ptr()->GetisOnline())
@@ -318,9 +318,9 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
           SendInterest(interest, "Kbucket_disconnect", true);
         }
 
-        ndn::Name interest;
-        interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
-        SendInterest(interest, "Kbucket_connect", true);
+        // ndn::Name interest;
+        // interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
+        // SendInterest(interest, "Kbucket_connect", true);
       }
       
     }
