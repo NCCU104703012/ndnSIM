@@ -45,7 +45,7 @@
 #include <sqlite3.h>
 
 //是否為雙向K桶
-bool double_direct_kbuk = true;
+bool double_direct_kbuk = false;
 
 //K桶大小
  int Kbuk_Size = 10;
@@ -56,7 +56,7 @@ int week = 86400;
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 0;
+int onlineNum = 1;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;

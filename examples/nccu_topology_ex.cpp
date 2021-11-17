@@ -51,7 +51,7 @@ std::string Query_Algorithm = "DataManageOrigin";
 int NodeNumber = 100;
 
 //一個節點產生的order數量
-int OrderNumber = 3;
+int OrderNumber = 5;
 
 //order開始時間
 int orderStartTime = 5000;
@@ -169,8 +169,9 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
 
 void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, std::set<int> shopList)
 {
-  std::poisson_distribution<int> poisson(Guest_Poisson);
+  // std::poisson_distribution<int> poisson(Guest_Poisson);
   //std::poisson_distribution<int> poisson_record(Record_Poisson);
+  std::uniform_int_distribution<int> distribution(0,Guest_Poisson);
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   Order* Optr_head = new Order("init", "init", 0, targetNum);
   int head = 0;
@@ -189,7 +190,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   Optr_head->setShopList(shopList_string);
 
   //產生Guest list，用來產生實際record
-  double totalTime = (double)poisson(generator);
+  double totalTime = (double)distribution(generator);
   Guest* Gptr_head = new Guest("Guest_Record_Node" + to_string(nodeNum), totalTime);
   
 
@@ -199,7 +200,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   {
     std::string orderName = "newRecord_Node" + to_string(nodeNum) + "_" + to_string(i);
 
-    totalTime = totalTime + (double)poisson(generator)/Guest_Poisson_div;
+    totalTime = totalTime + (double)distribution(generator)/Guest_Poisson_div;
     std::cout << totalTime << " ";
     head = tail;
     tail = query.find_first_of("/", head);

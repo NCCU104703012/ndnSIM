@@ -323,42 +323,26 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
         // std::cout << "head: " << head << " tail: " << tail << "\n";
 
+        std::pair<std::string, std::string> update_string = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
+
+        if (update_string.first == SourceNode)
+        {
+          ndn::Name interest;
+          interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
+          SendInterest(interest, "Kbucket_connect", true);
+        }
+
+        if (update_string.second != "NULL")
+        {
+          ndn::Name interest;
+          interest.append("prefix").append("data").append("download").append(update_string.second).append(GetK_ptr()->GetKId()).append("NULL").append("Kbucket_disconnect");
+          SendInterest(interest, "Kbucket_disconnect", true);
+        }
+
         while (tail != -1)
         {
             std::string newNode = nextHop.substr(head+1, tail-head-1);
-            std::pair<std::string, std::string> update_string = GetK_ptr()->KBucket_update(newNode, GetK_ptr()->GetSameBits(newNode));
-
-            // //K桶更新
-            // if (update_string.first == newNode)
-            // {
-            //   kbuk_update_set.insert(newNode);
-            // }
             
-            // //將需要連接的節點先行紀錄
-            // if (update_string.second != "NULL")
-            // {
-            //   if (kbuk_update_set.find(update_string.second) != kbuk_update_set.end())
-            //   {
-            //     kbuk_update_set.erase(update_string.second);
-            //   }
-              
-            //   kbuk_delete_set.insert(update_string.second);
-              
-            // }
-
-            if (update_string.first == newNode)
-            {
-              ndn::Name interest;
-              interest.append("prefix").append("data").append("download").append(newNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
-              SendInterest(interest, "Kbucket_connect", true);
-            }
-
-            if (update_string.second != "NULL")
-            {
-              ndn::Name interest;
-              interest.append("prefix").append("data").append("download").append(update_string.second).append(GetK_ptr()->GetKId()).append("NULL").append("Kbucket_disconnect");
-              SendInterest(interest, "Kbucket_disconnect", true);
-            }
 
 
             //next round hop更新

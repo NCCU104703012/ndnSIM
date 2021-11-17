@@ -4,10 +4,19 @@
 import json
 from os import error
 
+# import matplotlib相關套件
+
+import matplotlib.pyplot as plt
+
 StartTime = 500
 
 def main():
-    with open('nccu_output_origin.json') as f:
+    with open('nccu_output.json') as f:
+    # with open('nccu_output_origin.json') as f:
+    # with open('nccu_output_noNDN.json') as f:
+        print(f.name)
+        print('----------------------------------------------------')
+
         data = json.load(f)
 
         orderNum = 0
@@ -56,15 +65,17 @@ def main():
 
                 for item in data[node][orderName]["fulfill-order"]:
                     if len(item) > 8 :
-                        fulfill_count = fulfill_count + 1
                         arrive_time = float(data[node][orderName]["fulfill-order"][item])
+                        if arrive_time - startTime < 10:
+                            total_Fulfill_Num += 1
+
                         if arrive_time > longest_time:
                             longest_time = arrive_time
                 
                 if (longest_time - startTime) >= 10:
                     continue
                 
-                total_Fulfill_Num = total_Fulfill_Num + fulfill_count
+                
                 if longest_time > startTime:
                     totalDelay = totalDelay + (longest_time-startTime)
                 
@@ -75,6 +86,7 @@ def main():
         
         print("totalDataNum = " + str(totalDataNum))
         print("total_Fulfill_Num = " + str(total_Fulfill_Num))
+        print("Data hit rate =  " + str(total_Fulfill_Num/totalDataNum))
         print("average Delay = " + str(totalDelay/hasData_return))
         print("hasData_return = " + str(hasData_return))
         print("orderNum = " + str(orderNum))
@@ -126,7 +138,7 @@ def main():
             if line.find('DataManage:OnInterest():') != -1 & line.find('Received Interest packet for') != -1  :
                 manage_on_interest = manage_on_interest +1
             
-            if line.find('DataManage:SendInterest():') != -1:
+            if line.find('Query another Node for data') != -1:
                 manage_send_interest = manage_send_interest +1
 
             if line.find('Query another Node for ndnFault_tolerant') != -1:
@@ -137,7 +149,7 @@ def main():
     
     print("DataManage: Sending Data packet for = " + str(manage_send_data))
     print("DataManage: Received Interest packet = " + str(manage_on_interest))
-    print("DataManage: SendInterest() = " + str(manage_send_interest))
+    print("DataManage: Query another Node for data = " + str(manage_send_interest))
     print("DataManage: ndnFault_tolerant = " + str(manage_ndn_fault))
     print("DataManage: NO-match-Data-&-next-Node = " + str(manage_no_match))
     print('----------------------------------------------------')
@@ -145,6 +157,7 @@ def main():
     origin_send_next_round = 0
     origin_send_data = 0
     origin_send_interest = 0
+    origin_no_match = 0
 
     with open('DataManageOrigin_log.txt') as f:
         for line in f.readlines():
@@ -161,11 +174,163 @@ def main():
             
             if line.find('DataManageOrigin:SendInterest():') != -1:
                 origin_send_interest = origin_send_interest +1
+            
+            if line.find('NO-match-Data-&-next-Node') != -1:
+                origin_no_match = origin_no_match +1
     
     print("DataManageOrigin: next round Query = " + str(origin_send_next_round))
     print("DataManageOrigin: Sending Data packet for = " + str(origin_send_data))
     print("DataManageOrigin: SendInterest() = " + str(origin_send_interest))
+    print("DataManageOrigin: NO-match-Data-&-next-Node = " + str(origin_no_match))
+
+
+
+# 資料視覺化
+
+    # # 設定圖片大小為長15、寬10
+    # plt.figure(figsize=(15,10),dpi=100,linewidth = 2)
+
+    # # NDN錯誤容忍
+    # time_arr = []
+    # fulfill_data_arr = []
+
+    # time = 0
+
+    # for i in range(0,15):
+    #     temp_fulfill_num = 0
+        
+    #     with open('nccu_output.json') as f:
+    #         data = json.load(f)
+
+    #         for node in data:
+    #             for orderName in data[node]:
+    #                 if "fulfill-order" not in data[node][orderName]:
+    #                     continue
+
+    #                 for item in data[node][orderName]["fulfill-order"]:
+
+    #                     test_string = data[node][orderName]["Start-process-Order"]["Time"]
+    #                     startTime = float(test_string.strip('+').strip('s'))
+    #                     arrive_time = float(data[node][orderName]["fulfill-order"][item])
+
+    #                     if (arrive_time - startTime) >= 10:
+    #                         continue
+
+    #                     if arrive_time - startTime <= time:
+    #                         temp_fulfill_num += 1
+                            
             
+    #         time_arr.append(time)
+    #         fulfill_data_arr.append(temp_fulfill_num)
+    #         temp_fulfill_num = 0
+
+    #         time = time + 0.05
+    # # 把資料放進來並指定對應的X軸、Y軸的資料，用方形做標記(s-)，並指定線條顏色為紅色，使用label標記線條含意
+    # plt.plot(time_arr,fulfill_data_arr,'s-',color = 'r', label="NDN fault tolerant")
+
+    # # 原版Kademlia
+    # time_arr = []
+    # fulfill_data_arr = []
+
+    # time = 0
+
+    # for i in range(0,15):
+    #     temp_fulfill_num = 0
+        
+    #     with open('nccu_output_origin.json') as f:
+    #         data = json.load(f)
+
+    #         for node in data:
+    #             for orderName in data[node]:
+    #                 if "fulfill-order" not in data[node][orderName]:
+    #                     continue
+
+    #                 for item in data[node][orderName]["fulfill-order"]:
+
+    #                     test_string = data[node][orderName]["Start-process-Order"]["Time"]
+    #                     startTime = float(test_string.strip('+').strip('s'))
+    #                     arrive_time = float(data[node][orderName]["fulfill-order"][item])
+
+    #                     if (arrive_time - startTime) >= 10:
+    #                         continue
+
+    #                     if arrive_time - startTime <= time:
+    #                         temp_fulfill_num += 1
+            
+    #         time_arr.append(time)
+    #         fulfill_data_arr.append(temp_fulfill_num)
+    #         temp_fulfill_num = 0
+
+    #         time = time + 0.05
+
+    # # 把資料放進來並指定對應的X軸、Y軸的資料，用方形做標記(s-)，並指定線條顏色為紅色，使用label標記線條含意
+    # plt.plot(time_arr,fulfill_data_arr,'s-',color = 'g', label="Kademlia")
+
+
+    # # 純NDN逐跳
+    # time_arr = []
+    # fulfill_data_arr = []
+
+    # time = 0
+
+    # for i in range(0,15):
+    #     temp_fulfill_num = 0
+        
+    #     with open('nccu_output_noNDN.json') as f:
+    #         data = json.load(f)
+
+    #         for node in data:
+    #             for orderName in data[node]:
+    #                 if "fulfill-order" not in data[node][orderName]:
+    #                     continue
+
+    #                 for item in data[node][orderName]["fulfill-order"]:
+
+    #                     test_string = data[node][orderName]["Start-process-Order"]["Time"]
+    #                     startTime = float(test_string.strip('+').strip('s'))
+    #                     arrive_time = float(data[node][orderName]["fulfill-order"][item])
+
+    #                     if (arrive_time - startTime) >= 10:
+    #                         continue
+
+    #                     if arrive_time - startTime <= time:
+    #                         temp_fulfill_num += 1
+            
+    #         time_arr.append(time)
+    #         fulfill_data_arr.append(temp_fulfill_num)
+
+    #         time = time + 0.05
+
+    # # 把資料放進來並指定對應的X軸、Y軸的資料，用方形做標記(s-)，並指定線條顏色為紅色，使用label標記線條含意
+    # plt.plot(time_arr,fulfill_data_arr,'s-',color = 'b', label="kademlia hop by hop")
+
+
+
+    # # 設定圖片標題，以及指定字型設定，x代表與圖案最左側的距離，y代表與圖片的距離
+
+    # plt.title("Python Line chart", x=0.5, y=1.03)
+
+    # # 设置刻度字体大小
+
+    # plt.xticks(fontsize=20)
+
+    # plt.yticks(fontsize=20)
+
+    # # 標示x軸(labelpad代表與圖片的距離)
+
+    # plt.xlabel("time", fontsize=30, labelpad = 15)
+
+    # # 標示y軸(labelpad代表與圖片的距離)
+
+    # plt.ylabel("data hit %", fontsize=30, labelpad = 20)
+
+    # # 顯示出線條標記位置
+
+    # plt.legend(loc = "best", fontsize=20)
+
+    # # 畫出圖片
+
+    # plt.show()
 
 
             
