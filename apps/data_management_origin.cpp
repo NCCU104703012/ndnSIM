@@ -325,19 +325,19 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 
         std::pair<std::string, std::string> update_string = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
 
-        if (update_string.first == SourceNode)
-        {
-          ndn::Name interest;
-          interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
-          SendInterest(interest, "Kbucket_connect", true);
-        }
+        // if (update_string.first == SourceNode)
+        // {
+        //   ndn::Name interest;
+        //   interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
+        //   SendInterest(interest, "Kbucket_connect", true);
+        // }
 
-        if (update_string.second != "NULL")
-        {
-          ndn::Name interest;
-          interest.append("prefix").append("data").append("download").append(update_string.second).append(GetK_ptr()->GetKId()).append("NULL").append("Kbucket_disconnect");
-          SendInterest(interest, "Kbucket_disconnect", true);
-        }
+        // if (update_string.second != "NULL")
+        // {
+        //   ndn::Name interest;
+        //   interest.append("prefix").append("data").append("download").append(update_string.second).append(GetK_ptr()->GetKId()).append("NULL").append("Kbucket_disconnect");
+        //   SendInterest(interest, "Kbucket_disconnect", true);
+        // }
 
         while (tail != -1)
         {
@@ -468,6 +468,9 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     //此節點擁有資料，送回給sourceNode
     else if(GetK_ptr()->GetData(DataName))
     {
+      //針對來源節點進行更新
+      std::pair<std::string, std::string> update_string = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
+
       NS_LOG_DEBUG("Find targetNode: " << interest->getName());
       outInterest.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
       SendInterest(outInterest, "getData return to customer: ", true);
@@ -480,6 +483,9 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     }
     else
     {
+      //針對來源節點進行更新
+      std::pair<std::string, std::string> update_string = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
+
       NS_LOG_DEBUG("No data: " << interest->getName());
       //此節點沒有資料，確認是否有K桶節點可返回
       std::size_t biTemp = std::hash<std::string>{}(DataName);

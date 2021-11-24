@@ -14,14 +14,14 @@ import json
 def main():
     # f = open("nccu1115_only_ndn.txt")
 
-    f = open("nccu1115_10kbuk_offline.txt")
-    file = open('nccu_output.json', "w")
+    # f = open("nccu1115_10kbuk_offline.txt")
+    # file = open('nccu_output.json', "w")
 
     # f = open("nccu1115_origin_10kbuk_offline.txt")
     # file = open('nccu_output_origin.json', "w")
 
-    # f = open("nccu1115_noNDN_5kbuk_offline.txt")
-    # file = open('nccu_output_noNDN.json', "w")
+    f = open("nccu1115_noNDN_10kbuk_offline.txt")
+    file = open('nccu_output_noNDN.json', "w")
 
     dataManage_file = open("DataManage_log.txt", 'w')
     dataManageOrigin_file = open("DataManageOrigin_log.txt", 'w')

@@ -54,10 +54,10 @@ int NodeNumber = 100;
 int OrderNumber = 5;
 
 //order開始時間
-int orderStartTime = 5000;
+int orderStartTime = 3600;
 
 //平均幾秒處理下一個order
-int Guest_Poisson = 1000;
+int Guest_Poisson = 3600;
 int Guest_Poisson_div = 1;
 
 //初始K桶大小
@@ -169,9 +169,9 @@ void set_data_management(std::string nodeName, std::string prefix, Kademlia* k_p
 
 void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeNum, std::set<int> shopList)
 {
-  // std::poisson_distribution<int> poisson(Guest_Poisson);
+  std::poisson_distribution<int> poisson(Guest_Poisson);
   //std::poisson_distribution<int> poisson_record(Record_Poisson);
-  std::uniform_int_distribution<int> distribution(0,Guest_Poisson);
+  // std::uniform_int_distribution<int> distribution(0,Guest_Poisson);
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   Order* Optr_head = new Order("init", "init", 0, targetNum);
   int head = 0;
@@ -190,7 +190,7 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   Optr_head->setShopList(shopList_string);
 
   //產生Guest list，用來產生實際record
-  double totalTime = (double)distribution(generator);
+  double totalTime = (double)poisson(generator);
   Guest* Gptr_head = new Guest("Guest_Record_Node" + to_string(nodeNum), totalTime);
   
 
@@ -200,8 +200,8 @@ void set_customerApp(int targetNum, std::string query, Kademlia* kptr, int nodeN
   {
     std::string orderName = "newRecord_Node" + to_string(nodeNum) + "_" + to_string(i);
 
-    totalTime = totalTime + (double)distribution(generator)/Guest_Poisson_div;
-    std::cout << totalTime << " ";
+    totalTime = totalTime + (double)poisson(generator)/Guest_Poisson_div;
+    // std::cout << totalTime << " ";
     head = tail;
     tail = query.find_first_of("/", head);
     Optr_head->AddOrder(orderName, query.substr(head, tail-head), totalTime, targetNum+1);
@@ -356,7 +356,7 @@ main(int argc, char* argv[])
 
   AnnotatedTopologyReader topologyReader("", 1000);
   // topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo50.txt");
-  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo225.txt");
+  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo100.txt");
   topologyReader.Read();
 
   //資料庫測試
@@ -375,7 +375,29 @@ main(int argc, char* argv[])
   }
 
   /* Create SQL statement */
-  //所在Node, 資料名稱, 
+  //刪除資料庫
+  //  sqlCommand = std::string(" ") + "DROP TABLE RECORD;";
+
+  //  /* Execute SQL statement */
+  //  rc = sqlite3_exec(db, &sqlCommand[0], callback, 0, &zErrMsg);
+  //  if( rc != SQLITE_OK ){
+  //  fprintf(stderr, "SQL error: %s\n", zErrMsg);
+  //     sqlite3_free(zErrMsg);
+  //  }else{
+  //     fprintf(stdout, "Table delete successfully\n");
+  //  }
+
+  //  sqlCommand = std::string(" ") + "DROP TABLE DATAKEYSET;";
+
+  //  /* Execute SQL statement */
+  //  rc = sqlite3_exec(db, &sqlCommand[0], callback, 0, &zErrMsg);
+  //  if( rc != SQLITE_OK ){
+  //  fprintf(stderr, "SQL error: %s\n", zErrMsg);
+  //     sqlite3_free(zErrMsg);
+  //  }else{
+  //     fprintf(stdout, "Table delete successfully\n");
+  //  }
+
    sqlCommand = std::string(" ") + "CREATE TABLE RECORD(" +
          "NODE           TEXT     NOT NULL," +
          "DATA           TEXT     NOT NULL," +
@@ -467,7 +489,7 @@ main(int argc, char* argv[])
   //  Simulator::Schedule(Seconds(1.0), ndn::LinkControlHelper::FailLink, Fail_node0, Fail_node2);
   //  Simulator::Schedule(Seconds(10.0), ndn::LinkControlHelper::UpLink, Fail_node0, Fail_node2);
 
-  //ndn::L3RateTracer::InstallAll("rate-trace.txt", Seconds(30));
+  ndn::L3RateTracer::InstallAll("rate-trace.txt", Seconds(1000));
   // L2RateTracer::InstallAll("drop-trace.txt", Seconds(5));
   // ndn::CsTracer::InstallAll("cs-trace.txt", Seconds(1));
 

@@ -48,15 +48,15 @@
 bool double_direct_kbuk = false;
 
 //K桶大小
- int Kbuk_Size = 10;
+int Kbuk_Size = 10;
 
 // 一週期的時間長度 86400
-int week = 86400;
+int week = 600;
 // 開始上下線時間
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 1;
+int onlineNum = 3;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -166,18 +166,20 @@ CustomerApp::StartApplication()
   ndn::FibHelper::AddRoute(GetNode(), m_prefix, m_face, 0);
   //ndn::FibHelper::AddRoute(GetNode(), "/prefix/clothes", m_face, 0);
 
-  std::size_t tempHash = std::hash<std::string>{}(NodeName.toUri());
+  std::size_t tempHash = std::hash<std::string>{}(NodeName.toUri() + std::to_string(time(NULL)));
 
   Order* O_ptr = GetO_ptr()->getNext();
   //Guest* G_ptr = GetG_ptr();
-
+  std::cout << "ordertime:";
   while (O_ptr != NULL)
   {
-    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()), &CustomerApp::InitSendQuery, this);
-    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+ MicroService_Timeout), &CustomerApp::OrderTimeout, this);
-    
+    std::size_t order_tempHash = std::hash<std::string>{}(std::to_string(O_ptr->getTimeStamp()));
+    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+ order_tempHash%3600), &CustomerApp::InitSendQuery, this);
+    Simulator::Schedule(Seconds(O_ptr->getTimeStamp()+ order_tempHash%3600 + MicroService_Timeout), &CustomerApp::OrderTimeout, this);
+    std::cout << (O_ptr->getTimeStamp()+ order_tempHash%3600) << " ";
     O_ptr = O_ptr->getNext();
   }
+  std::cout << "\n";
 
   //設定儲存K桶資訊的時間，並初始化K桶，根據其資訊在實驗開始時先connect
   SetKubcket_init();
@@ -933,14 +935,15 @@ CustomerApp::DataSet_update(std::string inputDataName){
 void
 CustomerApp::Node_OnLine(){
 
-  // if (GetK_ptr()->GetisOnline())
-  // {
-  //   return;
-  // }
-
   Kademlia* tempK_ptr = GetK_ptr();
 
   tempK_ptr->SetisOnline(true);
+
+  //若模擬單向K桶，則double_direct_kbuk為false
+  if (!double_direct_kbuk)
+  {
+    return;
+  }
 
   std::string* K_bucket ;
 
@@ -979,6 +982,7 @@ CustomerApp::Node_OffLine(){
   }
 
   GetK_ptr()->SetisOnline(false);
+  NS_LOG_DEBUG("Node Offline process");
   
   Kademlia* tempK_ptr = GetK_ptr();
   std::string* K_bucket ;

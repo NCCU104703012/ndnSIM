@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 StartTime = 500
 
 def main():
-    with open('nccu_output.json') as f:
+    # with open('nccu_output.json') as f:
     # with open('nccu_output_origin.json') as f:
-    # with open('nccu_output_noNDN.json') as f:
+    with open('nccu_output_noNDN.json') as f:
         print(f.name)
         print('----------------------------------------------------')
 
