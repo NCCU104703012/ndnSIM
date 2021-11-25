@@ -38,7 +38,7 @@
 #include <memory>
 
 
-bool ndnFault_tolerant_disable = true;
+bool ndnFault_tolerant_disable = false;
 
 
 NS_LOG_COMPONENT_DEFINE("DataManage");
@@ -185,6 +185,18 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
     }
 
+    if (flag.compare("1") != 0 && TargetNode != SourceNode)
+    {
+      auto data = std::make_shared<ndn::Data>(interest->getName());
+      data->setFreshnessPeriod(ndn::time::milliseconds(1000));
+      data->setContent(std::make_shared< ::ndn::Buffer>(1));
+      ndn::StackHelper::getKeyChain().sign(*data);
+
+      // Call trace (for logging purposes)
+      m_transmittedDatas(data, this, m_face);
+    }
+    
+
     //檢查是否有前綴異常
     if (TargetNode.substr(0,4) != GetK_ptr()->GetKId().substr(0,4))
     {
@@ -258,9 +270,6 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         }
       }
 
-      ndn::Name outData;
-      outData.append("prefix").append("data").append("download").append(SourceNode).append(TargetNode).append(DataName).append(itemType);
-
       auto data = std::make_shared<ndn::Data>(interest->getName());
       data->setFreshnessPeriod(ndn::time::milliseconds(1000));
       data->setContent(std::make_shared< ::ndn::Buffer>(1024));
@@ -286,7 +295,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         std::pair<std::string, std::string> replaced_node = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
         std::string k_buk_string = "_";
         std::string* K_bucket ;
-        for (int i = 2; i <= 6; i = i+2)
+        for (int i = 4; i <= 8; i = i+2)
         {
           K_bucket = GetK_ptr()->GetK_bucket(i);
 
@@ -340,7 +349,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
           std::pair<std::string, std::string> replaced_node = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
           std::string k_buk_string = "_";
           std::string* K_bucket ;
-          for (int i = 2; i <= 6; i = i+2)
+          for (int i = 4; i <= 8; i = i+2)
           {
             K_bucket = GetK_ptr()->GetK_bucket(i);
 
@@ -411,9 +420,10 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 void
 DataManage::OnData(std::shared_ptr<const ndn::Data> data)
 {
-  NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
+  return;
+  // NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
 
-  std::cout << "DATA received for name " << data->getName() << std::endl;
+  // std::cout << "DATA received for name " << data->getName() << std::endl;
 }
 
 void

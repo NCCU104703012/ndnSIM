@@ -187,11 +187,11 @@ def main():
     #                         if (arrive_time - startTime) >= 15:
     #                             continue
                             
-    #                         # if arrive_time - startTime <= time and arrive_time - startTime > time - 0.05 :
-    #                         #     temp_fulfill_num += 1
-
-    #                         if arrive_time - startTime <= time :
+    #                         if arrive_time - startTime <= time and arrive_time - startTime > time - time_gap :
     #                             temp_fulfill_num += 1
+
+    #                         # if arrive_time - startTime <= time :
+    #                         #     temp_fulfill_num += 1
                                 
                 
     #             time_arr.append(time)
@@ -212,7 +212,7 @@ def main():
         fulfill_data_arr = []
 
         time = 5000
-        time_gap = 50
+        time_gap = 1000
 
         for i in range(0,40):
             temp_fulfill_num = 0
@@ -222,24 +222,6 @@ def main():
                 data = json.load(f)
 
                 for node in data:
-                    for orderName in data[node]:
-                        if "fulfill-order" not in data[node][orderName]:
-                            continue
-
-                        for item in data[node][orderName]["fulfill-order"]:
-
-                            test_string = data[node][orderName]["Start-process-Order"]["Time"]
-                            startTime = float(test_string.strip('+').strip('s'))
-                            arrive_time = float(data[node][orderName]["fulfill-order"][item])
-
-                            if (arrive_time - startTime) >= 15 :
-                                continue
-
-                        
-                            
-                            # if arrive_time <= time and arrive_time > time - time_gap:
-                            if arrive_time <= time :
-                                temp_fulfill_num += 1
                     
                     for orderName in data[node]:
                         #沒有Query任何資料，不計算數量
@@ -252,17 +234,23 @@ def main():
                         startTime = float(test_string.strip('+').strip('s'))
 
                         for item in dataList:
-                            # if len(item) > 8 and startTime <= time and startTime > time - time_gap:
-                            if len(item) > 8 and startTime <= time:
+                            if len(item) > 8 and startTime <= time and startTime > time - time_gap:
+                            # if len(item) > 8 and startTime <= time:
                                 temp_setData_num = temp_setData_num + 1
+                        
+                                if "fulfill-order" not in data[node][orderName]:
+                                    continue
+
+                                if item in data[node][orderName]["fulfill-order"] :
+                                    temp_fulfill_num += 1
 
                 if temp_setData_num == 0:
                     temp_setData_num = 1
                 
                 time_arr.append(time)
-                # fulfill_data_arr.append(temp_fulfill_num/temp_setData_num * 100)
+                fulfill_data_arr.append(temp_fulfill_num/temp_setData_num * 100)
                 # fulfill_data_arr.append(temp_setData_num)
-                fulfill_data_arr.append(temp_fulfill_num)
+                # fulfill_data_arr.append(temp_fulfill_num)
                 
 
                 time = time + time_gap

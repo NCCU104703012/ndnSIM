@@ -164,13 +164,13 @@ public:
     void
     SetClosest_Node(){
         std::size_t hashData = std::hash<std::string>{}(this->Name);
-        std::string binaryData = std::bitset<16>(hashData).to_string();
+        std::string binaryData = std::bitset<8>(hashData).to_string();
 
         for (int i = 0; i < 3; i++)
         {
             if (nextHop_list[i] != "NULL")
             {
-                if (XOR(nextHop_list[i], binaryData) > XOR(closest_node, binaryData))
+                if (XOR(nextHop_list[i], binaryData) > XOR(closest_node, binaryData) || closest_node == "NULL")
                 {
                     closest_node = nextHop_list[i];
                 }
@@ -263,13 +263,13 @@ public:
             std::cout << "error: GetK_bucket() distance = " << distance << "\n";
         }
 
-        if (distance >= 6)
-        {
-            return k_bucket;
-        }
-        else if (distance >= 4)
+        if (distance >= 4)
         {
             return k_bucket4;
+        }
+        else if (distance >= 2)
+        {
+            return k_bucket6;
         }
         return k_bucket8; 
     };
@@ -310,11 +310,11 @@ public:
     KBucket_hasNode(std::string sourceNode){
         for (int i = 0; i < GetK_bucket_size(); i++)
         {
-            if (k_bucket[i] == sourceNode)
+            if (k_bucket4[i] == sourceNode)
             {
                 return true;
             }
-            if (k_bucket4[i] == sourceNode)
+            if (k_bucket6[i] == sourceNode)
             {
                 return true;
             }
@@ -344,18 +344,18 @@ public:
         std::cout << "k_bucket: ";
         for (int i = 0; i < GetK_bucket_size(); i++)
         {
-            if (k_bucket[i] != "NULL")
+            if (k_bucket4[i] != "NULL")
             {
-                std::cout << k_bucket[i] + "|";
+                std::cout << k_bucket4[i] + "|";
             }
         }
          std::cout << "\n";
         std::cout << "k_bucket4: ";
          for (int i = 0; i < GetK_bucket_size(); i++)
         {
-            if (k_bucket4[i] != "NULL")
+            if (k_bucket6[i] != "NULL")
             {
-                std::cout << k_bucket4[i] + "|";
+                std::cout << k_bucket6[i] + "|";
             }
         }
         std::cout << "\n";
@@ -424,8 +424,8 @@ private:
     std::string node_name;
     std::string KId;
     Data *dataList;
-    std::string k_bucket[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
     std::string k_bucket4[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
+    std::string k_bucket6[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
     std::string k_bucket8[15] = {"NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL", "NULL"};
 
     //資料庫的輸出儲存變數

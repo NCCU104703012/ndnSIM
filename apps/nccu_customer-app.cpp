@@ -51,12 +51,12 @@ bool double_direct_kbuk = false;
 int Kbuk_Size = 10;
 
 // 一週期的時間長度 86400
-int week = 600;
+int week = 86400;
 // 開始上下線時間
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 3;
+int onlineNum = 1;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -183,7 +183,6 @@ CustomerApp::StartApplication()
 
   //設定儲存K桶資訊的時間，並初始化K桶，根據其資訊在實驗開始時先connect
   SetKubcket_init();
-  Simulator::Schedule(Seconds(10 + tempHash%100), &CustomerApp::Node_OnLine, this);
 
   for (int i = 0; i < 10; i++)
   {
@@ -207,6 +206,7 @@ CustomerApp::StartApplication()
 
   //shiftTime: 隨機打散上下線時間
   int shiftTime = tempHash%1000;
+  
 
   for (int i = 0; i < onlineNum; i++)
   {
@@ -269,6 +269,17 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         break;
       }
     }
+
+  if (SourceNode.compare("1") != 0)
+  {
+    auto data = std::make_shared<ndn::Data>(interest->getName());
+    data->setFreshnessPeriod(ndn::time::milliseconds(1000));
+    data->setContent(std::make_shared< ::ndn::Buffer>(1));
+    ndn::StackHelper::getKeyChain().sign(*data);
+
+    // Call trace (for logging purposes)
+    m_transmittedDatas(data, this, m_face);
+  }
   
 
   if (itemtype == "dataSet_update")
@@ -292,6 +303,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       ndn::Name interest;
       interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
       SendInterest(interest, "Kbucket_disconnect: ", true);
+            
       return;
     }
 
@@ -302,35 +314,23 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     {
       //針對來源節點對K桶進行更新
       bool update_flag = GetK_ptr()->KBucket_hasNode(SourceNode);
-      if (!update_flag)
+      if (!update_flag && double_direct_kbuk )
       {
         //沒有節點存在，需要回送disconnect訊息
         std::string k_buk_string = "NULL";
-        // std::string* K_bucket ;
-        // for (int i = 4; i <= 12; i = i+4)
-        // {
-        //   K_bucket = GetK_ptr()->GetK_bucket(i);
-
-        //   for (int j = 0; j < Kbuk_Size; j++)
-        //   {
-        //     if (K_bucket[j] != "NULL")
-        //     {
-        //       k_buk_string = k_buk_string + K_bucket[j] + "_";
-        //     }
-        //   } 
-        // }
+        
         ndn::Name interest;
         interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
-        SendInterest(interest, "Kbucket_disconnect: ", true);
+        if (double_direct_kbuk)
+        {
+          SendInterest(interest, "Kbucket_disconnect: ", true);
+        }
         return;
       }
       else
       {
         //connect成功，進行新節點加入後的資料轉移程序
         std::string trans_list = GetK_ptr()->Transform_Data(TargetNode ,SourceNode);
-
-        // std::cout << NodeName << ": ";
-        // GetK_ptr()->print_Kbucket();
 
         if (trans_list == "|")
         {
@@ -362,28 +362,21 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     // flag = 0 表示初次要求建立連接
     else if (flag_connect_handshake == "0")
     {
-      if (GetK_ptr()->KBucket_hasNode(SourceNode))
-      {
-        return;
-      }
 
       //運行演算法，確定是否要加入此來源
       std::pair<std::string, std::string> replaced_node = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
       std::string k_buk_string = "NULL";
-      // std::string* K_bucket ;
-      // for (int i = 2; i <= 6; i = i+2)
-      // {
-      //   K_bucket = GetK_ptr()->GetK_bucket(i);
 
-      //   for (int j = 0; j < Kbuk_Size; j++)
-      //   {
-      //     if (K_bucket[j] != "NULL")
-      //     {
-      //       k_buk_string = k_buk_string + K_bucket[j] + "_";
-      //     }
-      //   }
-        
-      // }
+      //若是單向K桶，則不論加不加入，均回傳flag == 1
+      if (!double_direct_kbuk)
+      {
+        flag_connect_handshake = "1";
+        ndn::Name interest;
+        interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
+        SendInterest(interest, "Kbucket_connect: ", true);
+        return;
+      }
+
       //若加入，則反送flag == 1
       //不加入，不動作or送其他封包
       if (replaced_node.first == SourceNode)
@@ -397,16 +390,22 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       {
         ndn::Name interest;
         interest.append("prefix").append("data").append("download").append(SourceNode).append(NodeName).append("NULL").append("Kbucket_disconnect");
-        SendInterest(interest, "Kbucket_disconnect: ", true);
+        if (double_direct_kbuk)
+        {
+          SendInterest(interest, "Kbucket_disconnect: ", true);
+        }
+        
       }
-
-      
 
       if (replaced_node.second != "NULL")
       {
         ndn::Name interest;
         interest.append("prefix").append("data").append("download").append(replaced_node.second).append(NodeName).append(k_buk_string).append("Kbucket_disconnect");
-        SendInterest(interest, "Kbucket_disconnect: ", true);
+        if (double_direct_kbuk)
+        {
+          SendInterest(interest, "Kbucket_disconnect: ", true);
+        }
+        
       }
     
     }
@@ -491,7 +490,11 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       ndn::Name interest;
 
       interest.append("prefix").append("data").append("download").append(disCoonectNode).append(GetK_ptr()->GetKId()).append(k_buk_string).append("Kbucket_disconnect");
-      SendInterest(interest, "Kbucket_disconnect: ", true);
+      if (double_direct_kbuk)
+      {
+        SendInterest(interest, "Kbucket_disconnect: ", true);
+      }
+      
     }
 
     //將更新好的K桶依據新連接對象分別connect
@@ -591,7 +594,7 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 void
 CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
 {
-  NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
+  
   
   std::string inputString = data->getName().toUri();
 
@@ -627,6 +630,13 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
         break;
       }
     }
+
+    if (flag.compare("1") != 0)
+    {
+      return;
+    }
+
+    NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
 
     Order* O_ptr = GetO_ptr()->getNext();
     Order* Pre_O_ptr = GetO_ptr();
@@ -939,15 +949,15 @@ CustomerApp::Node_OnLine(){
 
   tempK_ptr->SetisOnline(true);
 
-  //若模擬單向K桶，則double_direct_kbuk為false
-  if (!double_direct_kbuk)
-  {
-    return;
-  }
+  // //若模擬單向K桶，則double_direct_kbuk為false
+  // if (!double_direct_kbuk)
+  // {
+  //   return;
+  // }
 
   std::string* K_bucket ;
 
-  for (int i = 2; i <= 6; i = i+2)
+  for (int i = 4; i <= 8; i = i+2)
   {
     K_bucket = tempK_ptr->GetK_bucket(i);
 
@@ -967,9 +977,6 @@ CustomerApp::Node_OnLine(){
   }
   
 
-  
-
-
   isNodeOnline = true;
 }
 
@@ -983,18 +990,18 @@ CustomerApp::Node_OffLine(){
 
   GetK_ptr()->SetisOnline(false);
   NS_LOG_DEBUG("Node Offline process");
+
+  // //若模擬單向K桶，則double_direct_kbuk為false
+  if (!double_direct_kbuk)
+  {
+    return;
+  }
   
   Kademlia* tempK_ptr = GetK_ptr();
   std::string* K_bucket ;
   std::string Kbuk_string = "_";
 
-  //若模擬單向K桶，則double_direct_kbuk為false
-  if (!double_direct_kbuk)
-  {
-    return;
-  }
-
-  for (int i = 2; i <= 6; i = i+2)
+  for (int i = 4; i <= 8; i = i+2)
   {
     K_bucket = tempK_ptr->GetK_bucket(i);
 
@@ -1009,7 +1016,7 @@ CustomerApp::Node_OffLine(){
     
   }
 
-  for (int i = 2; i <= 6; i = i+2)
+  for (int i = 4; i <= 8; i = i+2)
   {
     K_bucket = tempK_ptr->GetK_bucket(i);
 
@@ -1035,45 +1042,37 @@ CustomerApp::Node_OffLine(){
   isNodeOnline = false;
 }
 
-//透過寬鬆前綴認識其他節點
+
 void
-CustomerApp::NDN_prefix_connect(){
-  // std::string* k_bucket ;
-  // std::string ndn_prefix;
-  // K_bucket = GetK_ptr()->GetK_bucket(6);
-  // ndn_prefix = GetK_ptr()->GetKId().substr(0,12) + "xxxx";
+CustomerApp::check_kbuk_connect(){
 
-  // std::string flag_connect_handshake = "0";
+  if (!GetK_ptr()->GetisOnline())
+  {
+    return;
+  }
 
-  // for (int j = 0; j < Kbuk_Size; j++)
-  // {
+  Kademlia* tempK_ptr = GetK_ptr();
 
-  //   if (K_bucket[j] == "NULL")
-  //   {
-  //     ndn::Name prefixInterest;
+  std::string* K_bucket ;
 
-  //     prefixInterest.append("prefix").append("data").append("download").append(ndn_prefix).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
+  for (int i = 4; i <= 8; i = i+2)
+  {
+    K_bucket = tempK_ptr->GetK_bucket(i);
 
-  //     SendInterest(prefixInterest, "Kbucket_connect: ", true);
-  //     break;
-  //   }
-  // }
+    std::string flag_connect_handshake = "0";
 
-  // K_bucket = GetK_ptr()->GetK_bucket(4);
-  // ndn_prefix = GetK_ptr()->GetKId().substr(0,8) + "xxxxxxxx";
-  
-  // for (int j = 0; j < Kbuk_Size; j++)
-  // {
-  //   if (K_bucket[j] == "NULL")
-  //   {
-  //     ndn::Name prefixInterest;
+    for (int j = 0; j < Kbuk_Size; j++)
+    {
+      if (K_bucket[j] != "NULL")
+      {
+        ndn::Name prefixInterest;
+        prefixInterest.append("prefix").append("data").append("download").append(K_bucket[j]).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
 
-  //     prefixInterest.append("prefix").append("data").append("download").append(ndn_prefix).append(NodeName).append(flag_connect_handshake).append("Kbucket_connect");
+        SendInterest(prefixInterest, "Kbucket_connect: ", true);
+      }
 
-  //     SendInterest(prefixInterest, "Kbucket_connect: ", true);
-  //     break;
-  //   }
-  // }
+    }
+  }
 
 }
 

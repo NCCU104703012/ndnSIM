@@ -51,7 +51,7 @@ std::string Query_Algorithm = "DataManageOrigin";
 int NodeNumber = 100;
 
 //一個節點產生的order數量
-int OrderNumber = 5;
+int OrderNumber = 1;
 
 //order開始時間
 int orderStartTime = 3600;
@@ -68,6 +68,9 @@ bool set_kbucket_bool = true;
 
 //商店合作鏈大小
 int ShopChain_num = 5;
+
+//程式結束時間
+int StopTime = 20000;
 
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
@@ -493,7 +496,7 @@ main(int argc, char* argv[])
   // L2RateTracer::InstallAll("drop-trace.txt", Seconds(5));
   // ndn::CsTracer::InstallAll("cs-trace.txt", Seconds(1));
 
-  Simulator::Stop(Seconds(10000000.0));
+  Simulator::Stop(Seconds(StopTime));
 
   Simulator::Run();
   Simulator::Destroy();

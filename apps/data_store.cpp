@@ -229,7 +229,7 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
     transform_node.first = "NULL";
     transform_node.second = "NULL";
 
-    for (int i = 2; i <= 6; i = i+2)
+    for (int i = 4; i <= 8; i = i+2)
     {
        std::string* K_bucket = GetK_ptr()->GetK_bucket(i);
        for (int j = 0; j < GetK_ptr()->GetK_bucket_size() ; j++)
@@ -368,9 +368,10 @@ DataStore::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 void
 DataStore::OnData(std::shared_ptr<const ndn::Data> data)
 {
-  NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
+  return;
+  // NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
 
-  std::cout << "DATA received for name " << data->getName() << std::endl;
+  // std::cout << "DATA received for name " << data->getName() << std::endl;
 }
 
 void

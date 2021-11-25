@@ -12,8 +12,8 @@ StartTime = 500
 
 def main():
     # with open('nccu_output.json') as f:
-    # with open('nccu_output_origin.json') as f:
-    with open('nccu_output_noNDN.json') as f:
+    with open('nccu_output_origin.json') as f:
+    # with open('nccu_output_noNDN.json') as f:
         print(f.name)
         print('----------------------------------------------------')
 
@@ -103,10 +103,10 @@ def main():
             if float(words[0].strip('s').strip('+')) < StartTime:
                 continue
 
-            if line.find('CustomerApp:SendInterest()') != -1 & line.find('Kbucket_connect') != -1:
+            if line.find('CustomerApp:SendInterest()') != -1 and line.find('Kbucket_connect') != -1 :
                 customer_send_connect = customer_send_connect +1
             
-            if line.find('CustomerApp:SendInterest()') != -1 & line.find('Kbucket_disconnect') != -1:
+            if line.find('CustomerApp:SendInterest()') != -1 and line.find('Kbucket_disconnect') != -1:
                 customer_send_disconnect = customer_send_disconnect +1
 
             if line.find('CustomerApp:OnInterest()') != -1:

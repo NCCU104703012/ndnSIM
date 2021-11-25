@@ -190,6 +190,17 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
     }
 
+    if (flag.compare("1") != 0 && TargetNode != SourceNode)
+    {
+      auto data = std::make_shared<ndn::Data>(interest->getName());
+      data->setFreshnessPeriod(ndn::time::milliseconds(1000));
+      data->setContent(std::make_shared< ::ndn::Buffer>(1));
+      ndn::StackHelper::getKeyChain().sign(*data);
+
+      // Call trace (for logging purposes)
+      m_transmittedDatas(data, this, m_face);
+    }
+
     ndn::Name outInterest;
 
     if (flag == "-1")
@@ -234,9 +245,18 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         }
         
 
-        queryDataPtr->closest_node = SourceNode;
+        queryDataPtr->closest_node = "NULL";
 
         //從三個K桶中比較有無更接近的節點
+        for (int i = 0; i < GetK_ptr()->GetK_bucket_size(); i++)
+        {
+            if (GetK_ptr()->GetK_bucket(8)[i] != "NULL")
+            {
+                queryDataPtr->update_nextHop(GetK_ptr()->GetK_bucket(8)[i]);
+            }
+        
+        }
+
         for (int i = 0; i < GetK_ptr()->GetK_bucket_size(); i++)
         {
             if (GetK_ptr()->GetK_bucket(6)[i] != "NULL")
@@ -255,21 +275,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         
         }
 
-        for (int i = 0; i < GetK_ptr()->GetK_bucket_size(); i++)
-        {
-            if (GetK_ptr()->GetK_bucket(0)[i] != "NULL")
-            {
-                queryDataPtr->update_nextHop(GetK_ptr()->GetK_bucket(0)[i]);
-            }
-        
-        }
-
-        //std::cout << "nextHop List: " ;
-        // for (int i = 0; i < 3; i++)
-        // {
-            //std::cout << queryDataPtr->nextHop_list[i] << "  "  ;
-        // }
-        //std::cout<< "\n";
+        queryDataPtr->SetClosest_Node();
 
         bool hasNextHop = false;
         for (int i = 0; i < 3; i++)
@@ -294,6 +300,7 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
             NS_LOG_DEBUG("NO-match-Data-&-next-Node(init): " << queryDataPtr->Name);
             GetK_ptr()->Delete_data_query(queryDataPtr->Name);
         }
+        
 
         return;
     }
@@ -349,6 +356,8 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
             if (newNode != SourceNode)
             {
                 queryDataPtr->update_nextHop(newNode);
+
+                GetK_ptr()->KBucket_update(newNode, GetK_ptr()->GetSameBits(newNode));
             }
 
             if (tail == int(nextHop.length()))
@@ -492,15 +501,15 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       std::string binaryDataName = std::bitset<8>(biTemp).to_string();
       //NS_LOG_DEBUG("hash Record for " << binaryDataName << " " << DataName);
 
-      if (GetK_ptr()->GetNext_Node(binaryDataName, 1, SourceNode) == GetK_ptr()->GetKId())
-      {
-        outInterest.append("prefix").append("data").append("query").append(SourceNode).append("0").append(TargetNode).append(DataName).append("Return").append("NULL").append(std::to_string(time(NULL)));
-      }
-      else
-      {
+      // if (GetK_ptr()->GetNext_Node(binaryDataName, 1, SourceNode) == GetK_ptr()->GetKId())
+      // {
+      //   outInterest.append("prefix").append("data").append("query").append(SourceNode).append("0").append(TargetNode).append(DataName).append("Return").append("NULL").append(std::to_string(time(NULL)));
+      // }
+      // else
+      // {
         std::string next_round_info = GetK_ptr()->GetNext_Node(binaryDataName, 3, SourceNode);
         outInterest.append("prefix").append("data").append("query").append(SourceNode).append("0").append(TargetNode).append(DataName).append("Return").append(next_round_info);
-      }
+      // }
         SendInterest(outInterest, "sendBack to SourceNode: ", true);
     }
 
@@ -510,9 +519,10 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
 void
 DataManageOrigin::OnData(std::shared_ptr<const ndn::Data> data)
 {
-  NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
+  return;
+  // NS_LOG_DEBUG("Receiving Data packet for " << data->getName());
 
-  std::cout << "DATA received for name " << data->getName() << std::endl;
+  // std::cout << "DATA received for name " << data->getName() << std::endl;
 }
 
 void
@@ -560,6 +570,7 @@ DataManageOrigin::timeOut()
             
             bool hasNextHop = false;
             queryDataPtr->target_reply_count = 0;
+            queryDataPtr->SetClosest_Node();
             
             for (int i = 0; i < 3; i++)
             {
@@ -573,14 +584,13 @@ DataManageOrigin::timeOut()
                     queryDataPtr->nextHop_list[i] = "NULL";
                     //queryDataPtr->timeout_check[i] = queryDataPtr->nextHop_list[i];
 
-                    outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(GetK_ptr()->GetKId()).append(queryDataPtr->Name).append("timeOut").append("NULL").append(std::to_string(time(NULL)));
+                    outInterest.append("prefix").append("data").append("query").append(targetNode).append("0").append(GetK_ptr()->GetKId()).append(queryDataPtr->Name).append("next-round").append("NULL").append(std::to_string(time(NULL)));
                     SendInterest(outInterest, " TimeOut next round Query: ", true);
                 }
             }
 
             if (hasNextHop)
             {
-                queryDataPtr->SetClosest_Node();
                 queryDataPtr->reply_count = 0;
                 queryDataPtr->lifeTime = 0;
                 std::cout << "Timeout! Go to Next round: " << queryDataPtr->Name << "\n";

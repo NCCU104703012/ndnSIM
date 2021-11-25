@@ -96,8 +96,9 @@ public:
   void
   Node_OffLine();
 
+  //向所有k桶節點傳送connect
   void
-  NDN_prefix_connect();
+  check_kbuk_connect();
 
   //將Guest 轉換成指標
   Guest*

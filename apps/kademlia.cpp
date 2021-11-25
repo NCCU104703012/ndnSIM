@@ -61,14 +61,16 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
 
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        if (SourceNode == k_bucket[i] || k_bucket[i] == "NULL")
+        if (SourceNode == k_bucket4[i] || k_bucket4[i] == "NULL")
         {
             continue;
         }
 
-        if (this->XOR(k_bucket[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
+        outputString = outputString + "_" + k_bucket4[i];
+
+        if (this->XOR(k_bucket4[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
         {
-            output[mostFar_Node.second] = k_bucket[i];
+            output[mostFar_Node.second] = k_bucket4[i];
             
             mostFar_Node.first = output[0];
             mostFar_Node.second = 0;    
@@ -91,14 +93,16 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
 
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        if (SourceNode == k_bucket4[i] || k_bucket4[i] == "NULL")
+        if (SourceNode == k_bucket6[i] || k_bucket6[i] == "NULL")
         {
             continue;
         }
 
-        if (this->XOR(k_bucket4[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
+        outputString = outputString + "_" + k_bucket6[i];
+
+        if (this->XOR(k_bucket6[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
         {
-            output[mostFar_Node.second] = k_bucket4[i];
+            output[mostFar_Node.second] = k_bucket6[i];
 
             mostFar_Node.first = output[0];
             mostFar_Node.second = 0;    
@@ -125,6 +129,8 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
         {
             continue;
         }
+
+        outputString = outputString + "_" + k_bucket8[i];
 
         if (this->XOR(k_bucket8[i], TargetNode) > this->XOR(TargetNode, mostFar_Node.first))
         {
@@ -155,10 +161,10 @@ Kademlia::GetNext_Node(std::string TargetNode, int output_num, std::string Sourc
         return mostClose_Node.first;
     }
 
-    for (int i = 0; i < 3; i++)
-    {
-            outputString = outputString + "_" + output[i];
-    }
+    // for (int i = 0; i < 3; i++)
+    // {
+    //         outputString = outputString + "_" + output[i];
+    // }
 
     outputString = outputString + "_";
     
@@ -305,6 +311,7 @@ Kademlia::KBucket_update(std::string sourceNode , int distance)
         outputPair.second = output_KID;
     }
     
+    
     return outputPair;
     
 
@@ -316,14 +323,14 @@ Kademlia::KBucket_delete(std::string sourceNode)
 {
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        if (k_bucket[i] == sourceNode)
-        {
-            k_bucket[i] = "NULL";
-            return;
-        }
         if (k_bucket4[i] == sourceNode)
         {
             k_bucket4[i] = "NULL";
+            return;
+        }
+        if (k_bucket6[i] == sourceNode)
+        {
+            k_bucket6[i] = "NULL";
             return;
         }
         if (k_bucket8[i] == sourceNode)
@@ -418,14 +425,14 @@ Kademlia::SetK_bucket_to_DB(){
     
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        if (k_bucket[i] == "NULL")
+        if (k_bucket4[i] == "NULL")
         {
             continue;
         }
 
         //將現有K桶資訊存入資料庫
         sqlCommand = std::string("INSERT INTO KBUCKET (NODE,KID)") +
-                    "VALUES('"+ this->KId + "', '" + k_bucket[i] + "');";
+                    "VALUES('"+ this->KId + "', '" + k_bucket4[i] + "');";
                     
         /* Execute SQL statement */
         rc = sqlite3_exec(db, &sqlCommand[0], dataList->DB_NULL, 0, &zErrMsg);
@@ -436,14 +443,14 @@ Kademlia::SetK_bucket_to_DB(){
 
     for (int i = 0; i < GetK_bucket_size(); i++)
     {
-        if (k_bucket4[i] == "NULL")
+        if (k_bucket6[i] == "NULL")
         {
             continue;
         }
 
         //將現有K桶資訊存入資料庫
         sqlCommand = std::string("INSERT INTO KBUCKET (NODE,KID)") +
-                    "VALUES('"+ this->KId + "', '" + k_bucket4[i] + "');";
+                    "VALUES('"+ this->KId + "', '" + k_bucket6[i] + "');";
                     
         /* Execute SQL statement */
         rc = sqlite3_exec(db, &sqlCommand[0], dataList->DB_NULL, 0, &zErrMsg);
@@ -785,25 +792,32 @@ Data::update_nextHop(std::string inputNode)
     mostFar_node.first = nextHop_list[0];
     mostFar_node.second = 0;
 
-    if (distance <= XOR(binaryData, closest_node))
+    if (closest_node != "NULL")
     {
-        return;
+        if (distance <= XOR(binaryData, closest_node))
+        {
+            return;
+        }
     }
-
-    for (int  i = 0; i < 3; i++)
-    {
+    
+    for (int  i = 0; i < 3; i++){
         if (this->nextHop_list[i] == inputNode)
         {
             // 預防nextHop list出現相同節點，重複Query
             return;
         }
+    }
 
+    for (int  i = 0; i < 3; i++)
+    {
         if (this->nextHop_list[i] == "NULL")
         {
             this->nextHop_list[i] = inputNode;
             return;
         }
+    }
 
+    for (int  i = 0; i < 3; i++){
         if (XOR(mostFar_node.first, binaryData) > XOR(nextHop_list[i], binaryData))
         {
             mostFar_node.first = nextHop_list[i];
@@ -815,6 +829,7 @@ Data::update_nextHop(std::string inputNode)
     {
         nextHop_list[mostFar_node.second] = inputNode;
     }
+
     return;
 }
 
