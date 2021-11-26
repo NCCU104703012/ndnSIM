@@ -51,7 +51,7 @@ std::string Query_Algorithm = "DataManageOrigin";
 int NodeNumber = 100;
 
 //一個節點產生的order數量
-int OrderNumber = 1;
+int OrderNumber = 5;
 
 //order開始時間
 int orderStartTime = 3600;
@@ -61,7 +61,7 @@ int Guest_Poisson = 3600;
 int Guest_Poisson_div = 1;
 
 //初始K桶大小
-int Kbuk_Number = 10;
+int Kbuk_Number = 5;
 
 //是否設定初始K桶
 bool set_kbucket_bool = true;
@@ -70,7 +70,7 @@ bool set_kbucket_bool = true;
 int ShopChain_num = 5;
 
 //程式結束時間
-int StopTime = 20000;
+int StopTime = 30000;
 
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){

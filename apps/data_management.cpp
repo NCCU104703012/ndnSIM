@@ -185,16 +185,16 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
     }
 
-    if (flag.compare("1") != 0 && TargetNode != SourceNode)
-    {
-      auto data = std::make_shared<ndn::Data>(interest->getName());
-      data->setFreshnessPeriod(ndn::time::milliseconds(1000));
-      data->setContent(std::make_shared< ::ndn::Buffer>(1));
-      ndn::StackHelper::getKeyChain().sign(*data);
+    // if (flag.compare("1") != 0 && TargetNode != SourceNode)
+    // {
+    //   auto data = std::make_shared<ndn::Data>(interest->getName());
+    //   data->setFreshnessPeriod(ndn::time::milliseconds(1000));
+    //   data->setContent(std::make_shared< ::ndn::Buffer>(1));
+    //   ndn::StackHelper::getKeyChain().sign(*data);
 
-      // Call trace (for logging purposes)
-      m_transmittedDatas(data, this, m_face);
-    }
+    //   // Call trace (for logging purposes)
+    //   m_transmittedDatas(data, this, m_face);
+    // }
     
 
     //檢查是否有前綴異常
@@ -283,6 +283,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       m_appLink->onReceiveData(*data);
     }
 
+
     //確認是否有此資料 若無則從k桶找尋下一目標
     else if(GetK_ptr()->GetData(DataName))
     {
@@ -295,7 +296,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         std::pair<std::string, std::string> replaced_node = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
         std::string k_buk_string = "_";
         std::string* K_bucket ;
-        for (int i = 4; i <= 8; i = i+2)
+        for (int i = 0; i <= 4; i = i+2)
         {
           K_bucket = GetK_ptr()->GetK_bucket(i);
 
@@ -349,7 +350,7 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
           std::pair<std::string, std::string> replaced_node = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
           std::string k_buk_string = "_";
           std::string* K_bucket ;
-          for (int i = 4; i <= 8; i = i+2)
+          for (int i = 0; i <= 4; i = i+2)
           {
             K_bucket = GetK_ptr()->GetK_bucket(i);
 

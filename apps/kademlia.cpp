@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <sqlite3.h>
 
-int Kbucket_size = 10;
+int Kbucket_size = 5;
 
 Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID, sqlite3* inputDB)
 {
@@ -380,18 +380,23 @@ Kademlia::Delete_data_query(std::string DataName)
 
     if (targetPtr == NULL)
     {
-        // std::cout << "In delete_data(), GetData() is NULL\n";
         return;
     }
     
     Data* prePtr = queryList;
+    Data* target_nextptr = targetPtr->next;
 
     while (1)
     {
+        targetPtr = queryList->GetData(DataName);
+        if (targetPtr == NULL)
+        {
+            return;
+        }
+
         if (prePtr->next == targetPtr)
         {
-            // std::cout << "Delete Data sucess: " << targetPtr->Name << "\n";
-            prePtr->next = targetPtr->next;
+            prePtr->next = target_nextptr;
             delete targetPtr;
             return;
         }

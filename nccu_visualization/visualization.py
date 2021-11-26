@@ -156,107 +156,107 @@ def main():
     #     plt.plot(time_arr,fulfill_data_arr,'s-',color = color_arr[index], label=lable_arr[index])
     
     # 累計fulfill資料 以及其delay 折線圖
-    # for index in range(0,3):
-    #     json_info = json_process(file_arr[index])
-        
-    #     time_arr = []
-    #     fulfill_data_arr = []
-
-    #     time = 0
-    #     time_gap = 0.05
-
-    #     for i in range(0,40):
-    #         temp_fulfill_num = 0
-            
-    #         with open(file_arr[index]) as f:
-    #             data = json.load(f)
-
-
-
-    #             for node in data:
-    #                 for orderName in data[node]:
-    #                     if "fulfill-order" not in data[node][orderName]:
-    #                         continue
-
-    #                     for item in data[node][orderName]["fulfill-order"]:
-
-    #                         test_string = data[node][orderName]["Start-process-Order"]["Time"]
-    #                         startTime = float(test_string.strip('+').strip('s'))
-    #                         arrive_time = float(data[node][orderName]["fulfill-order"][item])
-
-    #                         if (arrive_time - startTime) >= 15:
-    #                             continue
-                            
-    #                         if arrive_time - startTime <= time and arrive_time - startTime > time - time_gap :
-    #                             temp_fulfill_num += 1
-
-    #                         # if arrive_time - startTime <= time :
-    #                         #     temp_fulfill_num += 1
-                                
-                
-    #             time_arr.append(time)
-
-    #             fulfill_data_arr.append(temp_fulfill_num/json_info["totalDataNum"] * 100)
-    #             # fulfill_data_arr.append(temp_fulfill_num)
-                
-    #             time = time + time_gap
-                
-    #     # 把資料放進來並指定對應的X軸、Y軸的資料，用方形做標記(s-)，並指定線條顏色為紅色，使用label標記線條含意
-    #     plt.plot(time_arr,fulfill_data_arr,'s-',color = color_arr[index], label=lable_arr[index])
-
-
-    # 區間或累計資料命中率
     for index in range(0,3):
+        json_info = json_process(file_arr[index])
         
         time_arr = []
         fulfill_data_arr = []
 
-        time = 5000
-        time_gap = 1000
+        time = 0
+        time_gap = 0.05
 
-        for i in range(0,40):
+        for i in range(0,80):
             temp_fulfill_num = 0
-            temp_setData_num = 0
             
             with open(file_arr[index]) as f:
                 data = json.load(f)
 
+
+
                 for node in data:
-                    
                     for orderName in data[node]:
-                        #沒有Query任何資料，不計算數量
-                        if "setDataList" not in data[node][orderName]:
+                        if "fulfill-order" not in data[node][orderName]:
                             continue
-                        
-                        #計算有多少資料被加入dataList，Micro Order先不算
-                        dataList = data[node][orderName]["setDataList"]
-                        test_string = data[node][orderName]["Start-process-Order"]["Time"]
-                        startTime = float(test_string.strip('+').strip('s'))
 
-                        for item in dataList:
-                            if len(item) > 8 and startTime <= time and startTime > time - time_gap:
-                            # if len(item) > 8 and startTime <= time:
-                                temp_setData_num = temp_setData_num + 1
-                        
-                                if "fulfill-order" not in data[node][orderName]:
-                                    continue
+                        for item in data[node][orderName]["fulfill-order"]:
 
-                                if item in data[node][orderName]["fulfill-order"] :
-                                    temp_fulfill_num += 1
+                            test_string = data[node][orderName]["Start-process-Order"]["Time"]
+                            startTime = float(test_string.strip('+').strip('s'))
+                            arrive_time = float(data[node][orderName]["fulfill-order"][item])
 
-                if temp_setData_num == 0:
-                    temp_setData_num = 1
+                            if (arrive_time - startTime) >= 15:
+                                continue
+                            
+                            if arrive_time - startTime <= time and arrive_time - startTime > time - time_gap :
+                                temp_fulfill_num += 1
+
+                            # if arrive_time - startTime <= time :
+                            #     temp_fulfill_num += 1
+                                
                 
                 time_arr.append(time)
-                fulfill_data_arr.append(temp_fulfill_num/temp_setData_num * 100)
-                # fulfill_data_arr.append(temp_setData_num)
+
+                fulfill_data_arr.append(temp_fulfill_num/json_info["totalDataNum"] * 100)
                 # fulfill_data_arr.append(temp_fulfill_num)
                 
-
                 time = time + time_gap
-
+                
         # 把資料放進來並指定對應的X軸、Y軸的資料，用方形做標記(s-)，並指定線條顏色為紅色，使用label標記線條含意
         plt.plot(time_arr,fulfill_data_arr,'s-',color = color_arr[index], label=lable_arr[index])
+
+
+    # 區間或累計資料命中率
+    # for index in range(0,3):
+        
+    #     time_arr = []
+    #     fulfill_data_arr = []
+
+    #     time = 5000
+    #     time_gap = 500
+
+    #     for i in range(0,40):
+    #         temp_fulfill_num = 0
+    #         temp_setData_num = 0
+            
+    #         with open(file_arr[index]) as f:
+    #             data = json.load(f)
+
+    #             for node in data:
+                    
+    #                 for orderName in data[node]:
+    #                     #沒有Query任何資料，不計算數量
+    #                     if "setDataList" not in data[node][orderName]:
+    #                         continue
+                        
+    #                     #計算有多少資料被加入dataList，Micro Order先不算
+    #                     dataList = data[node][orderName]["setDataList"]
+    #                     test_string = data[node][orderName]["Start-process-Order"]["Time"]
+    #                     startTime = float(test_string.strip('+').strip('s'))
+
+    #                     for item in dataList:
+    #                         if len(item) > 8 and startTime <= time and startTime > time - time_gap:
+    #                         # if len(item) > 8 and startTime <= time:
+    #                             temp_setData_num = temp_setData_num + 1
+                        
+    #                             if "fulfill-order" not in data[node][orderName]:
+    #                                 continue
+
+    #                             if item in data[node][orderName]["fulfill-order"] :
+    #                                 temp_fulfill_num += 1
+
+    #             if temp_setData_num == 0:
+    #                 temp_setData_num = 1
+                
+    #             time_arr.append(time)
+    #             fulfill_data_arr.append(temp_fulfill_num/temp_setData_num * 100)
+    #             # fulfill_data_arr.append(temp_setData_num)
+    #             # fulfill_data_arr.append(temp_fulfill_num)
+                
+
+    #             time = time + time_gap
+
+    #     # 把資料放進來並指定對應的X軸、Y軸的資料，用方形做標記(s-)，並指定線條顏色為紅色，使用label標記線條含意
+    #     plt.plot(time_arr,fulfill_data_arr,'s-',color = color_arr[index], label=lable_arr[index])
     
     
 

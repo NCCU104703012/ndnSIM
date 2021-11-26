@@ -48,7 +48,7 @@
 bool double_direct_kbuk = false;
 
 //K桶大小
-int Kbuk_Size = 10;
+int Kbuk_Size = 5;
 
 // 一週期的時間長度 86400
 int week = 86400;
@@ -270,16 +270,16 @@ CustomerApp::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
     }
 
-  if (SourceNode.compare("1") != 0)
-  {
-    auto data = std::make_shared<ndn::Data>(interest->getName());
-    data->setFreshnessPeriod(ndn::time::milliseconds(1000));
-    data->setContent(std::make_shared< ::ndn::Buffer>(1));
-    ndn::StackHelper::getKeyChain().sign(*data);
+  // if (SourceNode.compare("1") != 0)
+  // {
+  //   auto data = std::make_shared<ndn::Data>(interest->getName());
+  //   data->setFreshnessPeriod(ndn::time::milliseconds(1000));
+  //   data->setContent(std::make_shared< ::ndn::Buffer>(1));
+  //   ndn::StackHelper::getKeyChain().sign(*data);
 
-    // Call trace (for logging purposes)
-    m_transmittedDatas(data, this, m_face);
-  }
+  //   // Call trace (for logging purposes)
+  //   m_transmittedDatas(data, this, m_face);
+  // }
   
 
   if (itemtype == "dataSet_update")
@@ -957,7 +957,7 @@ CustomerApp::Node_OnLine(){
 
   std::string* K_bucket ;
 
-  for (int i = 4; i <= 8; i = i+2)
+  for (int i = 0; i <= 4; i = i+2)
   {
     K_bucket = tempK_ptr->GetK_bucket(i);
 
@@ -1016,7 +1016,7 @@ CustomerApp::Node_OffLine(){
     
   }
 
-  for (int i = 4; i <= 8; i = i+2)
+  for (int i = 0; i <= 4; i = i+2)
   {
     K_bucket = tempK_ptr->GetK_bucket(i);
 
@@ -1055,7 +1055,7 @@ CustomerApp::check_kbuk_connect(){
 
   std::string* K_bucket ;
 
-  for (int i = 4; i <= 8; i = i+2)
+  for (int i = 0; i <= 4; i = i+2)
   {
     K_bucket = tempK_ptr->GetK_bucket(i);
 

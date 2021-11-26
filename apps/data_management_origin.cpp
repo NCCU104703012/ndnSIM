@@ -190,16 +190,16 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
       }
     }
 
-    if (flag.compare("1") != 0 && TargetNode != SourceNode)
-    {
-      auto data = std::make_shared<ndn::Data>(interest->getName());
-      data->setFreshnessPeriod(ndn::time::milliseconds(1000));
-      data->setContent(std::make_shared< ::ndn::Buffer>(1));
-      ndn::StackHelper::getKeyChain().sign(*data);
+    // if (flag.compare("1") != 0 && TargetNode != SourceNode)
+    // {
+    //   auto data = std::make_shared<ndn::Data>(interest->getName());
+    //   data->setFreshnessPeriod(ndn::time::milliseconds(1000));
+    //   data->setContent(std::make_shared< ::ndn::Buffer>(1));
+    //   ndn::StackHelper::getKeyChain().sign(*data);
 
-      // Call trace (for logging purposes)
-      m_transmittedDatas(data, this, m_face);
-    }
+    //   // Call trace (for logging purposes)
+    //   m_transmittedDatas(data, this, m_face);
+    // }
 
     ndn::Name outInterest;
 
@@ -328,24 +328,6 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         head = nextHop.find_first_of("_", head);
         tail = nextHop.find_first_of("_", head+1);
 
-        // std::cout << "head: " << head << " tail: " << tail << "\n";
-
-        std::pair<std::string, std::string> update_string = GetK_ptr()->KBucket_update(SourceNode, GetK_ptr()->GetSameBits(SourceNode));
-
-        // if (update_string.first == SourceNode)
-        // {
-        //   ndn::Name interest;
-        //   interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
-        //   SendInterest(interest, "Kbucket_connect", true);
-        // }
-
-        // if (update_string.second != "NULL")
-        // {
-        //   ndn::Name interest;
-        //   interest.append("prefix").append("data").append("download").append(update_string.second).append(GetK_ptr()->GetKId()).append("NULL").append("Kbucket_disconnect");
-        //   SendInterest(interest, "Kbucket_disconnect", true);
-        // }
-
         while (tail != -1)
         {
             std::string newNode = nextHop.substr(head+1, tail-head-1);
@@ -357,7 +339,13 @@ DataManageOrigin::OnInterest(std::shared_ptr<const ndn::Interest> interest)
             {
                 queryDataPtr->update_nextHop(newNode);
 
-                GetK_ptr()->KBucket_update(newNode, GetK_ptr()->GetSameBits(newNode));
+                std::pair<std::string, std::string> update_string = GetK_ptr()->KBucket_update(newNode, GetK_ptr()->GetSameBits(newNode));
+                if (update_string.first == newNode)
+                {
+                  ndn::Name interest;
+                  interest.append("prefix").append("data").append("download").append(SourceNode).append(GetK_ptr()->GetKId()).append("0").append("Kbucket_connect");
+                  SendInterest(interest, "Kbucket_connect", true);
+                }
             }
 
             if (tail == int(nextHop.length()))
