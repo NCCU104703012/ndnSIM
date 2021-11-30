@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <sqlite3.h>
 
-int Kbucket_size = 5;
+int Kbucket_size = 10;
 
 Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::string kademliaID, sqlite3* inputDB)
 {
@@ -18,6 +18,7 @@ Kademlia::Kademlia(std::string node_name_input, std::string data_input, std::str
     dataList->Name = data_input;
     queryList = new Data();
     queryList->head = queryList;
+    queryList->next = NULL;
     queryList->Name = "init";
     KId = kademliaID;
     db = inputDB;
@@ -383,24 +384,28 @@ Kademlia::Delete_data_query(std::string DataName)
         return;
     }
     
+    
     Data* prePtr = queryList;
     Data* target_nextptr = targetPtr->next;
 
     while (1)
     {
-        targetPtr = queryList->GetData(DataName);
-        if (targetPtr == NULL)
+        try
         {
+            if (prePtr->next == targetPtr)
+            {
+                prePtr->next = target_nextptr;
+                delete targetPtr;
+                return;
+            }
+            prePtr = prePtr->next;
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            std::cout << "error! in Delete_data_query()\n";
             return;
         }
-
-        if (prePtr->next == targetPtr)
-        {
-            prePtr->next = target_nextptr;
-            delete targetPtr;
-            return;
-        }
-        prePtr = prePtr->next;
 
         if (prePtr == NULL)
         {
@@ -408,6 +413,7 @@ Kademlia::Delete_data_query(std::string DataName)
         }
         
     }
+
     
 }
 
@@ -733,14 +739,24 @@ Data::GetData(std::string DataName)
     Data *tempptr = this;
     while (tempptr != NULL)
     {
-        if (DataName == tempptr->Name)
+        try
         {
-            return tempptr;
+            if (DataName == tempptr->Name)
+            {
+                return tempptr;
+            }
+            else
+            {
+                tempptr = tempptr->next;
+            }
         }
-        else
+        catch(const std::exception& e)
         {
-            tempptr = tempptr->next;
+            std::cerr << e.what() << '\n';
+            std::cout << "error! in GetData()\n";
+            return NULL;
         }
+        
     }
     return NULL;
 }

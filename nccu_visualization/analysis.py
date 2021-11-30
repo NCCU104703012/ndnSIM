@@ -8,7 +8,7 @@ from os import error
 
 import matplotlib.pyplot as plt
 
-StartTime = 500
+StartTime = 3600
 
 def main():
     # with open('nccu_output.json') as f:
@@ -27,6 +27,7 @@ def main():
         totalDelay = 0
         totalDataNum = 0
         total_Fulfill_Num = 0
+        total_local_cache = 0
 
         for node in data:
             # if node != "44":
@@ -69,6 +70,9 @@ def main():
                         if arrive_time - startTime < 10:
                             total_Fulfill_Num += 1
 
+                        if arrive_time == startTime:
+                            total_local_cache += 1
+
                         if arrive_time > longest_time:
                             longest_time = arrive_time
                 
@@ -86,10 +90,11 @@ def main():
         
         print("totalDataNum = " + str(totalDataNum))
         print("total_Fulfill_Num = " + str(total_Fulfill_Num))
-        print("Data hit rate =  " + str(total_Fulfill_Num/totalDataNum))
-        print("average Delay = " + str(totalDelay/hasData_return))
+        print("Data hit rate (not include cache) =  " + str((total_Fulfill_Num - total_local_cache)/(totalDataNum - total_local_cache)))
+        print("average Delay (per Order) = " + str(totalDelay/hasData_return))
         print("hasData_return = " + str(hasData_return))
         print("orderNum = " + str(orderNum))
+        print("total_local_cache = " + str(total_local_cache))
         print('----------------------------------------------------')
 
     customer_send_connect = 0

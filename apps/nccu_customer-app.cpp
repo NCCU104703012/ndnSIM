@@ -48,7 +48,7 @@
 bool double_direct_kbuk = false;
 
 //K桶大小
-int Kbuk_Size = 5;
+int Kbuk_Size = 10;
 
 // 一週期的時間長度 86400
 int week = 86400;
@@ -56,7 +56,7 @@ int week = 86400;
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 1;
+int onlineNum = 0;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;
@@ -206,7 +206,12 @@ CustomerApp::StartApplication()
 
   //shiftTime: 隨機打散上下線時間
   int shiftTime = tempHash%1000;
+
   
+  if (double_direct_kbuk)
+  {
+    Simulator::Schedule(Seconds(shiftTime), &CustomerApp::check_kbuk_connect, this);
+  }
 
   for (int i = 0; i < onlineNum; i++)
   {
@@ -641,10 +646,10 @@ CustomerApp::OnData(std::shared_ptr<const ndn::Data> data)
     Order* O_ptr = GetO_ptr()->getNext();
     Order* Pre_O_ptr = GetO_ptr();
 
-    if (query_algorithm.toUri() == "/DataManageOrigin")
-    {
-      GetK_ptr()->Delete_data_query(DataString);
-    }
+    // if (query_algorithm.toUri() == "/DataManageOrigin")
+    // {
+    //   GetK_ptr()->Delete_data_query(DataString);
+    // }
     
     
     //遍歷所有order, 滿足所有需要此筆資料的order
@@ -887,6 +892,11 @@ CustomerApp::SendQuery(Order* O_ptr, std::string serviceType, bool isOrder_from_
       }
       else if (GetK_ptr()->GetQueryItem(dataString) == NULL && query_algorithm.toUri() == "/DataManageOrigin")
       {
+        if (GetK_ptr()->GetQueryItem(dataString) != NULL)
+        {
+          GetK_ptr()->Delete_data_query(dataString);
+        }
+
         GetK_ptr()->queryList->AddData(dataString, itemType, 0);
         ndn::Name temp;
         temp.append("prefix").append("data").append("query").append(NodeName).append("0").append(NodeName);

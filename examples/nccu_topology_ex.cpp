@@ -46,6 +46,12 @@
 //kad演算法 DataManageOrigin ＆ DataManage
 std::string Query_Algorithm = "DataManageOrigin";
 
+//資料庫名稱 
+//1115_100node.db 主要資料庫
+//100node_transfer.db 新資料實驗 使用 NDN error control
+//100node_origin_transfer.db 新資料實驗 使用原版Kad
+std::string DB_name = "100node_origin_transfer.db";
+
 //節點數量
 // int NodeNumber = 17;
 int NodeNumber = 100;
@@ -61,7 +67,7 @@ int Guest_Poisson = 3600;
 int Guest_Poisson_div = 1;
 
 //初始K桶大小
-int Kbuk_Number = 5;
+int Kbuk_Number = 10;
 
 //是否設定初始K桶
 bool set_kbucket_bool = true;
@@ -70,7 +76,7 @@ bool set_kbucket_bool = true;
 int ShopChain_num = 5;
 
 //程式結束時間
-int StopTime = 30000;
+int StopTime = 50000;
 
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
@@ -368,7 +374,7 @@ main(int argc, char* argv[])
   int rc;
   std::string sqlCommand;
 
-  rc = sqlite3_open("1115_100node.db", &db);
+  rc = sqlite3_open(DB_name.c_str(), &db);
 
   if( rc ){
      fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));

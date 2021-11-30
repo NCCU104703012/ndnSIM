@@ -229,21 +229,20 @@ DataManage::OnInterest(std::shared_ptr<const ndn::Interest> interest)
         return;
       }
 
-      // outInterest.append("prefix").append("data").append("query").append(TargetNode).append("0").append(SourceNode).append(DataName).append(itemType);
-      // auto interest = std::make_shared<ndn::Interest>(outInterest);
-      // Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
-      // interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
-      // interest->setMustBeFresh(1);
-      // interest->setInterestLifetime(ndn::time::seconds(1));
-      // interest->setHopLimit(20);
+      outInterest.append("prefix").append("data").append("query").append(TargetNode).append("0").append(SourceNode).append(DataName).append(itemType);
+      auto interest = std::make_shared<ndn::Interest>(outInterest);
+      Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable>();
+      interest->setNonce(rand->GetValue(0, std::numeric_limits<uint32_t>::max()));
+      interest->setMustBeFresh(1);
+      interest->setInterestLifetime(ndn::time::seconds(1));
+      interest->setHopLimit(20);
 
-      // NS_LOG_DEBUG("Query another Node for ndnFault_tolerant(offline) " << *interest);
-      NS_LOG_DEBUG("ndnFault_tolerant terminate(offline) " << *interest);
+      NS_LOG_DEBUG("Query another Node for ndnFault_tolerant(offline) " << *interest);
 
       // // Call trace (for logging purposes)
-      // m_transmittedInterests(interest, this, m_face);
+      m_transmittedInterests(interest, this, m_face);
 
-      // m_appLink->onReceiveInterest(*interest);
+      m_appLink->onReceiveInterest(*interest);
 
       return;
     }
