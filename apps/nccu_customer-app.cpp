@@ -56,7 +56,7 @@ int week = 86400;
 int startTime = 1000;
 
 // 上下線總次數
-int onlineNum = 0;
+int onlineNum = 1;
 
 //一個Order & MicroOrder Query資料量
 int OrderQuery_num = 10;

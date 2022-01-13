@@ -14,10 +14,10 @@ import json
 def main():
     # f = open("nccu1115_only_ndn.txt")
 
-    # f = open("nccu1121_5kbuk_newData.txt")
+    # f = open("nccu1121_5kbuk_half.txt")
     # file = open('nccu_output.json', "w")
 
-    f = open("nccu1121_origin_10kbuk_newData.txt")
+    f = open("nccu1121_origin_10kbuk_half.txt")
     file = open('nccu_output_origin.json', "w")
 
     # f = open("nccu1121_noNDN_10kbuk_offline.txt")

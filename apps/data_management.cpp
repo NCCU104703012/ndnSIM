@@ -38,7 +38,7 @@
 #include <memory>
 
 
-bool ndnFault_tolerant_disable = false;
+bool ndnFault_tolerant_disable = true;
 
 
 NS_LOG_COMPONENT_DEFINE("DataManage");

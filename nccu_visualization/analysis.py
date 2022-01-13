@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 StartTime = 3600
 
 def main():
-    # with open('nccu_output.json') as f:
-    with open('nccu_output_origin.json') as f:
+    with open('nccu_output.json') as f:
+    # with open('nccu_output_origin.json') as f:
     # with open('nccu_output_noNDN.json') as f:
         print(f.name)
         print('----------------------------------------------------')
@@ -163,6 +163,7 @@ def main():
     origin_send_data = 0
     origin_send_interest = 0
     origin_no_match = 0
+    origin_send_back = 0
 
     with open('DataManageOrigin_log.txt') as f:
         for line in f.readlines():
@@ -182,11 +183,15 @@ def main():
             
             if line.find('NO-match-Data-&-next-Node') != -1:
                 origin_no_match = origin_no_match +1
+            
+            if line.find('sendBack to SourceNode:') != -1:
+                origin_send_back = origin_send_back +1
     
     print("DataManageOrigin: next round Query = " + str(origin_send_next_round))
     print("DataManageOrigin: Sending Data packet for = " + str(origin_send_data))
     print("DataManageOrigin: SendInterest() = " + str(origin_send_interest))
     print("DataManageOrigin: NO-match-Data-&-next-Node = " + str(origin_no_match))
+    print("DataManageOrigin: sendBack to SourceNode = " + str(origin_send_back))
 
 
 

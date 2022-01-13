@@ -107,7 +107,8 @@ def main():
     plt.figure(figsize=(15,10),dpi=100,linewidth = 2)
 
     file_arr = ['nccu_output.json', 'nccu_output_origin.json', 'nccu_output_noNDN.json']
-    lable_arr = ["NDN fault tolerant", "Kademlia", "kademlia hop by hop"]
+    lable_arr = ["NDN error control + Hop by Hop Kademlia(K=5)", "Kademlia(K=10)", "Hop by hop kademlia(K=10)"]
+    label_marker_arr = ["o-", "s-", "^-"]
     color_arr = ['r', 'g', 'b']
 
     # 累計資料份數，以及時間 折線圖
@@ -153,7 +154,7 @@ def main():
     #             time = time + time_gap
 
     #     # 把資料放進來並指定對應的X軸、Y軸的資料，用方形做標記(s-)，並指定線條顏色為紅色，使用label標記線條含意
-    #     plt.plot(time_arr,fulfill_data_arr,'s-',color = color_arr[index], label=lable_arr[index])
+    #     plt.plot(time_arr,fulfill_data_arr,label_marker_arr[index],color = color_arr[index], label=lable_arr[index])
     
     # 累計fulfill資料 以及其delay 折線圖
     # for index in range(0,3):
@@ -200,9 +201,11 @@ def main():
     #             fulfill_data_arr.append(temp_fulfill_num)
                 
     #             time = time + time_gap
-                
+
+    #     del time_arr[0]
+    #     del fulfill_data_arr[0]        
     #     # 把資料放進來並指定對應的X軸、Y軸的資料，用方形做標記(s-)，並指定線條顏色為紅色，使用label標記線條含意
-    #     plt.plot(time_arr,fulfill_data_arr,'s-',color = color_arr[index], label=lable_arr[index])
+    #     plt.plot(time_arr,fulfill_data_arr,label_marker_arr[index],color = color_arr[index], label=lable_arr[index])
 
 
     # # 區間或累計資料命中率
@@ -211,10 +214,10 @@ def main():
         time_arr = []
         fulfill_data_arr = []
 
-        time = 8000
+        time = 15000
         time_gap = 1000
 
-        for i in range(0,41):
+        for i in range(0,35):
             temp_fulfill_num = 0
             temp_setData_num = 0
             
@@ -234,8 +237,8 @@ def main():
                         startTime = float(test_string.strip('+').strip('s'))
 
                         for item in dataList:
-                            if len(item) > 8 and startTime <= time and startTime > time - time_gap:
-                            # if len(item) > 8 and startTime <= time:
+                            # if len(item) > 8 and startTime <= time and startTime > time - time_gap:
+                            if len(item) > 8 and startTime <= time:
                                 temp_setData_num = temp_setData_num + 1
                         
                                 if "fulfill-order" not in data[node][orderName]:
@@ -257,14 +260,14 @@ def main():
                 time = time + time_gap
 
         # 把資料放進來並指定對應的X軸、Y軸的資料，用方形做標記(s-)，並指定線條顏色為紅色，使用label標記線條含意
-        plt.plot(time_arr,fulfill_data_arr,'s-',color = color_arr[index], label=lable_arr[index])
+        plt.plot(time_arr,fulfill_data_arr,label_marker_arr[index],color = color_arr[index], label=lable_arr[index])
     
     
 
 
     # 設定圖片標題，以及指定字型設定，x代表與圖案最左側的距離，y代表與圖片的距離
 
-    plt.title("Python Line chart", x=0.5, y=1.03)
+    # plt.title("Delay", x=0.5, y=1.03)
 
     # 设置刻度字体大小
 
@@ -274,15 +277,15 @@ def main():
 
     # 標示x軸(labelpad代表與圖片的距離)
 
-    plt.xlabel("delay(s)", fontsize=30, labelpad = 15)
+    plt.xlabel("Time(s)", fontsize=30, labelpad = 15)
 
     # 標示y軸(labelpad代表與圖片的距離)
 
-    plt.ylabel("data number", fontsize=30, labelpad = 20)
+    plt.ylabel("Data hit rate(%)", fontsize=30, labelpad = 20)
 
     # 顯示出線條標記位置
 
-    plt.legend(loc = "best", fontsize=20)
+    plt.legend(loc = "best", fontsize=15)
 
     # 畫出圖片
 

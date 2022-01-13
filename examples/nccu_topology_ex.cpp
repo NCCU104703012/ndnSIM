@@ -50,7 +50,7 @@ std::string Query_Algorithm = "DataManageOrigin";
 //1115_100node.db 主要資料庫
 //100node_transfer.db 新資料實驗 使用 NDN error control
 //100node_origin_transfer.db 新資料實驗 使用原版Kad
-std::string DB_name = "100node_origin_transfer.db";
+std::string DB_name = "1115_100node.db";
 
 //節點數量
 // int NodeNumber = 17;
@@ -76,7 +76,7 @@ bool set_kbucket_bool = true;
 int ShopChain_num = 5;
 
 //程式結束時間
-int StopTime = 50000;
+int StopTime = 30000;
 
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
@@ -365,7 +365,7 @@ main(int argc, char* argv[])
 
   AnnotatedTopologyReader topologyReader("", 1000);
   // topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo50.txt");
-  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo100.txt");
+  topologyReader.SetFileName("/home/nccu108753108/ndnSIM/ns-3/src/ndnSIM/nccu_visualization/nccu_topo2x50.txt");
   topologyReader.Read();
 
   //資料庫測試

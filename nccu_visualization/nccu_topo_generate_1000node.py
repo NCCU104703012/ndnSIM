@@ -15,25 +15,26 @@
 import numpy as np
 
 def main():
-    scale = 15
+    scale = 50
+    scale2 = 2
 
     print("OK")
-    arr = arrayA = np.arange(scale*scale)
+    arr = arrayA = np.arange(scale*scale2)
     # for item in range(0, 49):
     #     arr.append(item)
 
-    arr = np.reshape(arr, (scale, scale))
+    arr = np.reshape(arr, (scale, scale2))
 
     print(arr)
 
-    fp = open("nccu_topo225.txt", "a")
+    fp = open("nccu_topo2x50.txt", "a")
 
     yPos = 0
     xPos = 0
 
     fp.writelines("router\n")
 
-    for item in range(0, scale*scale):
+    for item in range(0, scale*scale2):
         output = "Node" + str(item) + "   NA   " + str(yPos+1) + "   " + str(xPos+1) + "\n"
         
         xPos = xPos + 3
@@ -47,9 +48,9 @@ def main():
 
     fp.writelines("link\n")
     
-    for item in range(0, scale*scale):
+    for item in range(0, scale*scale2):
 
-        if item + scale <= scale*scale-1:
+        if item + scale <= scale*scale2-1:
             output = "Node" + str(item) + "       Node" + str(item+scale) + "       100Mbps       " + "1       " + "10ms    " + "100" + "\n"
             fp.writelines(output)
 
